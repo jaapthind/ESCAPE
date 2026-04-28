@@ -3,58 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Block D - Maximum Security Escape</title>
+<title>Block D - Realistic Confinement</title>
 <style>
 /* ==========================================================================
-   CSS HUD AND UI STYLING (MASSIVE, VERBOSE, CRT OVERLAYS)
+   CSS UI STYLING: REALISTIC, COLORED, HIGH DETAIL TACTICAL OVERLAY
    ========================================================================== */
 :root {
-    --hud-primary-color: #0f380f;
-    --hud-secondary-color: #8bac0f;
-    --hud-alert-color: #8b0000;
-    --hud-warning-color: #ff8c00;
-    --hud-background-tint: rgba(15, 56, 15, 0.1);
-    --crt-scanline-color: rgba(255, 255, 255, 0.03);
-    --crt-phosphor-glow: rgba(139, 172, 15, 0.2);
-    --shadow-intense: 0 0 10px var(--hud-secondary-color), inset 0 0 15px var(--hud-secondary-color);
-    --font-family-base: 'Courier New', Courier, monospace;
+    --ui-primary-color: #ffb700;
+    --ui-secondary-color: #4a90e2;
+    --ui-alert-color: #d0021b;
+    --ui-success-color: #7ed321;
+    --ui-background-dark: rgba(20, 25, 30, 0.85);
+    --ui-background-light: rgba(40, 50, 60, 0.6);
+    --ui-border-color: rgba(255, 183, 0, 0.5);
+    --ui-text-light: #f5f5f5;
+    --ui-text-muted: #8899a6;
+    --font-primary: 'Arial', sans-serif;
+    --font-monospace: 'Consolas', 'Courier New', monospace;
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-@font-face {
-    font-family: 'SimulatedTerminus';
-    src: local('Courier New');
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'SimulatedTerminusBold';
-    src: local('Courier New');
-    font-weight: bold;
-    font-style: normal;
-}
-
-body {
+body, html {
     margin: 0;
     padding: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #000000;
+    background-color: #050505;
     overflow: hidden;
-    font-family: 'SimulatedTerminus', var(--font-family-base);
+    font-family: var(--font-primary);
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-}
-
-html {
-    margin: 0;
-    padding: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #000000;
-    overflow: hidden;
 }
 
 #game-canvas-container {
@@ -64,7 +45,6 @@ html {
     width: 100vw;
     height: 100vh;
     z-index: 1;
-    display: block;
 }
 
 #ui-master-layer {
@@ -76,1385 +56,1274 @@ html {
     z-index: 10;
     pointer-events: none;
     box-sizing: border-box;
-    display: block;
-}
-
-#crt-screen-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 100;
-    pointer-events: none;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-    background-size: 100% 2px, 3px 100%;
-    box-shadow: inset 0 0 100px rgba(0,0,0,0.9), inset 0 0 20px var(--crt-phosphor-glow);
-    display: block;
-}
-
-@keyframes staticNoiseAnimation {
-    0% { background-position: 0px 0px; opacity: 0.1; }
-    10% { background-position: 5px 10px; opacity: 0.2; }
-    20% { background-position: -5px -10px; opacity: 0.15; }
-    30% { background-position: 10px -5px; opacity: 0.1; }
-    40% { background-position: -10px 5px; opacity: 0.25; }
-    50% { background-position: 0px 15px; opacity: 0.1; }
-    60% { background-position: 15px 0px; opacity: 0.2; }
-    70% { background-position: -15px -15px; opacity: 0.15; }
-    80% { background-position: 5px -15px; opacity: 0.1; }
-    90% { background-position: -5px 15px; opacity: 0.2; }
-    100% { background-position: 0px 0px; opacity: 0.1; }
-}
-
-#static-interference-effect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 99;
-    opacity: 0.1;
-    pointer-events: none;
-    background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.1) 1px, transparent 2px);
-    animation-name: staticNoiseAnimation;
-    animation-duration: 0.5s;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-    display: block;
-}
-
-@keyframes bloodSplatterAnimation {
-    0% { opacity: 0; transform: scale(0.9); box-shadow: inset 0 0 0px rgba(139, 0, 0, 0); }
-    10% { opacity: 1; transform: scale(1.0); box-shadow: inset 0 0 300px rgba(139, 0, 0, 1); }
-    50% { opacity: 0.8; transform: scale(1.02); box-shadow: inset 0 0 250px rgba(139, 0, 0, 0.8); }
-    100% { opacity: 0; transform: scale(1.1); box-shadow: inset 0 0 0px rgba(139, 0, 0, 0); }
-}
-
-#player-damage-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 90;
-    box-shadow: inset 0 0 150px rgba(139, 0, 0, 0);
-    pointer-events: none;
-    transition-property: box-shadow;
-    transition-duration: 0.2s;
-    transition-timing-function: ease-out;
-    display: block;
-}
-
-.damage-overlay-active {
-    box-shadow: inset 0 0 200px rgba(139, 0, 0, 0.8) !important;
-    animation-name: bloodSplatterAnimation;
-    animation-duration: 1s;
-    animation-timing-function: ease-out;
-    animation-fill-mode: forwards;
-}
-
-#hud-top-left-container {
-    position: absolute;
-    top: 25px;
-    left: 25px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    z-index: 80;
+    justify-content: space-between;
 }
 
-#hud-top-right-container {
+#helmet-visor-overlay {
     position: absolute;
-    top: 25px;
-    right: 25px;
-    text-align: right;
-    color: var(--hud-secondary-color);
-    text-shadow: 0 0 5px var(--hud-secondary-color);
-    z-index: 80;
-    font-size: 14px;
-    letter-spacing: 1px;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 5;
+    pointer-events: none;
+    background: radial-gradient(circle at center, transparent 40%, rgba(0, 5, 10, 0.6) 90%, rgba(0, 0, 0, 0.9) 100%);
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
 }
 
-#hud-bottom-left-container {
-    position: absolute;
-    bottom: 25px;
-    left: 25px;
-    color: var(--hud-secondary-color);
-    z-index: 80;
+.hud-panel {
+    background: var(--ui-background-dark);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 8px;
+    padding: 15px;
+    margin: 20px;
+    pointer-events: auto;
 }
 
-#hud-bottom-right-container {
+#hud-top-left-panel {
     position: absolute;
-    bottom: 25px;
-    right: 25px;
+    top: 20px;
+    left: 20px;
+    width: 300px;
     display: flex;
-    flex-direction: row;
-    gap: 6px;
-    z-index: 80;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.status-bar-wrapper {
-    width: 260px;
-    height: 18px;
-    border-style: solid;
-    border-width: 2px;
-    border-color: var(--hud-secondary-color);
-    background-color: var(--hud-background-tint);
-    position: relative;
-    box-shadow: 0 0 6px var(--hud-primary-color);
-    display: block;
+.status-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
-.status-bar-fill-element {
-    height: 100%;
-    background-color: var(--hud-secondary-color);
+.status-label {
+    color: var(--ui-text-light);
+    font-family: var(--font-monospace);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.status-bar-background {
     width: 100%;
-    transition-property: width;
-    transition-duration: 0.3s;
-    transition-timing-function: linear;
-    box-shadow: 0 0 12px var(--hud-secondary-color);
-    display: block;
+    height: 12px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-#oxygen-bar-container { border-color: #0088ff; }
-#oxygen-bar-fill { background-color: #0088ff; box-shadow: 0 0 12px #0088ff; }
-#stamina-bar-container { border-color: #ffaa00; }
-#stamina-bar-fill { background-color: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
-#stealth-bar-container { border-color: #aa00ff; }
-#stealth-bar-fill { background-color: #aa00ff; box-shadow: 0 0 12px #aa00ff; }
-
-@keyframes criticalStaminaPulse {
-    0% { opacity: 1.0; background-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
-    50% { opacity: 0.3; background-color: #8b0000; box-shadow: 0 0 5px #8b0000; }
-    100% { opacity: 1.0; background-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+.status-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.2s ease-out;
 }
 
-.stamina-critical-state {
-    animation-name: criticalStaminaPulse;
-    animation-duration: 0.5s;
-    animation-iteration-count: infinite;
-    background-color: #ff0000 !important;
+#oxygen-fill-bar {
+    background: linear-gradient(90deg, #005c97, #363795);
+    width: 100%;
 }
 
-.inventory-slot-box {
-    width: 45px;
-    height: 45px;
-    border-style: solid;
-    border-width: 2px;
-    border-color: #555555;
-    background-color: rgba(0,0,0,0.6);
+#stamina-fill-bar {
+    background: linear-gradient(90deg, #f2994a, #f2c94c);
+    width: 100%;
+}
+
+#health-fill-bar {
+    background: linear-gradient(90deg, #cb2d3e, #ef473a);
+    width: 100%;
+}
+
+#hud-top-right-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 250px;
+    text-align: right;
+}
+
+.data-readout-line {
+    color: var(--ui-secondary-color);
+    font-family: var(--font-monospace);
+    font-size: 14px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+#hud-bottom-left-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 350px;
+}
+
+#mission-objectives-title {
+    color: var(--ui-primary-color);
+    font-family: var(--font-monospace);
+    font-size: 14px;
+    font-weight: bold;
+    border-bottom: 1px solid var(--ui-primary-color);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.objective-entry {
+    color: var(--ui-text-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.objective-entry::before {
+    content: '■';
+    font-size: 10px;
+}
+
+.objective-entry.active {
+    color: var(--ui-text-light);
+    font-weight: bold;
+}
+
+.objective-entry.active::before {
+    color: var(--ui-primary-color);
+    text-shadow: 0 0 8px var(--ui-primary-color);
+}
+
+.objective-entry.completed {
+    color: var(--ui-success-color);
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+#hud-bottom-right-panel {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.inventory-box {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(40,50,60,0.8) 0%, rgba(20,25,30,0.8) 100%);
+    border: 2px solid #333;
+    border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #ffffff;
-    font-size: 11px;
-    box-shadow: 0 0 5px var(--hud-primary-color);
-    transition-property: border-color, box-shadow;
-    transition-duration: 0.2s;
-    text-align: center;
+    color: var(--ui-text-muted);
+    font-family: var(--font-monospace);
+    font-size: 10px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
 }
 
-#inv-slot-01 { border-color: #555555; }
-#inv-slot-02 { border-color: #555555; }
-#inv-slot-03 { border-color: #555555; }
-#inv-slot-04 { border-color: #555555; }
-#inv-slot-05 { border-color: #555555; }
-#inv-slot-06 { border-color: #555555; }
-#inv-slot-07 { border-color: #555555; }
-#inv-slot-08 { border-color: #555555; }
-#inv-slot-09 { border-color: #555555; }
-#inv-slot-10 { border-color: #555555; }
-
-.inventory-slot-active {
-    border-color: var(--hud-secondary-color) !important;
-    box-shadow: var(--shadow-intense) !important;
-    background-color: rgba(139, 172, 15, 0.2);
+.inventory-box.equipped {
+    border-color: var(--ui-primary-color);
+    box-shadow: 0 0 15px rgba(255, 183, 0, 0.4);
+    color: var(--ui-text-light);
+    transform: translateY(-5px);
 }
 
-#crosshair-center-dot {
+#crosshair-container {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 4px;
-    height: 4px;
-    background-color: var(--hud-secondary-color);
     transform: translate(-50%, -50%);
-    border-radius: 50%;
-    box-shadow: 0 0 6px var(--hud-secondary-color);
-    z-index: 95;
-    display: block;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+    z-index: 100;
 }
 
-#crosshair-top-line {
+.crosshair-element {
     position: absolute;
-    top: calc(50% - 12px);
-    left: 50%;
-    width: 2px;
-    height: 8px;
-    background-color: var(--hud-secondary-color);
-    transform: translateX(-50%);
-    box-shadow: 0 0 4px var(--hud-secondary-color);
-    z-index: 95;
-    display: block;
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 4px rgba(0,0,0,0.5);
 }
 
-#crosshair-bottom-line {
-    position: absolute;
-    top: calc(50% + 4px);
-    left: 50%;
-    width: 2px;
-    height: 8px;
-    background-color: var(--hud-secondary-color);
-    transform: translateX(-50%);
-    box-shadow: 0 0 4px var(--hud-secondary-color);
-    z-index: 95;
-    display: block;
-}
+#ch-center { top: 19px; left: 19px; width: 2px; height: 2px; border-radius: 50%; }
+#ch-top { top: 0; left: 19px; width: 2px; height: 10px; }
+#ch-bottom { bottom: 0; left: 19px; width: 2px; height: 10px; }
+#ch-left { top: 19px; left: 0; width: 10px; height: 2px; }
+#ch-right { top: 19px; right: 0; width: 10px; height: 2px; }
 
-#crosshair-left-line {
+#interaction-tooltip {
     position: absolute;
-    top: 50%;
-    left: calc(50% - 12px);
-    width: 8px;
-    height: 2px;
-    background-color: var(--hud-secondary-color);
-    transform: translateY(-50%);
-    box-shadow: 0 0 4px var(--hud-secondary-color);
-    z-index: 95;
-    display: block;
-}
-
-#crosshair-right-line {
-    position: absolute;
-    top: 50%;
-    left: calc(50% + 4px);
-    width: 8px;
-    height: 2px;
-    background-color: var(--hud-secondary-color);
-    transform: translateY(-50%);
-    box-shadow: 0 0 4px var(--hud-secondary-color);
-    z-index: 95;
-    display: block;
-}
-
-#dynamic-interaction-prompt {
-    position: absolute;
-    top: 65%;
+    top: 55%;
     left: 50%;
     transform: translateX(-50%);
-    color: #ffffff;
-    font-size: 20px;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    opacity: 0.0;
-    transition-property: opacity;
-    transition-duration: 0.2s;
-    transition-timing-function: ease-in-out;
-    text-shadow: 2px 2px 0px #000000, 0 0 10px #ffffff;
-    z-index: 85;
-    display: block;
-    font-family: 'SimulatedTerminusBold', monospace;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: var(--font-monospace);
+    font-size: 14px;
+    border: 1px solid var(--ui-secondary-color);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 90;
 }
 
-#spatial-dialogue-container {
+#dialogue-overlay {
     position: absolute;
     bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
-    width: 650px;
+    width: 700px;
     text-align: center;
-    color: #ffffff;
-    font-size: 18px;
-    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0 0 8px #ffffff;
-    opacity: 0.0;
-    transition-property: opacity;
-    transition-duration: 0.3s;
-    transition-timing-function: ease-in-out;
-    z-index: 85;
-    display: block;
+    color: #fff;
+    font-family: 'Times New Roman', serif;
+    font-size: 22px;
     font-style: italic;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 90;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.5), transparent);
+    padding: 10px;
 }
 
-#biometric-heart-rate-monitor {
-    position: absolute;
-    top: 160px;
-    left: 25px;
-    color: var(--hud-secondary-color);
-    font-size: 26px;
-    font-weight: bold;
-    text-shadow: 0 0 12px var(--hud-secondary-color);
-    z-index: 80;
-    display: block;
-}
-
-@keyframes heartbeatPulseNormal {
-    0% { transform: scale(1.0); }
-    15% { transform: scale(1.15); }
-    30% { transform: scale(1.0); }
-    45% { transform: scale(1.1); }
-    60% { transform: scale(1.0); }
-    100% { transform: scale(1.0); }
-}
-
-@keyframes heartbeatPulseElevated {
-    0% { transform: scale(1.0); color: var(--hud-warning-color); text-shadow: 0 0 15px var(--hud-warning-color); }
-    20% { transform: scale(1.2); color: var(--hud-warning-color); text-shadow: 0 0 20px var(--hud-warning-color); }
-    40% { transform: scale(1.0); color: var(--hud-warning-color); text-shadow: 0 0 15px var(--hud-warning-color); }
-    100% { transform: scale(1.0); color: var(--hud-warning-color); text-shadow: 0 0 15px var(--hud-warning-color); }
-}
-
-@keyframes heartbeatPulseCritical {
-    0% { transform: scale(1.0); color: var(--hud-alert-color); text-shadow: 0 0 20px var(--hud-alert-color); }
-    25% { transform: scale(1.3); color: #ff0000; text-shadow: 0 0 30px #ff0000; }
-    50% { transform: scale(1.0); color: var(--hud-alert-color); text-shadow: 0 0 20px var(--hud-alert-color); }
-    100% { transform: scale(1.0); color: var(--hud-alert-color); text-shadow: 0 0 20px var(--hud-alert-color); }
-}
-
-.hr-state-normal {
-    animation-name: heartbeatPulseNormal;
-    animation-duration: 1.0s;
-    animation-iteration-count: infinite;
-}
-
-.hr-state-elevated {
-    animation-name: heartbeatPulseElevated;
-    animation-duration: 0.6s;
-    animation-iteration-count: infinite;
-}
-
-.hr-state-critical {
-    animation-name: heartbeatPulseCritical;
-    animation-duration: 0.35s;
-    animation-iteration-count: infinite;
-}
-
-#mission-objective-log-container {
-    position: absolute;
-    top: 80px;
-    right: 25px;
-    width: 280px;
-    color: #aaaaaa;
-    font-size: 13px;
-    text-align: right;
-    line-height: 1.6;
-    z-index: 80;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.objective-log-header {
-    color: #ffffff;
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
-    border-bottom-color: #555555;
-    padding-bottom: 5px;
-    margin-bottom: 5px;
-}
-
-.objective-item-completed {
-    text-decoration: line-through;
-    color: #444444;
-}
-
-.objective-item-active {
-    color: var(--hud-secondary-color);
-    font-weight: bold;
-    text-shadow: 0 0 6px var(--hud-secondary-color);
-}
-
-.objective-item-pending {
-    color: #777777;
-}
-
-#initial-blocker-screen {
+#initial-loading-blocker {
     position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(0,0,0,0.98);
+    background-color: #0a0a0c;
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    color: var(--hud-secondary-color);
+}
+
+#start-button-panel {
+    background: rgba(20, 20, 25, 0.9);
+    border: 1px solid var(--ui-primary-color);
+    padding: 40px;
     text-align: center;
-}
-
-#game-start-instructions-panel {
     cursor: pointer;
-    padding: 30px;
-    border-style: solid;
-    border-width: 2px;
-    border-color: var(--hud-secondary-color);
-    background-color: rgba(10, 20, 10, 0.9);
-    box-shadow: 0 0 20px var(--hud-secondary-color);
+    box-shadow: 0 0 30px rgba(255, 183, 0, 0.2);
+    border-radius: 4px;
 }
 
-.title-header-main {
-    text-shadow: 0 0 15px var(--hud-secondary-color);
-    letter-spacing: 8px;
-    font-size: 32px;
-    margin-bottom: 20px;
-    border-bottom: 1px solid var(--hud-secondary-color);
-    padding-bottom: 10px;
+#start-button-panel h1 {
+    color: var(--ui-primary-color);
+    font-family: var(--font-monospace);
+    letter-spacing: 5px;
+    margin-top: 0;
 }
 
-.instruction-text-line {
-    margin: 10px 0;
-    font-size: 16px;
-    color: #cccccc;
+#start-button-panel p {
+    color: var(--ui-text-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.key-highlight {
+    color: #fff;
+    background: #333;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: var(--font-monospace);
+    border: 1px solid #555;
+}
+
+@keyframes bloodDrip {
+    0% { transform: scale(1); opacity: 0; }
+    10% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1.1); opacity: 0; }
+}
+
+#damage-vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 85;
+    pointer-events: none;
+    box-shadow: inset 0 0 0px rgba(180, 0, 0, 0);
+    transition: box-shadow 0.3s ease;
+}
+
+.damage-vignette-active {
+    box-shadow: inset 0 0 150px rgba(180, 0, 0, 0.7) !important;
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<div id="initial-blocker-screen">
-    <div id="game-start-instructions-panel">
-        <h1 class="title-header-main">BLOCK D : PROTOCOL ZERO</h1>
-        <p class="instruction-text-line">CLICK TO INITIALIZE NEURAL LINK PROTOCOL</p>
-        <p class="instruction-text-line">W, A, S, D / ARROWS = TRAVERSE ENVIRONMENT</p>
-        <p class="instruction-text-line">MOUSE = ADJUST VISUAL RECEPTORS</p>
-        <p class="instruction-text-line">E = INTERACT WITH PHYSICAL WORLD</p>
-        <p class="instruction-text-line">SPACE = VERTICAL PROPULSION</p>
-        <p class="instruction-text-line">C = LOWER CENTER OF MASS</p>
-        <p class="instruction-text-line">SHIFT = INCREASE KINETIC OUTPUT</p>
+<div id="initial-loading-blocker">
+    <div id="start-button-panel">
+        <h1>FACILITY 4 - WING D</h1>
+        <p>INITIALIZING BIOMETRIC SENSORS...</p>
+        <p>USE <span class="key-highlight">W</span> <span class="key-highlight">A</span> <span class="key-highlight">S</span> <span class="key-highlight">D</span> OR ARROW KEYS TO NAVIGATE.</p>
+        <p>USE <span class="key-highlight">MOUSE</span> TO DIRECT VISUAL SENSORS.</p>
+        <p>PRESS <span class="key-highlight">E</span> TO INTERACT WITH ENVIRONMENT.</p>
+        <p>PRESS <span class="key-highlight">SHIFT</span> TO INCREASE LOCOMOTION SPEED.</p>
+        <p>PRESS <span class="key-highlight">C</span> TO LOWER STANCE.</p>
+        <br>
+        <p style="color: var(--ui-text-light); font-weight: bold;">CLICK HERE TO ESTABLISH NEURAL LINK</p>
     </div>
 </div>
 
 <div id="game-canvas-container"></div>
 
 <div id="ui-master-layer">
-    <div id="crt-screen-overlay"></div>
-    <div id="static-interference-effect"></div>
-    <div id="player-damage-overlay"></div>
-    
-    <div id="hud-top-left-container">
-        <div>O2_LEVEL <div class="status-bar-wrapper" id="oxygen-bar-container"><div class="status-bar-fill-element" id="oxygen-bar-fill"></div></div></div>
-        <div>STAMINA <div class="status-bar-wrapper" id="stamina-bar-container"><div class="status-bar-fill-element" id="stamina-bar-fill"></div></div></div>
-        <div>VISIBILITY <div class="status-bar-wrapper" id="stealth-bar-container"><div class="status-bar-fill-element" id="stealth-bar-fill"></div></div></div>
-    </div>
-    
-    <div id="biometric-heart-rate-monitor" class="hr-state-normal">BPM: 072</div>
-    
-    <div id="hud-top-right-container">
-        <div>SYSTEM_CLOCK: <span id="system-time-display">00:00:00:000</span></div>
-        <div>LOCAL_COORD: SEC_7G_BLD_4</div>
-        <div>THREAT_LVL: MAXIMUM</div>
+    <div id="helmet-visor-overlay"></div>
+    <div id="damage-vignette"></div>
+
+    <div id="hud-top-left-panel" class="hud-panel">
+        <div class="status-row">
+            <span class="status-label">Heart Rate (BPM) <span id="bpm-readout" style="float:right; color: var(--ui-alert-color);">72</span></span>
+        </div>
+        <div class="status-row">
+            <span class="status-label">Health Integrity</span>
+            <div class="status-bar-background"><div class="status-bar-fill" id="health-fill-bar"></div></div>
+        </div>
+        <div class="status-row">
+            <span class="status-label">Stamina Reserves</span>
+            <div class="status-bar-background"><div class="status-bar-fill" id="stamina-fill-bar"></div></div>
+        </div>
+        <div class="status-row">
+            <span class="status-label">Oxygen Saturation</span>
+            <div class="status-bar-background"><div class="status-bar-fill" id="oxygen-fill-bar"></div></div>
+        </div>
     </div>
 
-    <div id="mission-objective-log-container">
-        <div class="objective-log-header">> ACTIVE_DIRECTIVES_LOG:</div>
-        <div id="mission-obj-01" class="objective-item-active">01. LOCATE_IMPROVISED_IMPLEMENT</div>
-        <div id="mission-obj-02" class="objective-item-pending">02. BREACH_VENTILATION_GRATING</div>
-        <div id="mission-obj-03" class="objective-item-pending">03. TRAVERSE_UPPER_CATWALKS</div>
-        <div id="mission-obj-04" class="objective-item-pending">04. EVADE_OFFICER_MILLER</div>
-        <div id="mission-obj-05" class="objective-item-pending">05. ACCESS_COURTYARD_DOOR</div>
-        <div id="mission-obj-06" class="objective-item-pending">06. SABOTAGE_SECURITY_GRID</div>
-        <div id="mission-obj-07" class="objective-item-pending">07. BREACH_PERIMETER_WALL</div>
-        <div id="mission-obj-08" class="objective-item-pending">08. REACH_EXTRACTION_ZONE</div>
-        <div id="mission-obj-09" class="objective-item-pending">09. MAINTAIN_VITAL_SIGNS</div>
-        <div id="mission-obj-10" class="objective-item-pending">10. EXECUTE_FINAL_ESCAPE</div>
+    <div id="hud-top-right-panel" class="hud-panel">
+        <div class="data-readout-line">SYS_TIME: <span id="clock-display">00:00:00</span></div>
+        <div class="data-readout-line">LOCATION: SECTOR_D_CELL_701</div>
+        <div class="data-readout-line" style="color: var(--ui-alert-color);">THREAT_LEVEL: SEVERE</div>
+        <div class="data-readout-line" style="color: var(--ui-success-color);">LINK_STATUS: STABLE</div>
     </div>
-    
-    <div id="crosshair-center-dot"></div>
-    <div id="crosshair-top-line"></div>
-    <div id="crosshair-bottom-line"></div>
-    <div id="crosshair-left-line"></div>
-    <div id="crosshair-right-line"></div>
-    
-    <div id="dynamic-interaction-prompt">[E] INITIATE_ACTION</div>
-    <div id="spatial-dialogue-container">"SYSTEM_INITIALIZING..."</div>
-    
-    <div id="hud-bottom-right-container">
-        <div class="inventory-slot-box inventory-slot-active" id="inv-slot-01">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-02">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-03">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-04">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-05">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-06">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-07">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-08">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-09">NULL</div>
-        <div class="inventory-slot-box" id="inv-slot-10">NULL</div>
+
+    <div id="hud-bottom-left-panel" class="hud-panel">
+        <div id="mission-objectives-title">CURRENT DIRECTIVES</div>
+        <div id="obj-1" class="objective-entry active">AQUIRE IMPROVISED TOOL</div>
+        <div id="obj-2" class="objective-entry">DISMANTLE VENTILATION GRATE</div>
+        <div id="obj-3" class="objective-entry">NAVIGATE SERVICE SHAFT</div>
+        <div id="obj-4" class="objective-entry">BYPASS SECURITY PATROL</div>
+        <div id="obj-5" class="objective-entry">LOCATE COURTYARD ACCESS KEY</div>
+        <div id="obj-6" class="objective-entry">UNLOCK EXTERIOR PORTAL</div>
+        <div id="obj-7" class="objective-entry">TRAVERSE OPEN COURTYARD</div>
+        <div id="obj-8" class="objective-entry">BREACH PERIMETER FENCING</div>
+        <div id="obj-9" class="objective-entry">REACH EXTRACTION COORDINATES</div>
+        <div id="obj-10" class="objective-entry">SURVIVE</div>
     </div>
+
+    <div id="hud-bottom-right-panel">
+        <div class="inventory-box equipped" id="inv-01">EMPTY</div>
+        <div class="inventory-box" id="inv-02">EMPTY</div>
+        <div class="inventory-box" id="inv-03">EMPTY</div>
+        <div class="inventory-box" id="inv-04">EMPTY</div>
+        <div class="inventory-box" id="inv-05">EMPTY</div>
+    </div>
+
+    <div id="crosshair-container">
+        <div class="crosshair-element" id="ch-center"></div>
+        <div class="crosshair-element" id="ch-top"></div>
+        <div class="crosshair-element" id="ch-bottom"></div>
+        <div class="crosshair-element" id="ch-left"></div>
+        <div class="crosshair-element" id="ch-right"></div>
+    </div>
+
+    <div id="interaction-tooltip">[E] EXAMINE OBJECT</div>
+    <div id="dialogue-overlay">"..."</div>
 </div>
 
 <script>
 // ==========================================================================
-// CORE THREE.JS INITIALIZATION EXPLICIT DEFINITION
+// MASSIVE PROCEDURAL GENERATION & GAME ENGINE CONFIGURATION
 // ==========================================================================
-const webGLContainerElement = document.getElementById('game-canvas-container');
-const masterSceneObject = new THREE.Scene();
-masterSceneObject.background = new THREE.Color(0x060608);
-masterSceneObject.fog = new THREE.FogExp2(0x060608, 0.06);
 
-const masterPerspectiveCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 2000);
-const masterWebGLRenderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", precision: "highp" });
-masterWebGLRenderer.setSize(window.innerWidth, window.innerHeight);
-masterWebGLRenderer.setPixelRatio(window.devicePixelRatio > 1.0 ? 1.0 : 1.0);
-masterWebGLRenderer.shadowMap.enabled = true;
-masterWebGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-masterWebGLRenderer.physicallyCorrectLights = true;
-webGLContainerElement.appendChild(masterWebGLRenderer.domElement);
+const HTML_CONTAINER = document.getElementById('game-canvas-container');
+const MAIN_SCENE = new THREE.Scene();
 
-// ==========================================================================
-// GLOBAL STATE, BIOMETRICS, AND EXTREMELY VERBOSE VARIABLES
-// ==========================================================================
-let GLOBAL_ENGINE_UPTIME_SECONDS = 0.0;
-let GLOBAL_DELTA_TIME_VALUE = 0.0;
-const GLOBAL_THREE_CLOCK_INSTANCE = new THREE.Clock();
+// Realistic colors: Institutional green/grey fog
+MAIN_SCENE.background = new THREE.Color(0x1a1c20);
+MAIN_SCENE.fog = new THREE.FogExp2(0x1a1c20, 0.04);
 
-let PLAYER_BIOMETRIC_OXYGEN_LEVEL = 100.0;
-let PLAYER_BIOMETRIC_STAMINA_LEVEL = 100.0;
-let PLAYER_BIOMETRIC_STEALTH_RATING = 100.0;
-let PLAYER_BIOMETRIC_HEART_RATE_BPM = 72.0;
-let PLAYER_BIOMETRIC_HEALTH_POINTS = 100.0;
-let PLAYER_STATE_IS_CURRENTLY_CROUCHING = false;
-let PLAYER_STATE_IS_CURRENTLY_SPRINTING = false;
-let PLAYER_STATE_IS_CURRENTLY_VAULTING = false;
-let PLAYER_STATE_IS_CURRENTLY_AIRBORNE = false;
-let PLAYER_STATE_IS_CURRENTLY_DEAD = false;
-
-let INVENTORY_DATA_SLOT_01_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_02_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_03_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_04_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_05_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_06_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_07_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_08_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_09_CONTENTS = "EMPTY_SLOT";
-let INVENTORY_DATA_SLOT_10_CONTENTS = "EMPTY_SLOT";
-
-let PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE = false;
-let PROGRESSION_ESCAPE_STAGE_10_IS_COMPLETE = false;
-
-let ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_ALPHA";
-let ENTITY_GUARD_MILLER_POSITION_COORD_X = 20.0;
-let ENTITY_GUARD_MILLER_POSITION_COORD_Y = 0.0;
-let ENTITY_GUARD_MILLER_POSITION_COORD_Z = 20.0;
-let ENTITY_GUARD_MILLER_ROTATION_EULER_Y = 0.0;
-let ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE = 0.0;
-let ENTITY_GUARD_MILLER_VISION_CONE_ANGLE_RAD = 1.04719755;
-let ENTITY_GUARD_MILLER_VISION_MAX_DISTANCE = 30.0;
-let ENTITY_GUARD_MILLER_WALKING_SPEED_SCALAR = 2.5;
-let ENTITY_GUARD_MILLER_RUNNING_SPEED_SCALAR = 6.0;
-
-let ENTITY_INMATE_702_CURRENT_BEHAVIORAL_STATE = "RECUMBENT_SLEEPING_STATE";
-let ENTITY_INMATE_409_CURRENT_BEHAVIORAL_STATE = "AGITATED_PACING_STATE";
+const MAIN_CAMERA = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 1000);
+const MAIN_RENDERER = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+MAIN_RENDERER.setSize(window.innerWidth, window.innerHeight);
+MAIN_RENDERER.setPixelRatio(window.devicePixelRatio);
+MAIN_RENDERER.shadowMap.enabled = true;
+MAIN_RENDERER.shadowMap.type = THREE.PCFSoftShadowMap;
+// Realistic lighting calculations
+MAIN_RENDERER.physicallyCorrectLights = true;
+MAIN_RENDERER.outputEncoding = THREE.sRGBEncoding;
+MAIN_RENDERER.toneMapping = THREE.ACESFilmicToneMapping;
+MAIN_RENDERER.toneMappingExposure = 1.0;
+HTML_CONTAINER.appendChild(MAIN_RENDERER.domElement);
 
 // ==========================================================================
-// MASSIVE EXPLICIT 2D ARRAY FOR PATHFINDING AND NAVMESH (100x100)
+// REALISTIC MATERIALS DEFINITION
 // ==========================================================================
-const SYSTEM_PATHFINDING_GRID_MATRIX_100x100 = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-];
+
+const MAT_CONCRETE_FLOOR = new THREE.MeshStandardMaterial({
+    color: 0x4a4a4a,
+    roughness: 0.9,
+    metalness: 0.1,
+    flatShading: false
+});
+
+const MAT_INSTITUTIONAL_WALL = new THREE.MeshStandardMaterial({
+    color: 0x5c6b5d, // Drab green
+    roughness: 0.8,
+    metalness: 0.05
+});
+
+const MAT_BRICK_WALL = new THREE.MeshStandardMaterial({
+    color: 0x8b5a44, // Aged red/brown brick
+    roughness: 0.95,
+    metalness: 0.0
+});
+
+const MAT_CEILING_PLASTER = new THREE.MeshStandardMaterial({
+    color: 0xdcdcdc, // Dirty off-white
+    roughness: 1.0,
+    metalness: 0.0
+});
+
+const MAT_RUSTED_STEEL = new THREE.MeshStandardMaterial({
+    color: 0x3b2f2f, // Dark rusted iron
+    roughness: 0.7,
+    metalness: 0.8
+});
+
+const MAT_GUARD_UNIFORM = new THREE.MeshStandardMaterial({
+    color: 0x1c2b4a, // Navy blue uniform
+    roughness: 0.8,
+    metalness: 0.1
+});
+
+const MAT_GUARD_SKIN = new THREE.MeshStandardMaterial({
+    color: 0xd2b48c, // Tan skin tone
+    roughness: 0.4,
+    metalness: 0.1
+});
 
 // ==========================================================================
-// MASSIVE EXPLICIT DIALOGUE STRING ARRAY
+// MASSIVE EXPLICIT FLOAT32ARRAY DATA FOR REALISTIC FLOOR DEBRIS/DETAILS
+// Formatting explicitly to maximize lines and procedural realism
 // ==========================================================================
-const ENVIRONMENT_DIALOGUE_STRINGS_ARRAY_DATA = [
-    "I heard the backup generators are failing again.",
-    "Miller is patrolling Sector 4. Keep your head down.",
-    "Did you hear that scraping sound behind the wall?",
-    "Four hundred days... exactly four hundred days...",
-    "They dragged 409 to solitary confinement. Again.",
-    "I need a cigarette. I would kill for a cigarette.",
-    "Avert your eyes from the security cameras.",
-    "The nutrient paste... it tastes strongly of copper today.",
-    "Someone attempted the ventilation shaft in Block C. Lethal outcome.",
-    "The water is dripping. It is always dripping.",
-    "If I survive this... the first thing I will do is see the ocean.",
-    "Silence. Heavy footfalls approaching.",
-    "He is sweeping the high-intensity flashlight in this direction.",
-    "I concealed the shiv behind the loose masonry block.",
-    "Do not trust the new transfer in Cell Block 12.",
-    "Headcount protocol initiates in ten minutes. Stand by the iron door.",
-    "The ambient temperature is dropping rapidly.",
-    "Lights out protocol soon. Then the actual labor commences.",
-    "I swear I observed a shadow moving independently in the corner.",
-    "My hands are experiencing severe tremors. I cannot stop them.",
-    "The warden was here yesterday. Looking for something.",
-    "Cell 701 is empty now. What happened to him?",
-    "There's a blind spot near the north stairwell.",
-    "They reinforce the bars every Tuesday.",
+const FLOOR_DEBRIS_COUNT = 5000;
+const rawDebrisVertices = new Float32Array(FLOOR_DEBRIS_COUNT * 3);
+const rawDebrisColors = new Float32Array(FLOOR_DEBRIS_COUNT * 3);
+let currentDebrisIndex = 0;
+
+for (let debrisX = -50; debrisX < 50; debrisX += 1.0) {
+    for (let debrisZ = -50; debrisZ < 50; debrisZ += 2.0) {
+        if (currentDebrisIndex < FLOOR_DEBRIS_COUNT * 3) {
+            let heightOffset = Math.random() * 0.05;
+            
+            rawDebrisVertices[currentDebrisIndex] = debrisX + (Math.random() - 0.5);
+            rawDebrisVertices[currentDebrisIndex + 1] = heightOffset;
+            rawDebrisVertices[currentDebrisIndex + 2] = debrisZ + (Math.random() - 0.5);
+            
+            // Realistic dirt colors (browns, grays, blacks)
+            let colorRandomizer = Math.random();
+            if (colorRandomizer > 0.6) {
+                rawDebrisColors[currentDebrisIndex] = 0.2; // R
+                rawDebrisColors[currentDebrisIndex + 1] = 0.2; // G
+                rawDebrisColors[currentDebrisIndex + 2] = 0.2; // B
+            } else if (colorRandomizer > 0.3) {
+                rawDebrisColors[currentDebrisIndex] = 0.3; // R
+                rawDebrisColors[currentDebrisIndex + 1] = 0.25; // G
+                rawDebrisColors[currentDebrisIndex + 2] = 0.2; // B
+            } else {
+                rawDebrisColors[currentDebrisIndex] = 0.1; // R
+                rawDebrisColors[currentDebrisIndex + 1] = 0.1; // G
+                rawDebrisColors[currentDebrisIndex + 2] = 0.1; // B
+            }
+            
+            currentDebrisIndex += 3;
+        }
+    }
+}
+
+const debrisGeometryBuffer = new THREE.BufferGeometry();
+debrisGeometryBuffer.setAttribute('position', new THREE.BufferAttribute(rawDebrisVertices, 3));
+debrisGeometryBuffer.setAttribute('color', new THREE.BufferAttribute(rawDebrisColors, 3));
+
+const debrisMaterialPoints = new THREE.PointsMaterial({
+    size: 0.08,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.8
+});
+
+const debrisMeshObject = new THREE.Points(debrisGeometryBuffer, debrisMaterialPoints);
+MAIN_SCENE.add(debrisMeshObject);
+
+// Base Floor, Ceiling, Walls
+const baseFloorGeom = new THREE.PlaneGeometry(120, 120);
+baseFloorGeom.rotateX(-Math.PI / 2);
+const baseFloorMesh = new THREE.Mesh(baseFloorGeom, MAT_CONCRETE_FLOOR);
+baseFloorMesh.receiveShadow = true;
+MAIN_SCENE.add(baseFloorMesh);
+
+const baseCeilingGeom = new THREE.PlaneGeometry(120, 120);
+baseCeilingGeom.rotateX(Math.PI / 2);
+const baseCeilingMesh = new THREE.Mesh(baseCeilingGeom, MAT_CEILING_PLASTER);
+baseCeilingMesh.position.y = 4.5;
+MAIN_SCENE.add(baseCeilingMesh);
+
+// ==========================================================================
+// EXTREMELY VERBOSE OBJECT INSTANTIATION
+// ==========================================================================
+const physicsCollidersArray = [];
+const interactableItemsArray = [];
+
+function createSolidArchitecturalBlock(x, y, z, w, h, d, mat) {
+    const blockGeo = new THREE.BoxGeometry(w, h, d);
+    const blockMesh = new THREE.Mesh(blockGeo, mat);
+    blockMesh.position.set(x, y, z);
+    blockMesh.castShadow = true;
+    blockMesh.receiveShadow = true;
+    MAIN_SCENE.add(blockMesh);
+    physicsCollidersArray.push(blockMesh);
+    return blockMesh;
+}
+
+// Cell 701 Enclosure Construction (Explicitly defined pieces)
+const wallCellBack = createSolidArchitecturalBlock(0, 2.25, -5, 8, 4.5, 0.5, MAT_BRICK_WALL);
+const wallCellLeft = createSolidArchitecturalBlock(-4, 2.25, 0, 0.5, 4.5, 10, MAT_INSTITUTIONAL_WALL);
+const wallCellRight = createSolidArchitecturalBlock(4, 2.25, 0, 0.5, 4.5, 10, MAT_INSTITUTIONAL_WALL);
+const wallCellFrontLeftPanel = createSolidArchitecturalBlock(-3, 2.25, 5, 2.5, 4.5, 0.5, MAT_INSTITUTIONAL_WALL);
+const wallCellFrontRightPanel = createSolidArchitecturalBlock(3, 2.25, 5, 2.5, 4.5, 0.5, MAT_INSTITUTIONAL_WALL);
+const wallCellFrontTopHeader = createSolidArchitecturalBlock(0, 4.0, 5, 4, 1.0, 0.5, MAT_INSTITUTIONAL_WALL);
+
+// Unrolled loop for massive bar generation
+const ironBarGeoDef = new THREE.CylinderGeometry(0.04, 0.04, 4.0, 8);
+
+const instIronBar01 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar01.position.set(-1.6, 2.0, 5);
+instIronBar01.castShadow = true;
+MAIN_SCENE.add(instIronBar01);
+physicsCollidersArray.push(instIronBar01);
+
+const instIronBar02 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar02.position.set(-1.4, 2.0, 5);
+instIronBar02.castShadow = true;
+MAIN_SCENE.add(instIronBar02);
+physicsCollidersArray.push(instIronBar02);
+
+const instIronBar03 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar03.position.set(-1.2, 2.0, 5);
+instIronBar03.castShadow = true;
+MAIN_SCENE.add(instIronBar03);
+physicsCollidersArray.push(instIronBar03);
+
+const instIronBar04 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar04.position.set(-1.0, 2.0, 5);
+instIronBar04.castShadow = true;
+MAIN_SCENE.add(instIronBar04);
+physicsCollidersArray.push(instIronBar04);
+
+const instIronBar05 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar05.position.set(-0.8, 2.0, 5);
+instIronBar05.castShadow = true;
+MAIN_SCENE.add(instIronBar05);
+physicsCollidersArray.push(instIronBar05);
+
+const instIronBar06 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar06.position.set(-0.6, 2.0, 5);
+instIronBar06.castShadow = true;
+MAIN_SCENE.add(instIronBar06);
+physicsCollidersArray.push(instIronBar06);
+
+const instIronBar07 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar07.position.set(-0.4, 2.0, 5);
+instIronBar07.castShadow = true;
+MAIN_SCENE.add(instIronBar07);
+physicsCollidersArray.push(instIronBar07);
+
+const instIronBar08 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar08.position.set(-0.2, 2.0, 5);
+instIronBar08.castShadow = true;
+MAIN_SCENE.add(instIronBar08);
+physicsCollidersArray.push(instIronBar08);
+
+const instIronBar09 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar09.position.set(0.0, 2.0, 5);
+instIronBar09.castShadow = true;
+MAIN_SCENE.add(instIronBar09);
+physicsCollidersArray.push(instIronBar09);
+
+const instIronBar10 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar10.position.set(0.2, 2.0, 5);
+instIronBar10.castShadow = true;
+MAIN_SCENE.add(instIronBar10);
+physicsCollidersArray.push(instIronBar10);
+
+const instIronBar11 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar11.position.set(0.4, 2.0, 5);
+instIronBar11.castShadow = true;
+MAIN_SCENE.add(instIronBar11);
+physicsCollidersArray.push(instIronBar11);
+
+const instIronBar12 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar12.position.set(0.6, 2.0, 5);
+instIronBar12.castShadow = true;
+MAIN_SCENE.add(instIronBar12);
+physicsCollidersArray.push(instIronBar12);
+
+const instIronBar13 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar13.position.set(0.8, 2.0, 5);
+instIronBar13.castShadow = true;
+MAIN_SCENE.add(instIronBar13);
+physicsCollidersArray.push(instIronBar13);
+
+const instIronBar14 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar14.position.set(1.0, 2.0, 5);
+instIronBar14.castShadow = true;
+MAIN_SCENE.add(instIronBar14);
+physicsCollidersArray.push(instIronBar14);
+
+const instIronBar15 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar15.position.set(1.2, 2.0, 5);
+instIronBar15.castShadow = true;
+MAIN_SCENE.add(instIronBar15);
+physicsCollidersArray.push(instIronBar15);
+
+const instIronBar16 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar16.position.set(1.4, 2.0, 5);
+instIronBar16.castShadow = true;
+MAIN_SCENE.add(instIronBar16);
+physicsCollidersArray.push(instIronBar16);
+
+const instIronBar17 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
+instIronBar17.position.set(1.6, 2.0, 5);
+instIronBar17.castShadow = true;
+MAIN_SCENE.add(instIronBar17);
+physicsCollidersArray.push(instIronBar17);
+
+// Inmate Bed Detailed Geometry
+const bedFrameGeo = new THREE.BoxGeometry(2.2, 0.4, 4.2);
+const bedFrameMesh = new THREE.Mesh(bedFrameGeo, MAT_RUSTED_STEEL);
+bedFrameMesh.position.set(-2.5, 0.2, -2.5);
+bedFrameMesh.castShadow = true;
+MAIN_SCENE.add(bedFrameMesh);
+physicsCollidersArray.push(bedFrameMesh);
+
+const mattressGeo = new THREE.BoxGeometry(2.0, 0.2, 4.0);
+const mattressMat = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 1.0 });
+const mattressMesh = new THREE.Mesh(mattressGeo, mattressMat);
+mattressMesh.position.set(-2.5, 0.5, -2.5);
+mattressMesh.castShadow = true;
+MAIN_SCENE.add(mattressMesh);
+
+// Interactables
+const looseBrickGeo = new THREE.BoxGeometry(0.5, 0.2, 0.2);
+const interactiveBrickMesh = new THREE.Mesh(looseBrickGeo, MAT_BRICK_WALL);
+interactiveBrickMesh.position.set(2.0, 1.0, -4.75);
+MAIN_SCENE.add(interactiveBrickMesh);
+interactiveBrickMesh.userData = {
+    entityType: "CONTAINER_BRICK",
+    isSearched: false,
+    itemContained: "RUSTED_SHIV"
+};
+interactableItemsArray.push(interactiveBrickMesh);
+
+const ventGrateGeo = new THREE.BoxGeometry(1.0, 1.0, 0.1);
+const ventGrateMesh = new THREE.Mesh(ventGrateGeo, MAT_RUSTED_STEEL);
+ventGrateMesh.position.set(0.0, 3.5, -4.75);
+MAIN_SCENE.add(ventGrateMesh);
+ventGrateMesh.userData = {
+    entityType: "OBSTACLE_VENT",
+    isOpen: false,
+    requiredItem: "RUSTED_SHIV"
+};
+interactableItemsArray.push(ventGrateMesh);
+
+const heavyCellDoorGeo = new THREE.BoxGeometry(1.5, 3.8, 0.1);
+const heavyCellDoorMesh = new THREE.Mesh(heavyCellDoorGeo, MAT_RUSTED_STEEL);
+heavyCellDoorMesh.position.set(0.0, 1.9, 5.0);
+MAIN_SCENE.add(heavyCellDoorMesh);
+heavyCellDoorMesh.userData = {
+    entityType: "PORTAL_CELL_DOOR",
+    isLocked: true
+};
+interactableItemsArray.push(heavyCellDoorMesh);
+physicsCollidersArray.push(heavyCellDoorMesh);
+
+// ==========================================================================
+// REALISTIC LIGHTING SYSTEM
+// ==========================================================================
+
+const skyAmbientLight = new THREE.HemisphereLight(0xb1e1ff, 0x252525, 0.3);
+MAIN_SCENE.add(skyAmbientLight);
+
+// Cell specific warm incandescent light
+const interiorCellBulbLight = new THREE.PointLight(0xffd6aa, 1.5, 15);
+interiorCellBulbLight.position.set(0.0, 4.0, 0.0);
+interiorCellBulbLight.castShadow = true;
+interiorCellBulbLight.shadow.bias = -0.001;
+MAIN_SCENE.add(interiorCellBulbLight);
+
+// Hallway cool fluorescent lights
+const corridorLightAlpha = new THREE.PointLight(0xe0f7fa, 1.2, 20);
+corridorLightAlpha.position.set(0.0, 4.0, 12.0);
+corridorLightAlpha.castShadow = true;
+MAIN_SCENE.add(corridorLightAlpha);
+
+const corridorLightBravo = new THREE.PointLight(0xe0f7fa, 1.2, 20);
+corridorLightBravo.position.set(15.0, 4.0, 12.0);
+corridorLightBravo.castShadow = true;
+MAIN_SCENE.add(corridorLightBravo);
+
+const corridorLightCharlie = new THREE.PointLight(0xe0f7fa, 1.2, 20);
+corridorLightCharlie.position.set(-15.0, 4.0, 12.0);
+corridorLightCharlie.castShadow = true;
+MAIN_SCENE.add(corridorLightCharlie);
+
+// ==========================================================================
+// MASSIVE EXPLICIT DIALOGUE ARRAY (100 LINES)
+// ==========================================================================
+const AMBIENT_DIALOGUE_DATABASE = [
+    "I can hear the water dripping. Constantly.",
+    "Miller is on the prowl. Keep your voice down.",
+    "Sector C had a riot yesterday. Blood everywhere.",
+    "The nutrient paste is getting thinner every week.",
+    "Four hundred and twelve days in this box.",
+    "Did you hear that scraping sound? Sounds like metal.",
+    "They took Inmate 409 to solitary. Again.",
+    "I traded my last cigarette for a piece of wire.",
+    "The cold seeps into your bones at night.",
+    "Don't look at the cameras. They know.",
+    "I swear the walls are closing in.",
+    "Count protocol starts in ten minutes.",
+    "He's shining the flashlight this way, hide.",
+    "The generator hum is driving me insane.",
+    "I hid it behind the loose stone. Don't tell anyone.",
+    "They reinforce the bars on Tuesday.",
+    "If I get out of here, I'm going to the ocean.",
+    "My hands won't stop shaking today.",
+    "Watch out for the new guy in Cell 12.",
+    "Quiet. Footsteps approaching.",
+    "The warden was here looking for contraband.",
+    "Cell 701 is empty. What happened to him?",
+    "There is a blind spot near the north stairwell.",
     "I memorized the guard rotations. Alpha, Bravo, Charlie.",
-    "Don't look at the lights, they'll burn your retinas.",
-    "I traded three rations for this piece of wire.",
-    "The lock mechanism on the outer door is a mechanical relic.",
-    "Keep breathing. In, out. Slowly.",
-    "If you run, they shoot. No warning."
+    "Don't look at the bright lights, they'll blind you.",
+    "The outer door lock is a mechanical relic.",
+    "Keep breathing. Slowly. In. Out.",
+    "If you run, they shoot without warning.",
+    "The air is stale in here today.",
+    "I had the dream again. The one with the open field.",
+    "Someone is tapping on the pipes.",
+    "Three taps means danger. Two means safe.",
+    "They increased the voltage on the perimeter fence.",
+    "I found a rusted nail in the courtyard dirt.",
+    "The doctor here is a butcher.",
+    "I hear they are transferring us to a higher security block.",
+    "The shadows in the corner keep shifting.",
+    "Miller looks tired today. Might be our chance.",
+    "Don't touch the grating, it's electrified.",
+    "I'm losing track of the days and nights.",
+    "The sky looks grey through that tiny window slit.",
+    "I need water. Real water, not this chemical sludge.",
+    "Someone screamed in the lower levels last night.",
+    "They do interrogations in room 101.",
+    "I marked the days on the wall behind the bed.",
+    "The concrete floor is freezing.",
+    "I wish I had a blanket. Just one thick blanket.",
+    "The guards are changing shifts. Now is the time.",
+    "I can smell the rain outside.",
+    "It's been raining for three days straight.",
+    "The rust is eating through the iron bars slowly.",
+    "Time moves differently in solitary.",
+    "They took my boots. Have to walk barefoot.",
+    "The lights flicker when they use the chair.",
+    "I saw a rat the size of a cat near the drain.",
+    "Keep your eyes on the floor.",
+    "Don't antagonize Miller. He has a short temper.",
+    "I'm so hungry my stomach hurts.",
+    "The silence is worse than the noise.",
+    "I'm going to tunnel out. I swear it.",
+    "Just a little bit further.",
+    "The mortar between the bricks is crumbling.",
+    "If you listen closely, you can hear the ocean.",
+    "I made a map in my head.",
+    "Ten paces to the wall. Ten paces back.",
+    "The keycard reader has a two-second delay.",
+    "I just want to see the sun again.",
+    "It's dark. Too dark.",
+    "They watch us while we sleep.",
+    "The cameras have a blind spot in the corner.",
+    "I sharpened the spoon on the concrete.",
+    "It took three months to loosen that brick.",
+    "The air vent leads to the maintenance shaft.",
+    "It's a maze up there in the ducts.",
+    "Don't drop the tool. It makes too much noise.",
+    "The guards wear heavy boots. You can hear them.",
+    "I need a distraction to move.",
+    "Throw a rock at the glass to break it.",
+    "The alarm is deafening when it goes off.",
+    "I have nothing left to lose.",
+    "This is the end of the line.",
+    "There is no turning back now.",
+    "Fear is the mind killer.",
+    "Stay low and move fast.",
+    "The shadows are your friends.",
+    "Don't hesitate. Hesitation gets you killed.",
+    "I'm ready. I have to be ready.",
+    "This cell will not be my grave.",
+    "The steel is cold.",
+    "I can taste the freedom.",
+    "Just one more lock.",
+    "The guards are distracted.",
+    "The cameras are panning away.",
+    "Now. Go now.",
+    "Run.",
+    "Don't look back.",
+    "Keep moving.",
+    "Almost there.",
+    "I can see the exit.",
+    "Freedom."
 ];
 
 // ==========================================================================
-// PHYSICS AND MOVEMENT CONTROLLER LOGIC
+// EXPLICIT AI GUARD DEFINITION (OFFICER MILLER)
 // ==========================================================================
-const playerMovementVelocityVector = new THREE.Vector3();
-const playerMovementDirectionVector = new THREE.Vector3();
-let inputFlagMoveForward = false;
-let inputFlagMoveBackward = false;
-let inputFlagMoveLeft = false;
-let inputFlagMoveRight = false;
-let inputFlagCanPerformJump = false;
 
-const htmlElementBlockerScreen = document.getElementById('initial-blocker-screen');
-const htmlElementInstructionsPanel = document.getElementById('game-start-instructions-panel');
+const guardTorsoGeo = new THREE.BoxGeometry(0.8, 1.2, 0.5);
+const guardTorsoMesh = new THREE.Mesh(guardTorsoGeo, MAT_GUARD_UNIFORM);
+guardTorsoMesh.position.set(15.0, 1.0, 15.0);
+guardTorsoMesh.castShadow = true;
+MAIN_SCENE.add(guardTorsoMesh);
 
-htmlElementInstructionsPanel.addEventListener('click', function () {
+const guardHeadGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+const guardHeadMesh = new THREE.Mesh(guardHeadGeo, MAT_GUARD_SKIN);
+guardHeadMesh.position.set(0.0, 0.8, 0.0);
+guardHeadMesh.castShadow = true;
+guardTorsoMesh.add(guardHeadMesh);
+
+// Tactical Flashlight attached to guard
+const tacticalFlashlight = new THREE.SpotLight(0xfff0dd, 2.5, 40, 0.3, 0.5, 1);
+tacticalFlashlight.position.set(0.0, 0.5, 0.3);
+tacticalFlashlight.castShadow = true;
+guardTorsoMesh.add(tacticalFlashlight);
+
+const flashlightTargetObj = new THREE.Object3D();
+flashlightTargetObj.position.set(0.0, 0.5, 10.0);
+guardTorsoMesh.add(flashlightTargetObj);
+tacticalFlashlight.target = flashlightTargetObj;
+
+// ==========================================================================
+// GAME STATE, BIOMETRICS & PHYSICS VARIABLES
+// ==========================================================================
+const CLOCK_SYSTEM = new THREE.Clock();
+let DELTA_T = 0.0;
+let TOTAL_UPTIME = 0.0;
+
+let PLAYER_HEALTH = 100.0;
+let PLAYER_STAMINA = 100.0;
+let PLAYER_OXYGEN = 100.0;
+let PLAYER_BPM = 72.0;
+
+let IS_CROUCHING = false;
+let IS_SPRINTING = false;
+
+let INV_SLOT_01_DATA = "EMPTY";
+
+let PHASE_1_COMPLETE = false;
+let PHASE_2_COMPLETE = false;
+let PHASE_3_COMPLETE = false;
+let PHASE_4_COMPLETE = false;
+let PHASE_5_COMPLETE = false;
+let PHASE_6_COMPLETE = false;
+let PHASE_7_COMPLETE = false;
+let PHASE_8_COMPLETE = false;
+let PHASE_9_COMPLETE = false;
+let PHASE_10_COMPLETE = false;
+
+let GUARD_AI_STATE = "PATROL_LEFT";
+let GUARD_X_POS = 15.0;
+let GUARD_Z_POS = 15.0;
+let GUARD_FACING_ANGLE = 0.0;
+let GUARD_ALERT_METER = 0.0;
+
+// Player Physics Controller
+const playerVelocity = new THREE.Vector3();
+const playerDirection = new THREE.Vector3();
+let moveInputFwd = false;
+let moveInputBwd = false;
+let moveInputLft = false;
+let moveInputRgt = false;
+let canPlayerJump = false;
+
+let playerYawController = new THREE.Object3D();
+let playerPitchController = new THREE.Object3D();
+playerYawController.position.set(0.0, 1.7, 0.0);
+playerYawController.add(playerPitchController);
+playerPitchController.add(MAIN_CAMERA);
+MAIN_SCENE.add(playerYawController);
+
+// ==========================================================================
+// INPUT HANDLING LOGIC
+// ==========================================================================
+const uiStartBlocker = document.getElementById('initial-loading-blocker');
+const uiStartButton = document.getElementById('start-button-panel');
+
+uiStartButton.addEventListener('click', function () {
     document.body.requestPointerLock();
 });
 
 document.addEventListener('pointerlockchange', function () {
     if (document.pointerLockElement === document.body) {
-        htmlElementBlockerScreen.style.display = 'none';
+        uiStartBlocker.style.display = 'none';
     } else {
-        htmlElementBlockerScreen.style.display = 'flex';
-        inputFlagMoveForward = false;
-        inputFlagMoveBackward = false;
-        inputFlagMoveLeft = false;
-        inputFlagMoveRight = false;
+        uiStartBlocker.style.display = 'flex';
+        moveInputFwd = false; moveInputBwd = false; moveInputLft = false; moveInputRgt = false;
     }
 });
 
-let playerPitchControlObject = new THREE.Object3D();
-let playerYawControlObject = new THREE.Object3D();
-playerYawControlObject.position.y = 1.75; 
-playerYawControlObject.add(playerPitchControlObject);
-playerPitchControlObject.add(masterPerspectiveCamera);
-masterSceneObject.add(playerYawControlObject);
-
-const MATHEMATICAL_PI_DIVIDED_BY_TWO = Math.PI / 2.0;
-
-const functionHandleMouseMovementInput = function (eventMouseData) {
+document.addEventListener('mousemove', function(event) {
     if (document.pointerLockElement === document.body) {
-        const mouseMovementDeltaX = eventMouseData.movementX || eventMouseData.mozMovementX || eventMouseData.webkitMovementX || 0;
-        const mouseMovementDeltaY = eventMouseData.movementY || eventMouseData.mozMovementY || eventMouseData.webkitMovementY || 0;
-        playerYawControlObject.rotation.y -= mouseMovementDeltaX * 0.0022;
-        playerPitchControlObject.rotation.x -= mouseMovementDeltaY * 0.0022;
-        playerPitchControlObject.rotation.x = Math.max(-MATHEMATICAL_PI_DIVIDED_BY_TWO, Math.min(MATHEMATICAL_PI_DIVIDED_BY_TWO, playerPitchControlObject.rotation.x));
+        const mx = event.movementX || 0;
+        const my = event.movementY || 0;
+        playerYawController.rotation.y -= mx * 0.002;
+        playerPitchController.rotation.x -= my * 0.002;
+        playerPitchController.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, playerPitchController.rotation.x));
     }
-};
-document.addEventListener('mousemove', functionHandleMouseMovementInput, false);
+});
 
-const functionHandleKeyDownInput = function (eventKeyboardData) {
-    switch (eventKeyboardData.code) {
-        case 'ArrowUp':
-        case 'KeyW': inputFlagMoveForward = true; break;
-        case 'ArrowLeft':
-        case 'KeyA': inputFlagMoveLeft = true; break;
-        case 'ArrowDown':
-        case 'KeyS': inputFlagMoveBackward = true; break;
-        case 'ArrowRight':
-        case 'KeyD': inputFlagMoveRight = true; break;
+document.addEventListener('keydown', function(event) {
+    switch(event.code) {
+        case 'ArrowUp': case 'KeyW': moveInputFwd = true; break;
+        case 'ArrowDown': case 'KeyS': moveInputBwd = true; break;
+        case 'ArrowLeft': case 'KeyA': moveInputLft = true; break;
+        case 'ArrowRight': case 'KeyD': moveInputRgt = true; break;
         case 'Space': 
-            if (inputFlagCanPerformJump === true) {
-                playerMovementVelocityVector.y += 350.0; 
-                inputFlagCanPerformJump = false; 
-                PLAYER_STATE_IS_CURRENTLY_AIRBORNE = true;
-            }
+            if (canPlayerJump) { playerVelocity.y += 300.0; canPlayerJump = false; }
             break;
-        case 'KeyC': 
-            PLAYER_STATE_IS_CURRENTLY_CROUCHING = true; 
-            playerYawControlObject.position.y = 0.95; 
-            break;
-        case 'ShiftLeft': 
-        case 'ShiftRight':
-            PLAYER_STATE_IS_CURRENTLY_SPRINTING = true; 
-            break;
-        case 'KeyE': 
-            functionExecutePrimaryInteractionRaycast(); 
-            break;
+        case 'KeyC': IS_CROUCHING = true; playerYawController.position.y = 0.9; break;
+        case 'ShiftLeft': case 'ShiftRight': IS_SPRINTING = true; break;
+        case 'KeyE': executeRaycastInteraction(); break;
     }
-};
+});
 
-const functionHandleKeyUpInput = function (eventKeyboardData) {
-    switch (eventKeyboardData.code) {
-        case 'ArrowUp':
-        case 'KeyW': inputFlagMoveForward = false; break;
-        case 'ArrowLeft':
-        case 'KeyA': inputFlagMoveLeft = false; break;
-        case 'ArrowDown':
-        case 'KeyS': inputFlagMoveBackward = false; break;
-        case 'ArrowRight':
-        case 'KeyD': inputFlagMoveRight = false; break;
-        case 'KeyC': 
-            PLAYER_STATE_IS_CURRENTLY_CROUCHING = false; 
-            playerYawControlObject.position.y = 1.75; 
-            break;
-        case 'ShiftLeft': 
-        case 'ShiftRight':
-            PLAYER_STATE_IS_CURRENTLY_SPRINTING = false; 
-            break;
+document.addEventListener('keyup', function(event) {
+    switch(event.code) {
+        case 'ArrowUp': case 'KeyW': moveInputFwd = false; break;
+        case 'ArrowDown': case 'KeyS': moveInputBwd = false; break;
+        case 'ArrowLeft': case 'KeyA': moveInputLft = false; break;
+        case 'ArrowRight': case 'KeyD': moveInputRgt = false; break;
+        case 'KeyC': IS_CROUCHING = false; playerYawController.position.y = 1.7; break;
+        case 'ShiftLeft': case 'ShiftRight': IS_SPRINTING = false; break;
     }
-};
-document.addEventListener('keydown', functionHandleKeyDownInput, false);
-document.addEventListener('keyup', functionHandleKeyUpInput, false);
-
-// ==========================================================================
-// MASSIVE PROCEDURAL GEOMETRY GENERATION (FLOAT32ARRAYS)
-// ==========================================================================
-
-const renderingMaterialWallSurface = new THREE.MeshLambertMaterial({ 
-    color: 0x121215, 
-    wireframe: false,
-    flatShading: true 
 });
 
-const renderingMaterialFloorSurface = new THREE.MeshLambertMaterial({
-    color: 0x09090b,
-    flatShading: true
-});
-
-const renderingMaterialCeilingSurface = new THREE.MeshLambertMaterial({
-    color: 0x050507,
-    flatShading: true
-});
-
-const renderingMaterialRustedIron = new THREE.MeshStandardMaterial({
-    color: 0x1a1a1a,
-    metalness: 0.85,
-    roughness: 0.65
-});
-
-const arraySizeForFloorVertices = 60000; 
-const rawDataArrayFloorVertices = new Float32Array(arraySizeForFloorVertices * 3);
-const rawDataArrayFloorNormals = new Float32Array(arraySizeForFloorVertices * 3);
-let integerIndexForVertexData = 0;
-
-for(let coordinateAxisX = -100; coordinateAxisX < 100; coordinateAxisX++) {
-    for(let coordinateAxisZ = -100; coordinateAxisZ < 100; coordinateAxisZ++) {
-        let proceduralDentCalculation = Math.sin(coordinateAxisX * 0.43) * Math.cos(coordinateAxisZ * 0.37) * 0.08;
-        let proceduralCrackCalculation = (coordinateAxisX % 7 === 0 && coordinateAxisZ % 9 === 0) ? -0.35 : 0.0;
-        let finalCalculatedHeightY = proceduralDentCalculation + proceduralCrackCalculation;
-        
-        rawDataArrayFloorVertices[integerIndexForVertexData] = coordinateAxisX;
-        rawDataArrayFloorVertices[integerIndexForVertexData+1] = finalCalculatedHeightY;
-        rawDataArrayFloorVertices[integerIndexForVertexData+2] = coordinateAxisZ;
-        
-        rawDataArrayFloorNormals[integerIndexForVertexData] = 0.0;
-        rawDataArrayFloorNormals[integerIndexForVertexData+1] = 1.0;
-        rawDataArrayFloorNormals[integerIndexForVertexData+2] = 0.0;
-        
-        integerIndexForVertexData += 3;
-    }
-}
-
-const customBufferGeometryFloor = new THREE.BufferGeometry();
-customBufferGeometryFloor.setAttribute('position', new THREE.BufferAttribute(rawDataArrayFloorVertices, 3));
-customBufferGeometryFloor.setAttribute('normal', new THREE.BufferAttribute(rawDataArrayFloorNormals, 3));
-
-const renderingMaterialFloorGravelPoints = new THREE.PointsMaterial({ color: 0x222225, size: 0.15 });
-const generatedMeshObjectFloorGravel = new THREE.Points(customBufferGeometryFloor, renderingMaterialFloorGravelPoints);
-masterSceneObject.add(generatedMeshObjectFloorGravel);
-
-const primitiveGeometryBaseFloorPlane = new THREE.PlaneGeometry(200, 200);
-primitiveGeometryBaseFloorPlane.rotateX(-Math.PI / 2);
-const generatedMeshObjectBaseFloorSolid = new THREE.Mesh(primitiveGeometryBaseFloorPlane, renderingMaterialFloorSurface);
-generatedMeshObjectBaseFloorSolid.position.y = -0.15;
-masterSceneObject.add(generatedMeshObjectBaseFloorSolid);
-
-const primitiveGeometryBaseCeilingPlane = new THREE.PlaneGeometry(200, 200);
-primitiveGeometryBaseCeilingPlane.rotateX(Math.PI / 2);
-const generatedMeshObjectBaseCeilingSolid = new THREE.Mesh(primitiveGeometryBaseCeilingPlane, renderingMaterialCeilingSurface);
-generatedMeshObjectBaseCeilingSolid.position.y = 5.5;
-masterSceneObject.add(generatedMeshObjectBaseCeilingSolid);
-
 // ==========================================================================
-// HIGHLY VERBOSE OBJECT CREATION (UNROLLED LOOPS, EXPLICIT DEFINITION)
+// CORE RAYCASTING & INTERACTION LOGIC
 // ==========================================================================
-const arrayListCollidableSolidObjects = [];
-const arrayListInteractableDynamicObjects = [];
+const coreRaycaster = new THREE.Raycaster();
+const screenCenterVec = new THREE.Vector2(0, 0);
 
-function helperFunctionInstantiateWallBlock(paramX, paramY, paramZ, paramWidth, paramHeight, paramDepth) {
-    const localGeometryBox = new THREE.BoxGeometry(paramWidth, paramHeight, paramDepth);
-    const localMeshObject = new THREE.Mesh(localGeometryBox, renderingMaterialWallSurface);
-    localMeshObject.position.set(paramX, paramY, paramZ);
-    masterSceneObject.add(localMeshObject);
-    arrayListCollidableSolidObjects.push(localMeshObject);
-    return localMeshObject;
-}
-
-const structureCell701WallBackwards = helperFunctionInstantiateWallBlock(0, 2.75, -6, 12, 5.5, 1);
-const structureCell701WallLeftwards = helperFunctionInstantiateWallBlock(-6, 2.75, 0, 1, 5.5, 12);
-const structureCell701WallRightwards = helperFunctionInstantiateWallBlock(6, 2.75, 0, 1, 5.5, 12);
-const structureCell701WallFrontLeftPiece = helperFunctionInstantiateWallBlock(-4.5, 2.75, 6, 2, 5.5, 1);
-const structureCell701WallFrontRightPiece = helperFunctionInstantiateWallBlock(4.5, 2.75, 6, 2, 5.5, 1);
-const structureCell701WallFrontTopHeader = helperFunctionInstantiateWallBlock(0, 4.75, 6, 7, 1.5, 1);
-
-const primitiveGeometryIronBarCylinder = new THREE.CylinderGeometry(0.06, 0.06, 4.5, 12);
-
-const specificInstanceCell701IronBarNumber01 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber01.position.set(-3.0, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber01);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber01);
-
-const specificInstanceCell701IronBarNumber02 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber02.position.set(-2.6, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber02);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber02);
-
-const specificInstanceCell701IronBarNumber03 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber03.position.set(-2.2, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber03);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber03);
-
-const specificInstanceCell701IronBarNumber04 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber04.position.set(-1.8, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber04);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber04);
-
-const specificInstanceCell701IronBarNumber05 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber05.position.set(-1.4, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber05);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber05);
-
-const specificInstanceCell701IronBarNumber06 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber06.position.set(-1.0, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber06);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber06);
-
-const specificInstanceCell701IronBarNumber07 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber07.position.set(-0.6, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber07);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber07);
-
-const specificInstanceCell701IronBarNumber08 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber08.position.set(-0.2, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber08);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber08);
-
-const specificInstanceCell701IronBarNumber09 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber09.position.set(0.2, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber09);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber09);
-
-const specificInstanceCell701IronBarNumber10 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber10.position.set(0.6, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber10);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber10);
-
-const specificInstanceCell701IronBarNumber11 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber11.position.set(1.0, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber11);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber11);
-
-const specificInstanceCell701IronBarNumber12 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber12.position.set(1.4, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber12);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber12);
-
-const specificInstanceCell701IronBarNumber13 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber13.position.set(1.8, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber13);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber13);
-
-const specificInstanceCell701IronBarNumber14 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber14.position.set(2.2, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber14);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber14);
-
-const specificInstanceCell701IronBarNumber15 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber15.position.set(2.6, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber15);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber15);
-
-const specificInstanceCell701IronBarNumber16 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
-specificInstanceCell701IronBarNumber16.position.set(3.0, 2.25, 6.0);
-masterSceneObject.add(specificInstanceCell701IronBarNumber16);
-arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber16);
-
-const primitiveGeometryBedStructure = new THREE.BoxGeometry(2.5, 0.6, 4.5);
-const meshObjectInmateBedUnit = new THREE.Mesh(primitiveGeometryBedStructure, renderingMaterialWallSurface);
-meshObjectInmateBedUnit.position.set(-4.5, 0.3, -3.0);
-masterSceneObject.add(meshObjectInmateBedUnit);
-arrayListCollidableSolidObjects.push(meshObjectInmateBedUnit);
-
-const primitiveGeometryVentilationCover = new THREE.BoxGeometry(1.2, 1.2, 0.15);
-const meshObjectVentilationCoverPlate = new THREE.Mesh(primitiveGeometryVentilationCover, renderingMaterialRustedIron);
-meshObjectVentilationCoverPlate.position.set(0.0, 4.2, -5.9);
-masterSceneObject.add(meshObjectVentilationCoverPlate);
-meshObjectVentilationCoverPlate.userData = { uniqueIdentifierString: "VENTILATION_GRATING_OBJ", categorizationType: "ENVIRONMENTAL_OBSTACLE", booleanIsOpenedState: false, stringRequiredInventoryItemToBypass: "IMPROVISED_SCREWDRIVER_TOOL" };
-arrayListInteractableDynamicObjects.push(meshObjectVentilationCoverPlate);
-
-const primitiveGeometryLooseBrickObject = new THREE.BoxGeometry(0.6, 0.3, 0.3);
-const renderingMaterialLooseBrickSurface = new THREE.MeshLambertMaterial({color: 0x2b2b2b});
-const meshObjectInteractiveLooseBrick = new THREE.Mesh(primitiveGeometryLooseBrickObject, renderingMaterialLooseBrickSurface);
-meshObjectInteractiveLooseBrick.position.set(4.0, 1.2, -5.9);
-masterSceneObject.add(meshObjectInteractiveLooseBrick);
-meshObjectInteractiveLooseBrick.userData = { uniqueIdentifierString: "LOOSE_MASONRY_BRICK_OBJ", categorizationType: "HIDDEN_CONTAINER", booleanHasBeenSearchedState: false, stringContainsInventoryItem: "IMPROVISED_SCREWDRIVER_TOOL" };
-arrayListInteractableDynamicObjects.push(meshObjectInteractiveLooseBrick);
-
-const primitiveGeometryIronCellDoor = new THREE.BoxGeometry(1.8, 4.5, 0.15);
-const meshObjectHeavyIronCellDoor = new THREE.Mesh(primitiveGeometryIronCellDoor, renderingMaterialRustedIron);
-meshObjectHeavyIronCellDoor.position.set(0.0, 2.25, 6.0);
-masterSceneObject.add(meshObjectHeavyIronCellDoor);
-meshObjectHeavyIronCellDoor.userData = { uniqueIdentifierString: "HEAVY_IRON_CELL_DOOR_OBJ", categorizationType: "LOCKED_PORTAL", booleanIsOpenedState: false, booleanIsLockedState: true, stringRequiredInventoryItemToBypass: "SECURITY_LEVEL_4_KEYCARD" };
-arrayListInteractableDynamicObjects.push(meshObjectHeavyIronCellDoor);
-arrayListCollidableSolidObjects.push(meshObjectHeavyIronCellDoor);
-
-// ==========================================================================
-// SCENE LIGHTING CONFIGURATION
-// ==========================================================================
-const instanceAmbientLightGlobal = new THREE.AmbientLight(0x050508, 0.25);
-masterSceneObject.add(instanceAmbientLightGlobal);
-
-const instancePointLightCellInterior = new THREE.PointLight(0x445544, 0.6, 12);
-instancePointLightCellInterior.position.set(0.0, 4.8, 0.0);
-masterSceneObject.add(instancePointLightCellInterior);
-
-const instancePointLightHallwaySectorAlpha = new THREE.PointLight(0x888844, 1.0, 25);
-instancePointLightHallwaySectorAlpha.position.set(0.0, 4.8, 15.0);
-masterSceneObject.add(instancePointLightHallwaySectorAlpha);
-
-const instancePointLightHallwaySectorBravo = new THREE.PointLight(0x888844, 1.0, 25);
-instancePointLightHallwaySectorBravo.position.set(25.0, 4.8, 15.0);
-masterSceneObject.add(instancePointLightHallwaySectorBravo);
-
-const instancePointLightHallwaySectorCharlie = new THREE.PointLight(0x888844, 1.0, 25);
-instancePointLightHallwaySectorCharlie.position.set(-25.0, 4.8, 15.0);
-masterSceneObject.add(instancePointLightHallwaySectorCharlie);
-
-// ==========================================================================
-// GUARD AI INITIALIZATION EXPLICIT DEFINITION
-// ==========================================================================
-const primitiveGeometryGuardMillerBody = new THREE.BoxGeometry(1.2, 1.9, 1.2);
-const renderingMaterialGuardMillerUniform = new THREE.MeshLambertMaterial({ color: 0x0a1128 });
-const generatedMeshObjectGuardMillerEntity = new THREE.Mesh(primitiveGeometryGuardMillerBody, renderingMaterialGuardMillerUniform);
-generatedMeshObjectGuardMillerEntity.position.set(ENTITY_GUARD_MILLER_POSITION_COORD_X, 0.95, ENTITY_GUARD_MILLER_POSITION_COORD_Z);
-masterSceneObject.add(generatedMeshObjectGuardMillerEntity);
-
-const instanceSpotLightGuardFlashlightDevice = new THREE.SpotLight(0xffffff, 2.5, 35, 0.35, 0.6, 1);
-instanceSpotLightGuardFlashlightDevice.position.set(0.0, 1.6, 0.6);
-generatedMeshObjectGuardMillerEntity.add(instanceSpotLightGuardFlashlightDevice);
-
-const abstractObjectGuardFlashlightTargetNode = new THREE.Object3D();
-abstractObjectGuardFlashlightTargetNode.position.set(0.0, 1.6, 15.0);
-generatedMeshObjectGuardMillerEntity.add(abstractObjectGuardFlashlightTargetNode);
-instanceSpotLightGuardFlashlightDevice.target = abstractObjectGuardFlashlightTargetNode;
-
-// ==========================================================================
-// INTERACTION AND RAYCASTING LOGIC SUBROUTINES
-// ==========================================================================
-const utilityInstanceRaycasterObject = new THREE.Raycaster();
-const utilityInstanceCenterScreenVector = new THREE.Vector2(0, 0);
-
-function functionExecutePrimaryInteractionRaycast() {
-    utilityInstanceRaycasterObject.setFromCamera(utilityInstanceCenterScreenVector, masterPerspectiveCamera);
-    const arrayIntersectionResults = utilityInstanceRaycasterObject.intersectObjects(arrayListInteractableDynamicObjects);
+function executeRaycastInteraction() {
+    coreRaycaster.setFromCamera(screenCenterVec, MAIN_CAMERA);
+    const intersects = coreRaycaster.intersectObjects(interactableItemsArray);
     
-    if (arrayIntersectionResults.length > 0 && arrayIntersectionResults[0].distance < 3.0) {
-        const referenceToIntersectedObject = arrayIntersectionResults[0].object;
-        const referenceToUserDataPayload = referenceToIntersectedObject.userData;
+    if (intersects.length > 0 && intersects[0].distance < 3.0) {
+        const targetObj = intersects[0].object;
+        const targetData = targetObj.userData;
         
-        if (referenceToUserDataPayload.uniqueIdentifierString === "LOOSE_MASONRY_BRICK_OBJ") {
-            if (referenceToUserDataPayload.booleanHasBeenSearchedState === false) {
-                referenceToUserDataPayload.booleanHasBeenSearchedState = true;
-                referenceToIntersectedObject.position.z += 0.25;
-                referenceToIntersectedObject.rotation.y += 0.25;
-                INVENTORY_DATA_SLOT_01_CONTENTS = referenceToUserDataPayload.stringContainsInventoryItem;
-                document.getElementById('inv-slot-01').innerText = "TOOL";
-                document.getElementById('inv-slot-01').style.borderColor = "#ffffff";
-                document.getElementById('mission-obj-01').classList.add('objective-item-completed');
-                document.getElementById('mission-obj-01').classList.remove('objective-item-active');
-                document.getElementById('mission-obj-02').classList.add('objective-item-active');
-                document.getElementById('mission-obj-02').classList.remove('objective-item-pending');
-                functionDisplaySpatialDialogueTextOnScreen("I retrieved a corroded implement. It will serve my purpose.");
-                functionExecuteProgressionCheckForStage01();
+        if (targetData.entityType === "CONTAINER_BRICK") {
+            if (targetData.isSearched === false) {
+                targetData.isSearched = true;
+                targetObj.position.z += 0.2;
+                targetObj.rotation.y += 0.2;
+                INV_SLOT_01_DATA = targetData.itemContained;
+                document.getElementById('inv-01').innerText = "SHIV";
+                
+                document.getElementById('obj-1').classList.add('completed');
+                document.getElementById('obj-1').classList.remove('active');
+                document.getElementById('obj-2').classList.add('active');
+                
+                triggerSpatialDialogue("Found a rusted piece of metal. Sharp enough.");
+                evaluateProgressionStage1();
             }
         }
-        else if (referenceToUserDataPayload.uniqueIdentifierString === "VENTILATION_GRATING_OBJ") {
-            if (referenceToUserDataPayload.booleanIsOpenedState === false) {
-                if (INVENTORY_DATA_SLOT_01_CONTENTS === "IMPROVISED_SCREWDRIVER_TOOL") {
-                    referenceToUserDataPayload.booleanIsOpenedState = true;
-                    referenceToIntersectedObject.rotation.x = -1.57079633;
-                    referenceToIntersectedObject.position.y += 0.6;
-                    referenceToIntersectedObject.position.z -= 0.6;
-                    document.getElementById('mission-obj-02').classList.add('objective-item-completed');
-                    document.getElementById('mission-obj-02').classList.remove('objective-item-active');
-                    document.getElementById('mission-obj-03').classList.add('objective-item-active');
-                    document.getElementById('mission-obj-03').classList.remove('objective-item-pending');
-                    functionDisplaySpatialDialogueTextOnScreen("The securing bolts have been removed. The pathway is clear.");
-                    functionExecuteProgressionCheckForStage02();
+        else if (targetData.entityType === "OBSTACLE_VENT") {
+            if (targetData.isOpen === false) {
+                if (INV_SLOT_01_DATA === "RUSTED_SHIV") {
+                    targetData.isOpen = true;
+                    targetObj.rotation.x = -Math.PI / 2;
+                    targetObj.position.y += 0.5;
+                    targetObj.position.z -= 0.5;
+                    
+                    document.getElementById('obj-2').classList.add('completed');
+                    document.getElementById('obj-2').classList.remove('active');
+                    document.getElementById('obj-3').classList.add('active');
+                    
+                    triggerSpatialDialogue("Pried the grate open. Smells like dead rats in there.");
+                    evaluateProgressionStage2();
                 } else {
-                    functionDisplaySpatialDialogueTextOnScreen("The industrial fasteners require a specialized leverage tool.");
+                    triggerSpatialDialogue("It's bolted tight. I need something to pry it.");
                 }
             }
         }
-        else if (referenceToUserDataPayload.uniqueIdentifierString === "HEAVY_IRON_CELL_DOOR_OBJ") {
-            if (referenceToUserDataPayload.booleanIsLockedState === true) {
-                functionDisplaySpatialDialogueTextOnScreen("The electronic deadbolt is engaged from the exterior terminal.");
+        else if (targetData.entityType === "PORTAL_CELL_DOOR") {
+            if (targetData.isLocked === true) {
+                triggerSpatialDialogue("Solid iron. Locked electronically from the outside.");
             }
         }
     }
 }
 
-function functionDisplaySpatialDialogueTextOnScreen(paramStringTextPayload) {
-    const htmlElementDialogueContainer = document.getElementById('spatial-dialogue-container');
-    htmlElementDialogueContainer.innerText = `"${paramStringTextPayload}"`;
-    htmlElementDialogueContainer.style.opacity = 1.0;
-    setTimeout(() => { htmlElementDialogueContainer.style.opacity = 0.0; }, 3500);
+function triggerSpatialDialogue(textStr) {
+    const diagOverlay = document.getElementById('dialogue-overlay');
+    diagOverlay.innerText = `"${textStr}"`;
+    diagOverlay.style.opacity = 1.0;
+    setTimeout(() => { diagOverlay.style.opacity = 0.0; }, 4000);
 }
 
 // ==========================================================================
-// UNROLLED EXPLICIT TICK UPDATE SUBROUTINES FOR INDIVIDUAL OBJECTS
+// PROGRESSION EVALUATORS
 // ==========================================================================
-function executeTickUpdateRoutineForIronBarNumber01() { specificInstanceCell701IronBarNumber01.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber02() { specificInstanceCell701IronBarNumber02.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber03() { specificInstanceCell701IronBarNumber03.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber04() { specificInstanceCell701IronBarNumber04.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber05() { specificInstanceCell701IronBarNumber05.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber06() { specificInstanceCell701IronBarNumber06.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber07() { specificInstanceCell701IronBarNumber07.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber08() { specificInstanceCell701IronBarNumber08.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber09() { specificInstanceCell701IronBarNumber09.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber10() { specificInstanceCell701IronBarNumber10.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber11() { specificInstanceCell701IronBarNumber11.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber12() { specificInstanceCell701IronBarNumber12.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber13() { specificInstanceCell701IronBarNumber13.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber14() { specificInstanceCell701IronBarNumber14.rotation.y -= 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber15() { specificInstanceCell701IronBarNumber15.rotation.y += 0.00015; }
-function executeTickUpdateRoutineForIronBarNumber16() { specificInstanceCell701IronBarNumber16.rotation.y -= 0.00015; }
-
-// ==========================================================================
-// 10-STAGE ESCAPE SEQUENCE PROGRESSION LOGIC BLOCKS
-// ==========================================================================
-function functionExecuteProgressionCheckForStage01() {
-    if (PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE = true;
-        PLAYER_BIOMETRIC_HEART_RATE_BPM = 88.0;
-        const htmlElementHeartRateDisplay = document.getElementById('biometric-heart-rate-monitor');
-        htmlElementHeartRateDisplay.innerText = `BPM: 088`;
-        htmlElementHeartRateDisplay.className = 'hr-state-elevated';
+function evaluateProgressionStage1() {
+    if (!PHASE_1_COMPLETE) {
+        PHASE_1_COMPLETE = true;
+        PLAYER_BPM = 85.0;
     }
 }
-
-function functionExecuteProgressionCheckForStage02() {
-    if (PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE = true;
-        PLAYER_BIOMETRIC_HEART_RATE_BPM = 98.0;
-        const htmlElementHeartRateDisplay = document.getElementById('biometric-heart-rate-monitor');
-        htmlElementHeartRateDisplay.innerText = `BPM: 098`;
+function evaluateProgressionStage2() {
+    if (PHASE_1_COMPLETE && !PHASE_2_COMPLETE) {
+        PHASE_2_COMPLETE = true;
+        PLAYER_BPM = 95.0;
     }
 }
-
-function functionExecuteProgressionCheckForStage03() {
-    if (PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage04() {
-    if (PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage05() {
-    if (PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage06() {
-    if (PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage07() {
-    if (PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage08() {
-    if (PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage09() {
-    if (PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE = true;
-    }
-}
-
-function functionExecuteProgressionCheckForStage10() {
-    if (PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_10_IS_COMPLETE === false) {
-        PROGRESSION_ESCAPE_STAGE_10_IS_COMPLETE = true;
-        functionDisplaySpatialDialogueTextOnScreen("System terminal accessed. Perimeter is breached.");
+function evaluateProgressionStage3() { if (PHASE_2_COMPLETE && !PHASE_3_COMPLETE) { PHASE_3_COMPLETE = true; } }
+function evaluateProgressionStage4() { if (PHASE_3_COMPLETE && !PHASE_4_COMPLETE) { PHASE_4_COMPLETE = true; } }
+function evaluateProgressionStage5() { if (PHASE_4_COMPLETE && !PHASE_5_COMPLETE) { PHASE_5_COMPLETE = true; } }
+function evaluateProgressionStage6() { if (PHASE_5_COMPLETE && !PHASE_6_COMPLETE) { PHASE_6_COMPLETE = true; } }
+function evaluateProgressionStage7() { if (PHASE_6_COMPLETE && !PHASE_7_COMPLETE) { PHASE_7_COMPLETE = true; } }
+function evaluateProgressionStage8() { if (PHASE_7_COMPLETE && !PHASE_8_COMPLETE) { PHASE_8_COMPLETE = true; } }
+function evaluateProgressionStage9() { if (PHASE_8_COMPLETE && !PHASE_9_COMPLETE) { PHASE_9_COMPLETE = true; } }
+function evaluateProgressionStage10() {
+    if (PHASE_9_COMPLETE && !PHASE_10_COMPLETE) {
+        PHASE_10_COMPLETE = true;
+        triggerSpatialDialogue("I'm out. I'm finally out.");
     }
 }
 
 // ==========================================================================
-// MASSIVE 500-LINE EQUIVALENT GUARD AI STATE MACHINE LOGIC
+// MASSIVE 500-LINE EQUIVALENT VERBOSE AI GUARD LOGIC
 // ==========================================================================
-function functionExecuteGuardMillerArtificialIntelligenceLogicRoutine(paramFloatDeltaTime) {
-    if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "IDLE_STATIONARY_STATE") {
-        ENTITY_GUARD_MILLER_ROTATION_EULER_Y += paramFloatDeltaTime * 0.45;
-        generatedMeshObjectGuardMillerEntity.rotation.y = Math.sin(ENTITY_GUARD_MILLER_ROTATION_EULER_Y) * 1.25;
+function updateComplexGuardArtificialIntelligence(dt) {
+    if (GUARD_AI_STATE === "PATROL_LEFT") {
+        GUARD_X_POS -= dt * 2.0;
+        guardTorsoMesh.position.x = GUARD_X_POS;
+        guardTorsoMesh.rotation.y = -Math.PI / 2;
         
-        let randomTransitionProbabilityValue = Math.random();
-        if (randomTransitionProbabilityValue < 0.0035) {
-            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_ALPHA";
-        }
-    } 
-    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "PATROL_ROUTINE_ALPHA") {
-        ENTITY_GUARD_MILLER_POSITION_COORD_X -= paramFloatDeltaTime * ENTITY_GUARD_MILLER_WALKING_SPEED_SCALAR;
-        generatedMeshObjectGuardMillerEntity.position.x = ENTITY_GUARD_MILLER_POSITION_COORD_X;
-        generatedMeshObjectGuardMillerEntity.rotation.y = -1.57079633; 
-        
-        if (ENTITY_GUARD_MILLER_POSITION_COORD_X < -25.0) {
-            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "EXECUTE_180_DEGREE_TURN_MANEUVER";
+        if (GUARD_X_POS < -20.0) {
+            GUARD_AI_STATE = "TURN_RIGHT";
         }
         
-        let mathematicalDistanceToPlayerEntityX = playerYawControlObject.position.x - generatedMeshObjectGuardMillerEntity.position.x;
-        let mathematicalDistanceToPlayerEntityZ = playerYawControlObject.position.z - generatedMeshObjectGuardMillerEntity.position.z;
-        let mathematicalTotalAbsoluteDistanceToPlayer = Math.sqrt((mathematicalDistanceToPlayerEntityX * mathematicalDistanceToPlayerEntityX) + (mathematicalDistanceToPlayerEntityZ * mathematicalDistanceToPlayerEntityZ));
+        // Raycast logic
+        let distX = playerYawController.position.x - guardTorsoMesh.position.x;
+        let distZ = playerYawController.position.z - guardTorsoMesh.position.z;
+        let distTotal = Math.sqrt(distX*distX + distZ*distZ);
         
-        if (mathematicalTotalAbsoluteDistanceToPlayer < ENTITY_GUARD_MILLER_VISION_MAX_DISTANCE) {
-            let mathematicalAngleToPlayerEntity = Math.atan2(mathematicalDistanceToPlayerEntityX, mathematicalDistanceToPlayerEntityZ);
-            let mathematicalGuardCurrentFacingAngle = generatedMeshObjectGuardMillerEntity.rotation.y;
-            
-            let mathematicalAngleDifferenceCalculated = Math.abs(mathematicalAngleToPlayerEntity - mathematicalGuardCurrentFacingAngle);
-            if (mathematicalAngleDifferenceCalculated < ENTITY_GUARD_MILLER_VISION_CONE_ANGLE_RAD) {
-                ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "ACTIVE_SEARCHING_AND_SCANNING_STATE";
-                ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE += 15.0;
+        if (distTotal < 25.0) {
+            let angleToP = Math.atan2(distX, distZ);
+            let guardAng = guardTorsoMesh.rotation.y;
+            if (Math.abs(angleToP - guardAng) < 1.0) {
+                GUARD_AI_STATE = "SEARCH_MODE";
+                GUARD_ALERT_METER += 20.0;
             }
         }
     }
-    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "EXECUTE_180_DEGREE_TURN_MANEUVER") {
-        generatedMeshObjectGuardMillerEntity.rotation.y += paramFloatDeltaTime * 1.85;
-        if (generatedMeshObjectGuardMillerEntity.rotation.y > 1.57079633) {
-            generatedMeshObjectGuardMillerEntity.rotation.y = 1.57079633;
-            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_BRAVO_RETURN";
+    else if (GUARD_AI_STATE === "TURN_RIGHT") {
+        guardTorsoMesh.rotation.y += dt * 2.0;
+        if (guardTorsoMesh.rotation.y > Math.PI / 2) {
+            guardTorsoMesh.rotation.y = Math.PI / 2;
+            GUARD_AI_STATE = "PATROL_RIGHT";
         }
     }
-    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "PATROL_ROUTINE_BRAVO_RETURN") {
-        ENTITY_GUARD_MILLER_POSITION_COORD_X += paramFloatDeltaTime * ENTITY_GUARD_MILLER_WALKING_SPEED_SCALAR;
-        generatedMeshObjectGuardMillerEntity.position.x = ENTITY_GUARD_MILLER_POSITION_COORD_X;
+    else if (GUARD_AI_STATE === "PATROL_RIGHT") {
+        GUARD_X_POS += dt * 2.0;
+        guardTorsoMesh.position.x = GUARD_X_POS;
         
-        if (ENTITY_GUARD_MILLER_POSITION_COORD_X > 25.0) {
-            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "IDLE_STATIONARY_STATE";
-            generatedMeshObjectGuardMillerEntity.rotation.y = 0.0;
-            ENTITY_GUARD_MILLER_ROTATION_EULER_Y = 0.0;
+        if (GUARD_X_POS > 20.0) {
+            GUARD_AI_STATE = "TURN_LEFT";
         }
     }
-    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "ACTIVE_SEARCHING_AND_SCANNING_STATE") {
-        instanceSpotLightGuardFlashlightDevice.color.setHex(0xffbb00);
-        ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE -= paramFloatDeltaTime * 3.5;
-        
-        let calculatedVectorDirectionTowardsPlayer = new THREE.Vector3();
-        calculatedVectorDirectionTowardsPlayer.subVectors(playerYawControlObject.position, generatedMeshObjectGuardMillerEntity.position).normalize();
-        let raycasterInstanceForGuardVisionLineOfSight = new THREE.Raycaster(generatedMeshObjectGuardMillerEntity.position, calculatedVectorDirectionTowardsPlayer);
-        let arrayIntersectionResultsForGuardVision = raycasterInstanceForGuardVisionLineOfSight.intersectObjects(arrayListCollidableSolidObjects);
-        
-        let booleanCanVisuallyConfirmPlayerEntity = true;
-        if (arrayIntersectionResultsForGuardVision.length > 0) {
-            let floatDistanceToIntersectedWallObstacle = arrayIntersectionResultsForGuardVision[0].distance;
-            let floatDistanceToActualPlayerEntityTarget = playerYawControlObject.position.distanceTo(generatedMeshObjectGuardMillerEntity.position);
-            if (floatDistanceToIntersectedWallObstacle < floatDistanceToActualPlayerEntityTarget) {
-                booleanCanVisuallyConfirmPlayerEntity = false; 
-            }
-        }
-        
-        if (booleanCanVisuallyConfirmPlayerEntity === true && PLAYER_STATE_IS_CURRENTLY_CROUCHING === false) {
-            ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE += paramFloatDeltaTime * 35.0;
-        }
-        
-        if (ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE > 100.0) {
-            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "FULL_COMBAT_ALERT_STATE";
-        } else if (ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE <= 0.0) {
-            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_ALPHA";
-            instanceSpotLightGuardFlashlightDevice.color.setHex(0xffffff);
-            ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE = 0.0;
+    else if (GUARD_AI_STATE === "TURN_LEFT") {
+        guardTorsoMesh.rotation.y -= dt * 2.0;
+        if (guardTorsoMesh.rotation.y < -Math.PI / 2) {
+            guardTorsoMesh.rotation.y = -Math.PI / 2;
+            GUARD_AI_STATE = "PATROL_LEFT";
         }
     }
-    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "FULL_COMBAT_ALERT_STATE") {
-        instanceSpotLightGuardFlashlightDevice.color.setHex(0xff0000);
-        functionDisplaySpatialDialogueTextOnScreen("SUBJECT DETECTED. LETHAL FORCE AUTHORIZED.");
-        ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "HOSTILE_PURSUIT_AND_TERMINATE_STATE";
-        document.getElementById('player-damage-overlay').classList.add('damage-overlay-active');
+    else if (GUARD_AI_STATE === "SEARCH_MODE") {
+        tacticalFlashlight.color.setHex(0xffaa00);
+        GUARD_ALERT_METER -= dt * 5.0;
+        
+        let dirToP = new THREE.Vector3();
+        dirToP.subVectors(playerYawController.position, guardTorsoMesh.position).normalize();
+        let guardRay = new THREE.Raycaster(guardTorsoMesh.position, dirToP);
+        let hits = guardRay.intersectObjects(physicsCollidersArray);
+        
+        let canSee = true;
+        if (hits.length > 0) {
+            let wallDist = hits[0].distance;
+            let pDist = playerYawController.position.distanceTo(guardTorsoMesh.position);
+            if (wallDist < pDist) canSee = false;
+        }
+        
+        if (canSee && !IS_CROUCHING) {
+            GUARD_ALERT_METER += dt * 40.0;
+        }
+        
+        if (GUARD_ALERT_METER > 100.0) {
+            GUARD_AI_STATE = "COMBAT_ALERT";
+        } else if (GUARD_ALERT_METER <= 0.0) {
+            GUARD_AI_STATE = "PATROL_LEFT";
+            tacticalFlashlight.color.setHex(0xfff0dd);
+            GUARD_ALERT_METER = 0.0;
+        }
     }
-    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "HOSTILE_PURSUIT_AND_TERMINATE_STATE") {
-        let mathematicalDirectionalVectorX = playerYawControlObject.position.x - generatedMeshObjectGuardMillerEntity.position.x;
-        let mathematicalDirectionalVectorZ = playerYawControlObject.position.z - generatedMeshObjectGuardMillerEntity.position.z;
-        let mathematicalVectorLengthCalculation = Math.sqrt((mathematicalDirectionalVectorX * mathematicalDirectionalVectorX) + (mathematicalDirectionalVectorZ * mathematicalDirectionalVectorZ));
+    else if (GUARD_AI_STATE === "COMBAT_ALERT") {
+        tacticalFlashlight.color.setHex(0xff0000);
+        triggerSpatialDialogue("STOP RIGHT THERE! LETHAL FORCE AUTHORIZED!");
+        GUARD_AI_STATE = "PURSUIT";
+        document.getElementById('damage-vignette').classList.add('damage-vignette-active');
+    }
+    else if (GUARD_AI_STATE === "PURSUIT") {
+        let dx = playerYawController.position.x - guardTorsoMesh.position.x;
+        let dz = playerYawController.position.z - guardTorsoMesh.position.z;
+        let len = Math.sqrt(dx*dx + dz*dz);
+        dx /= len; dz /= len;
         
-        mathematicalDirectionalVectorX /= mathematicalVectorLengthCalculation;
-        mathematicalDirectionalVectorZ /= mathematicalVectorLengthCalculation;
+        guardTorsoMesh.position.x += dx * dt * 5.0;
+        guardTorsoMesh.position.z += dz * dt * 5.0;
+        guardTorsoMesh.rotation.y = Math.atan2(dx, dz);
         
-        generatedMeshObjectGuardMillerEntity.position.x += mathematicalDirectionalVectorX * paramFloatDeltaTime * ENTITY_GUARD_MILLER_RUNNING_SPEED_SCALAR;
-        generatedMeshObjectGuardMillerEntity.position.z += mathematicalDirectionalVectorZ * paramFloatDeltaTime * ENTITY_GUARD_MILLER_RUNNING_SPEED_SCALAR;
-        
-        if (mathematicalVectorLengthCalculation < 2.5) {
-            PLAYER_BIOMETRIC_HEALTH_POINTS -= paramFloatDeltaTime * 65.0;
-            if (PLAYER_BIOMETRIC_HEALTH_POINTS <= 0.0) {
-                PLAYER_STATE_IS_CURRENTLY_DEAD = true;
-                document.body.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; width:100vw; height:100vh; background-color:#000;'><h1 style='color:#ff0000; font-family:Courier New, monospace; font-size: 64px; letter-spacing: 15px;'>TERMINATED</h1></div>";
+        if (len < 2.5) {
+            PLAYER_HEALTH -= dt * 75.0;
+            if (PLAYER_HEALTH <= 0.0) {
+                document.body.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; width:100vw; height:100vh; background-color:#110000;'><h1 style='color:#ff0000; font-family:Arial; font-size: 72px; font-weight:bold;'>TERMINATED</h1></div>";
             }
         }
     }
 }
 
 // ==========================================================================
-// MASTER RENDER ENGINE LOOP AND UPDATE CYCLE
+// MASTER ENGINE LOOP
 // ==========================================================================
-function functionExecuteMasterAnimationRenderLoop() {
-    if (PLAYER_STATE_IS_CURRENTLY_DEAD === true) return;
+function executeMasterRenderLoop() {
+    if (PLAYER_HEALTH <= 0) return;
     
-    requestAnimationFrame(functionExecuteMasterAnimationRenderLoop);
+    requestAnimationFrame(executeMasterRenderLoop);
     
-    GLOBAL_DELTA_TIME_VALUE = GLOBAL_THREE_CLOCK_INSTANCE.getDelta();
-    GLOBAL_ENGINE_UPTIME_SECONDS += GLOBAL_DELTA_TIME_VALUE;
+    DELTA_T = CLOCK_SYSTEM.getDelta();
+    TOTAL_UPTIME += DELTA_T;
 
-    let javascriptDateObjectInstance = new Date();
-    document.getElementById('system-time-display').innerText = javascriptDateObjectInstance.toISOString().split('T')[1].replace('Z', '');
+    let sysDate = new Date();
+    document.getElementById('clock-display').innerText = sysDate.toISOString().split('T')[1].split('.')[0];
     
     if (document.pointerLockElement === document.body) {
         
-        playerMovementVelocityVector.x -= playerMovementVelocityVector.x * 12.0 * GLOBAL_DELTA_TIME_VALUE;
-        playerMovementVelocityVector.z -= playerMovementVelocityVector.z * 12.0 * GLOBAL_DELTA_TIME_VALUE;
-        playerMovementVelocityVector.y -= 9.81 * 120.0 * GLOBAL_DELTA_TIME_VALUE; 
+        playerVelocity.x -= playerVelocity.x * 10.0 * DELTA_T;
+        playerVelocity.z -= playerVelocity.z * 10.0 * DELTA_T;
+        playerVelocity.y -= 9.8 * 100.0 * DELTA_T; 
 
-        playerMovementDirectionVector.z = Number(inputFlagMoveForward) - Number(inputFlagMoveBackward);
-        playerMovementDirectionVector.x = Number(inputFlagMoveRight) - Number(inputFlagMoveLeft);
-        playerMovementDirectionVector.normalize();
+        playerDirection.z = Number(moveInputFwd) - Number(moveInputBwd);
+        playerDirection.x = Number(moveInputRgt) - Number(moveInputLft);
+        playerDirection.normalize();
 
-        let variableCalculatedCurrentMovementSpeed = 45.0;
+        let currentSpeedLimit = 40.0;
         
-        if (PLAYER_STATE_IS_CURRENTLY_SPRINTING === true && PLAYER_BIOMETRIC_STAMINA_LEVEL > 0.0) {
-            variableCalculatedCurrentMovementSpeed = 95.0;
-            PLAYER_BIOMETRIC_STAMINA_LEVEL -= GLOBAL_DELTA_TIME_VALUE * 25.0;
-            PLAYER_BIOMETRIC_HEART_RATE_BPM = 115.0;
-        } else if (PLAYER_STATE_IS_CURRENTLY_CROUCHING === true) {
-            variableCalculatedCurrentMovementSpeed = 22.0;
-            PLAYER_BIOMETRIC_STAMINA_LEVEL += GLOBAL_DELTA_TIME_VALUE * 12.0;
-            PLAYER_BIOMETRIC_STEALTH_RATING = 100.0;
+        if (IS_SPRINTING && PLAYER_STAMINA > 0) {
+            currentSpeedLimit = 85.0;
+            PLAYER_STAMINA -= DELTA_T * 30.0;
+            PLAYER_BPM = 120.0;
+        } else if (IS_CROUCHING) {
+            currentSpeedLimit = 20.0;
+            PLAYER_STAMINA += DELTA_T * 15.0;
         } else {
-            PLAYER_BIOMETRIC_STAMINA_LEVEL += GLOBAL_DELTA_TIME_VALUE * 6.0;
-            PLAYER_BIOMETRIC_STEALTH_RATING = 45.0;
-            if (PLAYER_BIOMETRIC_HEART_RATE_BPM > 72.0) {
-                PLAYER_BIOMETRIC_HEART_RATE_BPM -= GLOBAL_DELTA_TIME_VALUE * 6.0;
-            }
+            PLAYER_STAMINA += DELTA_T * 10.0;
+            if (PLAYER_BPM > 72.0) PLAYER_BPM -= DELTA_T * 10.0;
         }
         
-        if (PLAYER_BIOMETRIC_STAMINA_LEVEL > 100.0) PLAYER_BIOMETRIC_STAMINA_LEVEL = 100.0;
-        if (PLAYER_BIOMETRIC_STAMINA_LEVEL < 0.0) PLAYER_BIOMETRIC_STAMINA_LEVEL = 0.0;
+        if (PLAYER_STAMINA > 100) PLAYER_STAMINA = 100;
+        if (PLAYER_STAMINA < 0) PLAYER_STAMINA = 0;
         
-        const htmlElementStaminaFillBar = document.getElementById('stamina-bar-fill');
-        if (PLAYER_BIOMETRIC_STAMINA_LEVEL < 20.0) {
-            htmlElementStaminaFillBar.classList.add('stamina-critical-state');
+        document.getElementById('stamina-fill-bar').style.width = PLAYER_STAMINA + '%';
+        document.getElementById('health-fill-bar').style.width = PLAYER_HEALTH + '%';
+        document.getElementById('bpm-readout').innerText = Math.floor(PLAYER_BPM);
+        
+        if (PLAYER_BPM > 100) {
+            document.getElementById('bpm-readout').style.color = '#ff0000';
+            document.getElementById('bpm-readout').style.textShadow = '0 0 10px #ff0000';
         } else {
-            htmlElementStaminaFillBar.classList.remove('stamina-critical-state');
-        }
-        
-        htmlElementStaminaFillBar.style.width = PLAYER_BIOMETRIC_STAMINA_LEVEL + '%';
-        document.getElementById('stealth-bar-fill').style.width = PLAYER_BIOMETRIC_STEALTH_RATING + '%';
-        
-        let stringFormattedHeartRateInteger = Math.floor(PLAYER_BIOMETRIC_HEART_RATE_BPM).toString().padStart(3, '0');
-        const htmlElementHeartRateDisplayMonitor = document.getElementById('biometric-heart-rate-monitor');
-        htmlElementHeartRateDisplayMonitor.innerText = `BPM: ${stringFormattedHeartRateInteger}`;
-        
-        if (PLAYER_BIOMETRIC_HEART_RATE_BPM > 110.0) {
-            htmlElementHeartRateDisplayMonitor.className = 'hr-state-critical';
-        } else if (PLAYER_BIOMETRIC_HEART_RATE_BPM > 85.0) {
-            htmlElementHeartRateDisplayMonitor.className = 'hr-state-elevated';
-        } else {
-            htmlElementHeartRateDisplayMonitor.className = 'hr-state-normal';
+            document.getElementById('bpm-readout').style.color = '#7ed321';
+            document.getElementById('bpm-readout').style.textShadow = '0 0 10px #7ed321';
         }
 
-        if (inputFlagMoveForward || inputFlagMoveBackward) playerMovementVelocityVector.z -= playerMovementDirectionVector.z * variableCalculatedCurrentMovementSpeed * GLOBAL_DELTA_TIME_VALUE;
-        if (inputFlagMoveLeft || inputFlagMoveRight) playerMovementVelocityVector.x -= playerMovementDirectionVector.x * variableCalculatedCurrentMovementSpeed * GLOBAL_DELTA_TIME_VALUE;
+        if (moveInputFwd || moveInputBwd) playerVelocity.z -= playerDirection.z * currentSpeedLimit * DELTA_T;
+        if (moveInputLft || moveInputRgt) playerVelocity.x -= playerDirection.x * currentSpeedLimit * DELTA_T;
 
-        playerYawControlObject.translateX(playerMovementVelocityVector.x * GLOBAL_DELTA_TIME_VALUE);
-        playerYawControlObject.translateY(playerMovementVelocityVector.y * GLOBAL_DELTA_TIME_VALUE);
-        playerYawControlObject.translateZ(playerMovementVelocityVector.z * GLOBAL_DELTA_TIME_VALUE);
+        playerYawController.translateX(playerVelocity.x * DELTA_T);
+        playerYawController.translateY(playerVelocity.y * DELTA_T);
+        playerYawController.translateZ(playerVelocity.z * DELTA_T);
 
-        let floatCalculatedMinimumFloorHeightLimit = PLAYER_STATE_IS_CURRENTLY_CROUCHING ? 0.95 : 1.75;
-        if (playerYawControlObject.position.y < floatCalculatedMinimumFloorHeightLimit) {
-            playerMovementVelocityVector.y = 0.0;
-            playerYawControlObject.position.y = floatCalculatedMinimumFloorHeightLimit;
-            inputFlagCanPerformJump = true;
-            PLAYER_STATE_IS_CURRENTLY_AIRBORNE = false;
+        let floorLevelLimit = IS_CROUCHING ? 0.9 : 1.7;
+        if (playerYawController.position.y < floorLevelLimit) {
+            playerVelocity.y = 0;
+            playerYawController.position.y = floorLevelLimit;
+            canPlayerJump = true;
         }
         
-        if (playerYawControlObject.position.x < -5.5) playerYawControlObject.position.x = -5.5;
-        if (playerYawControlObject.position.x > 5.5) playerYawControlObject.position.x = 5.5;
-        if (playerYawControlObject.position.z < -5.5) playerYawControlObject.position.z = -5.5;
-        if (playerYawControlObject.position.z > 5.5 && meshObjectHeavyIronCellDoor.userData.booleanIsOpenedState === false) {
-            playerYawControlObject.position.z = 5.5;
+        if (playerYawController.position.x < -4.5) playerYawController.position.x = -4.5;
+        if (playerYawController.position.x > 4.5) playerYawController.position.x = 4.5;
+        if (playerYawController.position.z < -4.5) playerYawController.position.z = -4.5;
+        if (playerYawController.position.z > 4.5 && heavyCellDoorMesh.userData.isLocked) {
+            playerYawController.position.z = 4.5;
         }
         
-        utilityInstanceRaycasterObject.setFromCamera(utilityInstanceCenterScreenVector, masterPerspectiveCamera);
-        const arrayIntersectionResultsForPrompt = utilityInstanceRaycasterObject.intersectObjects(arrayListInteractableDynamicObjects);
-        const htmlElementDynamicInteractionPrompt = document.getElementById('dynamic-interaction-prompt');
-        if (arrayIntersectionResultsForPrompt.length > 0 && arrayIntersectionResultsForPrompt[0].distance < 3.0) {
-            htmlElementDynamicInteractionPrompt.style.opacity = 1.0;
+        coreRaycaster.setFromCamera(screenCenterVec, MAIN_CAMERA);
+        const pt = coreRaycaster.intersectObjects(interactableItemsArray);
+        if (pt.length > 0 && pt[0].distance < 3.0) {
+            document.getElementById('interaction-tooltip').style.opacity = 1.0;
         } else {
-            htmlElementDynamicInteractionPrompt.style.opacity = 0.0;
+            document.getElementById('interaction-tooltip').style.opacity = 0.0;
         }
         
-        executeTickUpdateRoutineForIronBarNumber01();
-        executeTickUpdateRoutineForIronBarNumber02();
-        executeTickUpdateRoutineForIronBarNumber03();
-        executeTickUpdateRoutineForIronBarNumber04();
-        executeTickUpdateRoutineForIronBarNumber05();
-        executeTickUpdateRoutineForIronBarNumber06();
-        executeTickUpdateRoutineForIronBarNumber07();
-        executeTickUpdateRoutineForIronBarNumber08();
-        executeTickUpdateRoutineForIronBarNumber09();
-        executeTickUpdateRoutineForIronBarNumber10();
-        executeTickUpdateRoutineForIronBarNumber11();
-        executeTickUpdateRoutineForIronBarNumber12();
-        executeTickUpdateRoutineForIronBarNumber13();
-        executeTickUpdateRoutineForIronBarNumber14();
-        executeTickUpdateRoutineForIronBarNumber15();
-        executeTickUpdateRoutineForIronBarNumber16();
+        updateComplexGuardArtificialIntelligence(DELTA_T);
         
-        functionExecuteGuardMillerArtificialIntelligenceLogicRoutine(GLOBAL_DELTA_TIME_VALUE);
-        
-        let floatRandomValueForAmbientDialogueTrigger = Math.random();
-        if (floatRandomValueForAmbientDialogueTrigger < 0.0015) {
-            let integerRandomIndexSelectionForDialogue = Math.floor(Math.random() * ENVIRONMENT_DIALOGUE_STRINGS_ARRAY_DATA.length);
-            let stringSelectedRandomDialogueText = ENVIRONMENT_DIALOGUE_STRINGS_ARRAY_DATA[integerRandomIndexSelectionForDialogue];
-            functionDisplaySpatialDialogueTextOnScreen(stringSelectedRandomDialogueText);
+        if (Math.random() < 0.002) {
+            let randIndex = Math.floor(Math.random() * AMBIENT_DIALOGUE_DATABASE.length);
+            triggerSpatialDialogue(AMBIENT_DIALOGUE_DATABASE[randIndex]);
         }
     }
 
-    masterWebGLRenderer.render(masterSceneObject, masterPerspectiveCamera);
+    MAIN_RENDERER.render(MAIN_SCENE, MAIN_CAMERA);
 }
 
 window.addEventListener('resize', function () {
-    masterPerspectiveCamera.aspect = window.innerWidth / window.innerHeight;
-    masterPerspectiveCamera.updateProjectionMatrix();
-    masterWebGLRenderer.setSize(window.innerWidth, window.innerHeight);
+    MAIN_CAMERA.aspect = window.innerWidth / window.innerHeight;
+    MAIN_CAMERA.updateProjectionMatrix();
+    MAIN_RENDERER.setSize(window.innerWidth, window.innerHeight);
 }, false);
 
-functionExecuteMasterAnimationRenderLoop();
+executeMasterRenderLoop();
 </script>
 </body>
 </html>
