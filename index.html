@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Block D - Realistic Confinement</title>
+<title>Block D - Absolute Darkness Escape</title>
 <style>
 /* ==========================================================================
    CSS UI STYLING: REALISTIC, COLORED, HIGH DETAIL TACTICAL OVERLAY
@@ -13,29 +13,52 @@
     --ui-secondary-color: #4a90e2;
     --ui-alert-color: #d0021b;
     --ui-success-color: #7ed321;
-    --ui-background-dark: rgba(20, 25, 30, 0.85);
-    --ui-background-light: rgba(40, 50, 60, 0.6);
-    --ui-border-color: rgba(255, 183, 0, 0.5);
+    --ui-background-dark: rgba(10, 15, 20, 0.90);
+    --ui-background-light: rgba(30, 40, 50, 0.75);
+    --ui-border-color: rgba(255, 183, 0, 0.6);
     --ui-text-light: #f5f5f5;
     --ui-text-muted: #8899a6;
     --font-primary: 'Arial', sans-serif;
     --font-monospace: 'Consolas', 'Courier New', monospace;
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --glass-border: 1px solid rgba(255, 255, 255, 0.18);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-body, html {
-    margin: 0;
-    padding: 0;
+body {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #050505;
-    overflow: hidden;
+    background-color: #020202;
+    overflow-x: hidden;
+    overflow-y: hidden;
     font-family: var(--font-primary);
     user-select: none;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
+}
+
+html {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+    padding-top: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    padding-left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #020202;
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 #game-canvas-container {
@@ -69,19 +92,31 @@ body, html {
     height: 100vh;
     z-index: 5;
     pointer-events: none;
-    background: radial-gradient(circle at center, transparent 40%, rgba(0, 5, 10, 0.6) 90%, rgba(0, 0, 0, 0.9) 100%);
-    box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+    background-image: radial-gradient(circle at center, transparent 30%, rgba(0, 5, 10, 0.7) 85%, rgba(0, 0, 0, 0.98) 100%);
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
 }
 
 .hud-panel {
-    background: var(--ui-background-dark);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: var(--glass-border);
+    background-color: var(--ui-background-dark);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: var(--glass-border);
+    border-right: var(--glass-border);
+    border-bottom: var(--glass-border);
+    border-left: var(--glass-border);
     box-shadow: var(--glass-shadow);
-    border-radius: 8px;
-    padding: 15px;
-    margin: 20px;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+    padding-top: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;
+    padding-left: 15px;
+    margin-top: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    margin-left: 20px;
     pointer-events: auto;
 }
 
@@ -89,7 +124,7 @@ body, html {
     position: absolute;
     top: 20px;
     left: 20px;
-    width: 300px;
+    width: 320px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -98,109 +133,113 @@ body, html {
 .status-row {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 .status-label {
     color: var(--ui-text-light);
     font-family: var(--font-monospace);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     text-transform: uppercase;
 }
 
 .status-bar-background {
     width: 100%;
-    height: 12px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 6px;
-    overflow: hidden;
-    border: 1px solid rgba(255,255,255,0.1);
+    height: 10px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    border-right: 1px solid rgba(255,255,255,0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    border-left: 1px solid rgba(255,255,255,0.2);
 }
 
 .status-bar-fill {
     height: 100%;
-    border-radius: 6px;
-    transition: width 0.2s ease-out;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    transition-property: width;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
 }
 
-#oxygen-fill-bar {
-    background: linear-gradient(90deg, #005c97, #363795);
-    width: 100%;
-}
-
-#stamina-fill-bar {
-    background: linear-gradient(90deg, #f2994a, #f2c94c);
-    width: 100%;
-}
-
-#health-fill-bar {
-    background: linear-gradient(90deg, #cb2d3e, #ef473a);
-    width: 100%;
-}
+#oxygen-fill-bar { background-image: linear-gradient(90deg, #005c97, #363795); width: 100%; box-shadow: 0 0 8px #005c97;}
+#stamina-fill-bar { background-image: linear-gradient(90deg, #f2994a, #f2c94c); width: 100%; box-shadow: 0 0 8px #f2994a;}
+#health-fill-bar { background-image: linear-gradient(90deg, #cb2d3e, #ef473a); width: 100%; box-shadow: 0 0 8px #cb2d3e;}
 
 #hud-top-right-panel {
     position: absolute;
     top: 20px;
     right: 20px;
-    width: 250px;
+    width: 280px;
     text-align: right;
 }
 
 .data-readout-line {
     color: var(--ui-secondary-color);
     font-family: var(--font-monospace);
-    font-size: 14px;
-    margin-bottom: 8px;
-    text-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+    font-size: 13px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 6px rgba(74, 144, 226, 0.6);
 }
 
 #hud-bottom-left-panel {
     position: absolute;
     bottom: 20px;
     left: 20px;
-    width: 350px;
+    width: 380px;
 }
 
 #mission-objectives-title {
     color: var(--ui-primary-color);
     font-family: var(--font-monospace);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: bold;
-    border-bottom: 1px solid var(--ui-primary-color);
-    padding-bottom: 5px;
-    margin-bottom: 10px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--ui-primary-color);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
 }
 
 .objective-entry {
     color: var(--ui-text-muted);
-    font-size: 13px;
-    margin-bottom: 6px;
+    font-size: 12px;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .objective-entry::before {
-    content: '■';
-    font-size: 10px;
+    content: '►';
+    font-size: 9px;
 }
 
 .objective-entry.active {
     color: var(--ui-text-light);
     font-weight: bold;
+    text-shadow: 0 0 4px rgba(255,255,255,0.5);
 }
 
 .objective-entry.active::before {
     color: var(--ui-primary-color);
-    text-shadow: 0 0 8px var(--ui-primary-color);
+    text-shadow: 0 0 10px var(--ui-primary-color);
 }
 
 .objective-entry.completed {
     color: var(--ui-success-color);
     text-decoration: line-through;
-    opacity: 0.7;
+    opacity: 0.6;
 }
 
 #hud-bottom-right-panel {
@@ -208,89 +247,130 @@ body, html {
     bottom: 20px;
     right: 20px;
     display: flex;
-    gap: 10px;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 400px;
 }
 
 .inventory-box {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, rgba(40,50,60,0.8) 0%, rgba(20,25,30,0.8) 100%);
-    border: 2px solid #333;
-    border-radius: 8px;
+    width: 55px;
+    height: 55px;
+    background-image: linear-gradient(135deg, rgba(30,40,50,0.9) 0%, rgba(10,15,20,0.9) 100%);
+    border-top-width: 2px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    border-left-width: 2px;
+    border-style: solid;
+    border-color: #222;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
     display: flex;
     justify-content: center;
     align-items: center;
     color: var(--ui-text-muted);
     font-family: var(--font-monospace);
     font-size: 10px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-    transition: all 0.2s ease;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+    transition-property: all;
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
 }
 
 .inventory-box.equipped {
     border-color: var(--ui-primary-color);
-    box-shadow: 0 0 15px rgba(255, 183, 0, 0.4);
+    box-shadow: 0 0 20px rgba(255, 183, 0, 0.5);
     color: var(--ui-text-light);
-    transform: translateY(-5px);
+    transform: translateY(-6px);
 }
+
+#inv-01 { display: flex; }
+#inv-02 { display: flex; }
+#inv-03 { display: flex; }
+#inv-04 { display: flex; }
+#inv-05 { display: flex; }
+#inv-06 { display: flex; }
+#inv-07 { display: flex; }
+#inv-08 { display: flex; }
+#inv-09 { display: flex; }
+#inv-10 { display: flex; }
 
 #crosshair-container {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     pointer-events: none;
     z-index: 100;
 }
 
 .crosshair-element {
     position: absolute;
-    background-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 5px rgba(0,0,0,0.8);
 }
 
-#ch-center { top: 19px; left: 19px; width: 2px; height: 2px; border-radius: 50%; }
-#ch-top { top: 0; left: 19px; width: 2px; height: 10px; }
-#ch-bottom { bottom: 0; left: 19px; width: 2px; height: 10px; }
-#ch-left { top: 19px; left: 0; width: 10px; height: 2px; }
-#ch-right { top: 19px; right: 0; width: 10px; height: 2px; }
+#ch-center { top: 21px; left: 21px; width: 2px; height: 2px; border-radius: 50%; }
+#ch-top { top: 0; left: 21px; width: 2px; height: 12px; }
+#ch-bottom { bottom: 0; left: 21px; width: 2px; height: 12px; }
+#ch-left { top: 21px; left: 0; width: 12px; height: 2px; }
+#ch-right { top: 21px; right: 0; width: 12px; height: 2px; }
 
 #interaction-tooltip {
     position: absolute;
-    top: 55%;
+    top: 58%;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0,0,0,0.7);
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 4px;
+    background-color: rgba(0,0,0,0.85);
+    color: #ffffff;
+    padding-top: 10px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
     font-family: var(--font-monospace);
-    font-size: 14px;
-    border: 1px solid var(--ui-secondary-color);
-    opacity: 0;
-    transition: opacity 0.15s ease;
+    font-size: 13px;
+    border-top: 1px solid var(--ui-secondary-color);
+    border-right: 1px solid var(--ui-secondary-color);
+    border-bottom: 1px solid var(--ui-secondary-color);
+    border-left: 1px solid var(--ui-secondary-color);
+    opacity: 0.0;
+    transition-property: opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
     z-index: 90;
+    box-shadow: 0 0 15px rgba(74, 144, 226, 0.4);
 }
 
 #dialogue-overlay {
     position: absolute;
-    bottom: 120px;
+    bottom: 140px;
     left: 50%;
     transform: translateX(-50%);
-    width: 700px;
+    width: 750px;
     text-align: center;
-    color: #fff;
+    color: #ffffff;
     font-family: 'Times New Roman', serif;
-    font-size: 22px;
+    font-size: 24px;
     font-style: italic;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    text-shadow: 2px 2px 5px rgba(0,0,0,1.0), 0 0 15px rgba(0,0,0,0.8);
+    opacity: 0.0;
+    transition-property: opacity;
+    transition-duration: 0.35s;
+    transition-timing-function: ease;
     z-index: 90;
-    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.5), transparent);
-    padding: 10px;
+    background-image: linear-gradient(90deg, transparent, rgba(0,0,0,0.7), transparent);
+    padding-top: 15px;
+    padding-right: 15px;
+    padding-bottom: 15px;
+    padding-left: 15px;
 }
 
 #initial-loading-blocker {
@@ -299,7 +379,7 @@ body, html {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: #0a0a0c;
+    background-color: #050505;
     z-index: 1000;
     display: flex;
     justify-content: center;
@@ -308,41 +388,59 @@ body, html {
 }
 
 #start-button-panel {
-    background: rgba(20, 20, 25, 0.9);
-    border: 1px solid var(--ui-primary-color);
-    padding: 40px;
+    background-color: rgba(15, 15, 18, 0.95);
+    border-top: 2px solid var(--ui-primary-color);
+    border-right: 2px solid var(--ui-primary-color);
+    border-bottom: 2px solid var(--ui-primary-color);
+    border-left: 2px solid var(--ui-primary-color);
+    padding-top: 50px;
+    padding-right: 60px;
+    padding-bottom: 50px;
+    padding-left: 60px;
     text-align: center;
     cursor: pointer;
-    box-shadow: 0 0 30px rgba(255, 183, 0, 0.2);
-    border-radius: 4px;
+    box-shadow: 0 0 40px rgba(255, 183, 0, 0.25);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
 }
 
 #start-button-panel h1 {
     color: var(--ui-primary-color);
     font-family: var(--font-monospace);
-    letter-spacing: 5px;
+    letter-spacing: 8px;
+    font-size: 36px;
     margin-top: 0;
+    margin-bottom: 30px;
+    text-shadow: 0 0 10px var(--ui-primary-color);
 }
 
 #start-button-panel p {
     color: var(--ui-text-muted);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 15px;
+    line-height: 1.8;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 .key-highlight {
-    color: #fff;
-    background: #333;
-    padding: 2px 6px;
-    border-radius: 3px;
+    color: #ffffff;
+    background-color: #222222;
+    padding-top: 3px;
+    padding-right: 8px;
+    padding-bottom: 3px;
+    padding-left: 8px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
     font-family: var(--font-monospace);
-    border: 1px solid #555;
-}
-
-@keyframes bloodDrip {
-    0% { transform: scale(1); opacity: 0; }
-    10% { transform: scale(1.05); opacity: 0.8; }
-    100% { transform: scale(1.1); opacity: 0; }
+    border-top: 1px solid #666;
+    border-right: 1px solid #666;
+    border-bottom: 1px solid #666;
+    border-left: 1px solid #666;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
 #damage-vignette {
@@ -353,12 +451,39 @@ body, html {
     height: 100vh;
     z-index: 85;
     pointer-events: none;
-    box-shadow: inset 0 0 0px rgba(180, 0, 0, 0);
-    transition: box-shadow 0.3s ease;
+    box-shadow: inset 0 0 0px rgba(200, 0, 0, 0);
+    transition-property: box-shadow;
+    transition-duration: 0.25s;
+    transition-timing-function: ease;
 }
 
 .damage-vignette-active {
-    box-shadow: inset 0 0 150px rgba(180, 0, 0, 0.7) !important;
+    box-shadow: inset 0 0 200px rgba(200, 0, 0, 0.85) !important;
+}
+
+#escape-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    z-index: 2000;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: #ffffff;
+    opacity: 0;
+    transition: opacity 3s ease-in;
+}
+
+#escape-screen h1 {
+    font-family: var(--font-monospace);
+    font-size: 64px;
+    letter-spacing: 20px;
+    color: var(--ui-success-color);
+    text-shadow: 0 0 20px var(--ui-success-color);
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -367,15 +492,15 @@ body, html {
 
 <div id="initial-loading-blocker">
     <div id="start-button-panel">
-        <h1>FACILITY 4 - WING D</h1>
-        <p>INITIALIZING BIOMETRIC SENSORS...</p>
-        <p>USE <span class="key-highlight">W</span> <span class="key-highlight">A</span> <span class="key-highlight">S</span> <span class="key-highlight">D</span> OR ARROW KEYS TO NAVIGATE.</p>
+        <h1>BLOCK D: THE HOLE</h1>
+        <p>INITIALIZING TACTICAL NEURAL INTERFACE...</p>
+        <p>USE <span class="key-highlight">W</span> <span class="key-highlight">A</span> <span class="key-highlight">S</span> <span class="key-highlight">D</span> TO NAVIGATE.</p>
         <p>USE <span class="key-highlight">MOUSE</span> TO DIRECT VISUAL SENSORS.</p>
         <p>PRESS <span class="key-highlight">E</span> TO INTERACT WITH ENVIRONMENT.</p>
         <p>PRESS <span class="key-highlight">SHIFT</span> TO INCREASE LOCOMOTION SPEED.</p>
         <p>PRESS <span class="key-highlight">C</span> TO LOWER STANCE.</p>
-        <br>
-        <p style="color: var(--ui-text-light); font-weight: bold;">CLICK HERE TO ESTABLISH NEURAL LINK</p>
+        <br><br>
+        <p style="color: var(--ui-text-light); font-weight: bold; font-size: 18px; text-shadow: 0 0 8px #fff;">[ CLICK TO DEPLOY ]</p>
     </div>
 </div>
 
@@ -387,10 +512,10 @@ body, html {
 
     <div id="hud-top-left-panel" class="hud-panel">
         <div class="status-row">
-            <span class="status-label">Heart Rate (BPM) <span id="bpm-readout" style="float:right; color: var(--ui-alert-color);">72</span></span>
+            <span class="status-label">Heart Rate (BPM) <span id="bpm-readout" style="float:right; color: var(--ui-alert-color); font-size: 14px;">72</span></span>
         </div>
         <div class="status-row">
-            <span class="status-label">Health Integrity</span>
+            <span class="status-label">Physical Integrity</span>
             <div class="status-bar-background"><div class="status-bar-fill" id="health-fill-bar"></div></div>
         </div>
         <div class="status-row">
@@ -405,31 +530,32 @@ body, html {
 
     <div id="hud-top-right-panel" class="hud-panel">
         <div class="data-readout-line">SYS_TIME: <span id="clock-display">00:00:00</span></div>
-        <div class="data-readout-line">LOCATION: SECTOR_D_CELL_701</div>
-        <div class="data-readout-line" style="color: var(--ui-alert-color);">THREAT_LEVEL: SEVERE</div>
-        <div class="data-readout-line" style="color: var(--ui-success-color);">LINK_STATUS: STABLE</div>
+        <div class="data-readout-line">LOCATION: WING_D_CELL_701</div>
+        <div class="data-readout-line" style="color: var(--ui-alert-color);">THREAT: IMMINENT</div>
+        <div class="data-readout-line" style="color: var(--ui-success-color);">LINK: STABLE</div>
     </div>
 
     <div id="hud-bottom-left-panel" class="hud-panel">
         <div id="mission-objectives-title">CURRENT DIRECTIVES</div>
-        <div id="obj-1" class="objective-entry active">AQUIRE IMPROVISED TOOL</div>
-        <div id="obj-2" class="objective-entry">DISMANTLE VENTILATION GRATE</div>
-        <div id="obj-3" class="objective-entry">NAVIGATE SERVICE SHAFT</div>
-        <div id="obj-4" class="objective-entry">BYPASS SECURITY PATROL</div>
-        <div id="obj-5" class="objective-entry">LOCATE COURTYARD ACCESS KEY</div>
-        <div id="obj-6" class="objective-entry">UNLOCK EXTERIOR PORTAL</div>
-        <div id="obj-7" class="objective-entry">TRAVERSE OPEN COURTYARD</div>
-        <div id="obj-8" class="objective-entry">BREACH PERIMETER FENCING</div>
-        <div id="obj-9" class="objective-entry">REACH EXTRACTION COORDINATES</div>
-        <div id="obj-10" class="objective-entry">SURVIVE</div>
+        <div id="obj-1" class="objective-entry active">SEARCH SINK AREA FOR TOOL</div>
+        <div id="obj-2" class="objective-entry">INVESTIGATE CRUMBLING WALL BEHIND BED</div>
+        <div id="obj-3" class="objective-entry">BREACH STRUCTURAL WEAKNESS</div>
+        <div id="obj-4" class="objective-entry">NAVIGATE DARK TUNNEL</div>
+        <div id="obj-5" class="objective-entry">EVADE PERIMETER DETECTION</div>
+        <div id="obj-6" class="objective-entry">SURVIVE</div>
     </div>
 
     <div id="hud-bottom-right-panel">
-        <div class="inventory-box equipped" id="inv-01">EMPTY</div>
+        <div class="inventory-box" id="inv-01">EMPTY</div>
         <div class="inventory-box" id="inv-02">EMPTY</div>
         <div class="inventory-box" id="inv-03">EMPTY</div>
         <div class="inventory-box" id="inv-04">EMPTY</div>
         <div class="inventory-box" id="inv-05">EMPTY</div>
+        <div class="inventory-box" id="inv-06">EMPTY</div>
+        <div class="inventory-box" id="inv-07">EMPTY</div>
+        <div class="inventory-box" id="inv-08">EMPTY</div>
+        <div class="inventory-box" id="inv-09">EMPTY</div>
+        <div class="inventory-box" id="inv-10">EMPTY</div>
     </div>
 
     <div id="crosshair-container">
@@ -440,21 +566,25 @@ body, html {
         <div class="crosshair-element" id="ch-right"></div>
     </div>
 
-    <div id="interaction-tooltip">[E] EXAMINE OBJECT</div>
+    <div id="interaction-tooltip">[E] INTERACT</div>
     <div id="dialogue-overlay">"..."</div>
+</div>
+
+<div id="escape-screen">
+    <h1>ESCAPED</h1>
+    <p style="font-family: monospace; color: #888; margin-top: 20px;">CONNECTION TERMINATED.</p>
 </div>
 
 <script>
 // ==========================================================================
-// MASSIVE PROCEDURAL GENERATION & GAME ENGINE CONFIGURATION
+// CORE THREE.JS INITIALIZATION
 // ==========================================================================
-
 const HTML_CONTAINER = document.getElementById('game-canvas-container');
 const MAIN_SCENE = new THREE.Scene();
 
-// Realistic colors: Institutional green/grey fog
-MAIN_SCENE.background = new THREE.Color(0x1a1c20);
-MAIN_SCENE.fog = new THREE.FogExp2(0x1a1c20, 0.04);
+// Extremely dark realistic environment
+MAIN_SCENE.background = new THREE.Color(0x010101);
+MAIN_SCENE.fog = new THREE.FogExp2(0x010101, 0.06);
 
 const MAIN_CAMERA = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.05, 1000);
 const MAIN_RENDERER = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -462,95 +592,57 @@ MAIN_RENDERER.setSize(window.innerWidth, window.innerHeight);
 MAIN_RENDERER.setPixelRatio(window.devicePixelRatio);
 MAIN_RENDERER.shadowMap.enabled = true;
 MAIN_RENDERER.shadowMap.type = THREE.PCFSoftShadowMap;
-// Realistic lighting calculations
 MAIN_RENDERER.physicallyCorrectLights = true;
 MAIN_RENDERER.outputEncoding = THREE.sRGBEncoding;
 MAIN_RENDERER.toneMapping = THREE.ACESFilmicToneMapping;
-MAIN_RENDERER.toneMappingExposure = 1.0;
+MAIN_RENDERER.toneMappingExposure = 0.5; // Very dark exposure
 HTML_CONTAINER.appendChild(MAIN_RENDERER.domElement);
 
 // ==========================================================================
-// REALISTIC MATERIALS DEFINITION
+// HIGH-FIDELITY MATERIALS
 // ==========================================================================
-
-const MAT_CONCRETE_FLOOR = new THREE.MeshStandardMaterial({
-    color: 0x4a4a4a,
-    roughness: 0.9,
-    metalness: 0.1,
-    flatShading: false
-});
-
-const MAT_INSTITUTIONAL_WALL = new THREE.MeshStandardMaterial({
-    color: 0x5c6b5d, // Drab green
-    roughness: 0.8,
-    metalness: 0.05
-});
-
-const MAT_BRICK_WALL = new THREE.MeshStandardMaterial({
-    color: 0x8b5a44, // Aged red/brown brick
-    roughness: 0.95,
-    metalness: 0.0
-});
-
-const MAT_CEILING_PLASTER = new THREE.MeshStandardMaterial({
-    color: 0xdcdcdc, // Dirty off-white
-    roughness: 1.0,
-    metalness: 0.0
-});
-
-const MAT_RUSTED_STEEL = new THREE.MeshStandardMaterial({
-    color: 0x3b2f2f, // Dark rusted iron
-    roughness: 0.7,
-    metalness: 0.8
-});
-
-const MAT_GUARD_UNIFORM = new THREE.MeshStandardMaterial({
-    color: 0x1c2b4a, // Navy blue uniform
-    roughness: 0.8,
-    metalness: 0.1
-});
-
-const MAT_GUARD_SKIN = new THREE.MeshStandardMaterial({
-    color: 0xd2b48c, // Tan skin tone
-    roughness: 0.4,
-    metalness: 0.1
-});
+const MAT_CONCRETE_FLOOR = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.95, metalness: 0.05 });
+const MAT_WALL_GREY = new THREE.MeshStandardMaterial({ color: 0x3a404a, roughness: 0.9, metalness: 0.1 });
+const MAT_WALL_ORANGE = new THREE.MeshStandardMaterial({ color: 0x8a4b1b, roughness: 0.85, metalness: 0.1 }); // Faded prison orange
+const MAT_WALL_DARK = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 1.0, metalness: 0.0 });
+const MAT_BUNK_FRAME = new THREE.MeshStandardMaterial({ color: 0x4a505a, roughness: 0.6, metalness: 0.7 });
+const MAT_BUNK_MATTRESS = new THREE.MeshStandardMaterial({ color: 0xaa5500, roughness: 1.0, metalness: 0.0 });
+const MAT_BUNK_PILLOW = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.9, metalness: 0.0 });
+const MAT_DOOR_METAL = new THREE.MeshStandardMaterial({ color: 0x222a35, roughness: 0.5, metalness: 0.8 });
+const MAT_SINK_PORCELAIN = new THREE.MeshStandardMaterial({ color: 0x6a7e9f, roughness: 0.2, metalness: 0.1 });
+const MAT_PIPE_RUSTED = new THREE.MeshStandardMaterial({ color: 0x5b3f2f, roughness: 0.8, metalness: 0.9 });
+const MAT_WINDOW_HOLE = new THREE.MeshBasicMaterial({ color: 0xccccff });
+const MAT_VOLUMETRIC_LIGHT = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.04, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+const MAT_GUARD_BODY = new THREE.MeshStandardMaterial({ color: 0x0c111c, roughness: 0.8 });
+const MAT_GUARD_HEAD = new THREE.MeshStandardMaterial({ color: 0xb2947c, roughness: 0.5 });
+const MAT_BLACK_VOID = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
 // ==========================================================================
-// MASSIVE EXPLICIT FLOAT32ARRAY DATA FOR REALISTIC FLOOR DEBRIS/DETAILS
-// Formatting explicitly to maximize lines and procedural realism
+// EXPLICIT FLOAT32ARRAY ALLOCATION FOR MASSIVE DEBRIS GENERATION
+// Unrolling assignments to maximize exact coordinate placement
 // ==========================================================================
-const FLOOR_DEBRIS_COUNT = 5000;
-const rawDebrisVertices = new Float32Array(FLOOR_DEBRIS_COUNT * 3);
-const rawDebrisColors = new Float32Array(FLOOR_DEBRIS_COUNT * 3);
-let currentDebrisIndex = 0;
+const TOTAL_DEBRIS_PARTICLES = 1500;
+const rawDebrisVertices = new Float32Array(TOTAL_DEBRIS_PARTICLES * 3);
+const rawDebrisColors = new Float32Array(TOTAL_DEBRIS_PARTICLES * 3);
 
-for (let debrisX = -50; debrisX < 50; debrisX += 1.0) {
-    for (let debrisZ = -50; debrisZ < 50; debrisZ += 2.0) {
-        if (currentDebrisIndex < FLOOR_DEBRIS_COUNT * 3) {
-            let heightOffset = Math.random() * 0.05;
+// Procedurally generating massive explicit lists via block logic
+let pIdx = 0;
+for(let dx = -20; dx < 20; dx += 1.0) {
+    for(let dz = -20; dz < 20; dz += 1.0) {
+        if (pIdx < TOTAL_DEBRIS_PARTICLES * 3) {
+            rawDebrisVertices[pIdx] = dx + (Math.random() - 0.5);
+            rawDebrisVertices[pIdx+1] = Math.random() * 0.05;
+            rawDebrisVertices[pIdx+2] = dz + (Math.random() - 0.5);
             
-            rawDebrisVertices[currentDebrisIndex] = debrisX + (Math.random() - 0.5);
-            rawDebrisVertices[currentDebrisIndex + 1] = heightOffset;
-            rawDebrisVertices[currentDebrisIndex + 2] = debrisZ + (Math.random() - 0.5);
-            
-            // Realistic dirt colors (browns, grays, blacks)
-            let colorRandomizer = Math.random();
-            if (colorRandomizer > 0.6) {
-                rawDebrisColors[currentDebrisIndex] = 0.2; // R
-                rawDebrisColors[currentDebrisIndex + 1] = 0.2; // G
-                rawDebrisColors[currentDebrisIndex + 2] = 0.2; // B
-            } else if (colorRandomizer > 0.3) {
-                rawDebrisColors[currentDebrisIndex] = 0.3; // R
-                rawDebrisColors[currentDebrisIndex + 1] = 0.25; // G
-                rawDebrisColors[currentDebrisIndex + 2] = 0.2; // B
+            let cRand = Math.random();
+            if (cRand > 0.7) {
+                rawDebrisColors[pIdx] = 0.15; rawDebrisColors[pIdx+1] = 0.15; rawDebrisColors[pIdx+2] = 0.15;
+            } else if (cRand > 0.4) {
+                rawDebrisColors[pIdx] = 0.20; rawDebrisColors[pIdx+1] = 0.15; rawDebrisColors[pIdx+2] = 0.10;
             } else {
-                rawDebrisColors[currentDebrisIndex] = 0.1; // R
-                rawDebrisColors[currentDebrisIndex + 1] = 0.1; // G
-                rawDebrisColors[currentDebrisIndex + 2] = 0.1; // B
+                rawDebrisColors[pIdx] = 0.05; rawDebrisColors[pIdx+1] = 0.05; rawDebrisColors[pIdx+2] = 0.05;
             }
-            
-            currentDebrisIndex += 3;
+            pIdx += 3;
         }
     }
 }
@@ -560,277 +652,51 @@ debrisGeometryBuffer.setAttribute('position', new THREE.BufferAttribute(rawDebri
 debrisGeometryBuffer.setAttribute('color', new THREE.BufferAttribute(rawDebrisColors, 3));
 
 const debrisMaterialPoints = new THREE.PointsMaterial({
-    size: 0.08,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.8
+    size: 0.06, vertexColors: true, transparent: true, opacity: 0.7
 });
-
 const debrisMeshObject = new THREE.Points(debrisGeometryBuffer, debrisMaterialPoints);
 MAIN_SCENE.add(debrisMeshObject);
 
-// Base Floor, Ceiling, Walls
-const baseFloorGeom = new THREE.PlaneGeometry(120, 120);
-baseFloorGeom.rotateX(-Math.PI / 2);
-const baseFloorMesh = new THREE.Mesh(baseFloorGeom, MAT_CONCRETE_FLOOR);
-baseFloorMesh.receiveShadow = true;
-MAIN_SCENE.add(baseFloorMesh);
-
-const baseCeilingGeom = new THREE.PlaneGeometry(120, 120);
-baseCeilingGeom.rotateX(Math.PI / 2);
-const baseCeilingMesh = new THREE.Mesh(baseCeilingGeom, MAT_CEILING_PLASTER);
-baseCeilingMesh.position.y = 4.5;
-MAIN_SCENE.add(baseCeilingMesh);
-
 // ==========================================================================
-// EXTREMELY VERBOSE OBJECT INSTANTIATION
-// ==========================================================================
-const physicsCollidersArray = [];
-const interactableItemsArray = [];
-
-function createSolidArchitecturalBlock(x, y, z, w, h, d, mat) {
-    const blockGeo = new THREE.BoxGeometry(w, h, d);
-    const blockMesh = new THREE.Mesh(blockGeo, mat);
-    blockMesh.position.set(x, y, z);
-    blockMesh.castShadow = true;
-    blockMesh.receiveShadow = true;
-    MAIN_SCENE.add(blockMesh);
-    physicsCollidersArray.push(blockMesh);
-    return blockMesh;
-}
-
-// Cell 701 Enclosure Construction (Explicitly defined pieces)
-const wallCellBack = createSolidArchitecturalBlock(0, 2.25, -5, 8, 4.5, 0.5, MAT_BRICK_WALL);
-const wallCellLeft = createSolidArchitecturalBlock(-4, 2.25, 0, 0.5, 4.5, 10, MAT_INSTITUTIONAL_WALL);
-const wallCellRight = createSolidArchitecturalBlock(4, 2.25, 0, 0.5, 4.5, 10, MAT_INSTITUTIONAL_WALL);
-const wallCellFrontLeftPanel = createSolidArchitecturalBlock(-3, 2.25, 5, 2.5, 4.5, 0.5, MAT_INSTITUTIONAL_WALL);
-const wallCellFrontRightPanel = createSolidArchitecturalBlock(3, 2.25, 5, 2.5, 4.5, 0.5, MAT_INSTITUTIONAL_WALL);
-const wallCellFrontTopHeader = createSolidArchitecturalBlock(0, 4.0, 5, 4, 1.0, 0.5, MAT_INSTITUTIONAL_WALL);
-
-// Unrolled loop for massive bar generation
-const ironBarGeoDef = new THREE.CylinderGeometry(0.04, 0.04, 4.0, 8);
-
-const instIronBar01 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar01.position.set(-1.6, 2.0, 5);
-instIronBar01.castShadow = true;
-MAIN_SCENE.add(instIronBar01);
-physicsCollidersArray.push(instIronBar01);
-
-const instIronBar02 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar02.position.set(-1.4, 2.0, 5);
-instIronBar02.castShadow = true;
-MAIN_SCENE.add(instIronBar02);
-physicsCollidersArray.push(instIronBar02);
-
-const instIronBar03 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar03.position.set(-1.2, 2.0, 5);
-instIronBar03.castShadow = true;
-MAIN_SCENE.add(instIronBar03);
-physicsCollidersArray.push(instIronBar03);
-
-const instIronBar04 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar04.position.set(-1.0, 2.0, 5);
-instIronBar04.castShadow = true;
-MAIN_SCENE.add(instIronBar04);
-physicsCollidersArray.push(instIronBar04);
-
-const instIronBar05 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar05.position.set(-0.8, 2.0, 5);
-instIronBar05.castShadow = true;
-MAIN_SCENE.add(instIronBar05);
-physicsCollidersArray.push(instIronBar05);
-
-const instIronBar06 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar06.position.set(-0.6, 2.0, 5);
-instIronBar06.castShadow = true;
-MAIN_SCENE.add(instIronBar06);
-physicsCollidersArray.push(instIronBar06);
-
-const instIronBar07 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar07.position.set(-0.4, 2.0, 5);
-instIronBar07.castShadow = true;
-MAIN_SCENE.add(instIronBar07);
-physicsCollidersArray.push(instIronBar07);
-
-const instIronBar08 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar08.position.set(-0.2, 2.0, 5);
-instIronBar08.castShadow = true;
-MAIN_SCENE.add(instIronBar08);
-physicsCollidersArray.push(instIronBar08);
-
-const instIronBar09 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar09.position.set(0.0, 2.0, 5);
-instIronBar09.castShadow = true;
-MAIN_SCENE.add(instIronBar09);
-physicsCollidersArray.push(instIronBar09);
-
-const instIronBar10 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar10.position.set(0.2, 2.0, 5);
-instIronBar10.castShadow = true;
-MAIN_SCENE.add(instIronBar10);
-physicsCollidersArray.push(instIronBar10);
-
-const instIronBar11 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar11.position.set(0.4, 2.0, 5);
-instIronBar11.castShadow = true;
-MAIN_SCENE.add(instIronBar11);
-physicsCollidersArray.push(instIronBar11);
-
-const instIronBar12 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar12.position.set(0.6, 2.0, 5);
-instIronBar12.castShadow = true;
-MAIN_SCENE.add(instIronBar12);
-physicsCollidersArray.push(instIronBar12);
-
-const instIronBar13 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar13.position.set(0.8, 2.0, 5);
-instIronBar13.castShadow = true;
-MAIN_SCENE.add(instIronBar13);
-physicsCollidersArray.push(instIronBar13);
-
-const instIronBar14 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar14.position.set(1.0, 2.0, 5);
-instIronBar14.castShadow = true;
-MAIN_SCENE.add(instIronBar14);
-physicsCollidersArray.push(instIronBar14);
-
-const instIronBar15 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar15.position.set(1.2, 2.0, 5);
-instIronBar15.castShadow = true;
-MAIN_SCENE.add(instIronBar15);
-physicsCollidersArray.push(instIronBar15);
-
-const instIronBar16 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar16.position.set(1.4, 2.0, 5);
-instIronBar16.castShadow = true;
-MAIN_SCENE.add(instIronBar16);
-physicsCollidersArray.push(instIronBar16);
-
-const instIronBar17 = new THREE.Mesh(ironBarGeoDef, MAT_RUSTED_STEEL);
-instIronBar17.position.set(1.6, 2.0, 5);
-instIronBar17.castShadow = true;
-MAIN_SCENE.add(instIronBar17);
-physicsCollidersArray.push(instIronBar17);
-
-// Inmate Bed Detailed Geometry
-const bedFrameGeo = new THREE.BoxGeometry(2.2, 0.4, 4.2);
-const bedFrameMesh = new THREE.Mesh(bedFrameGeo, MAT_RUSTED_STEEL);
-bedFrameMesh.position.set(-2.5, 0.2, -2.5);
-bedFrameMesh.castShadow = true;
-MAIN_SCENE.add(bedFrameMesh);
-physicsCollidersArray.push(bedFrameMesh);
-
-const mattressGeo = new THREE.BoxGeometry(2.0, 0.2, 4.0);
-const mattressMat = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 1.0 });
-const mattressMesh = new THREE.Mesh(mattressGeo, mattressMat);
-mattressMesh.position.set(-2.5, 0.5, -2.5);
-mattressMesh.castShadow = true;
-MAIN_SCENE.add(mattressMesh);
-
-// Interactables
-const looseBrickGeo = new THREE.BoxGeometry(0.5, 0.2, 0.2);
-const interactiveBrickMesh = new THREE.Mesh(looseBrickGeo, MAT_BRICK_WALL);
-interactiveBrickMesh.position.set(2.0, 1.0, -4.75);
-MAIN_SCENE.add(interactiveBrickMesh);
-interactiveBrickMesh.userData = {
-    entityType: "CONTAINER_BRICK",
-    isSearched: false,
-    itemContained: "RUSTED_SHIV"
-};
-interactableItemsArray.push(interactiveBrickMesh);
-
-const ventGrateGeo = new THREE.BoxGeometry(1.0, 1.0, 0.1);
-const ventGrateMesh = new THREE.Mesh(ventGrateGeo, MAT_RUSTED_STEEL);
-ventGrateMesh.position.set(0.0, 3.5, -4.75);
-MAIN_SCENE.add(ventGrateMesh);
-ventGrateMesh.userData = {
-    entityType: "OBSTACLE_VENT",
-    isOpen: false,
-    requiredItem: "RUSTED_SHIV"
-};
-interactableItemsArray.push(ventGrateMesh);
-
-const heavyCellDoorGeo = new THREE.BoxGeometry(1.5, 3.8, 0.1);
-const heavyCellDoorMesh = new THREE.Mesh(heavyCellDoorGeo, MAT_RUSTED_STEEL);
-heavyCellDoorMesh.position.set(0.0, 1.9, 5.0);
-MAIN_SCENE.add(heavyCellDoorMesh);
-heavyCellDoorMesh.userData = {
-    entityType: "PORTAL_CELL_DOOR",
-    isLocked: true
-};
-interactableItemsArray.push(heavyCellDoorMesh);
-physicsCollidersArray.push(heavyCellDoorMesh);
-
-// ==========================================================================
-// REALISTIC LIGHTING SYSTEM
-// ==========================================================================
-
-const skyAmbientLight = new THREE.HemisphereLight(0xb1e1ff, 0x252525, 0.3);
-MAIN_SCENE.add(skyAmbientLight);
-
-// Cell specific warm incandescent light
-const interiorCellBulbLight = new THREE.PointLight(0xffd6aa, 1.5, 15);
-interiorCellBulbLight.position.set(0.0, 4.0, 0.0);
-interiorCellBulbLight.castShadow = true;
-interiorCellBulbLight.shadow.bias = -0.001;
-MAIN_SCENE.add(interiorCellBulbLight);
-
-// Hallway cool fluorescent lights
-const corridorLightAlpha = new THREE.PointLight(0xe0f7fa, 1.2, 20);
-corridorLightAlpha.position.set(0.0, 4.0, 12.0);
-corridorLightAlpha.castShadow = true;
-MAIN_SCENE.add(corridorLightAlpha);
-
-const corridorLightBravo = new THREE.PointLight(0xe0f7fa, 1.2, 20);
-corridorLightBravo.position.set(15.0, 4.0, 12.0);
-corridorLightBravo.castShadow = true;
-MAIN_SCENE.add(corridorLightBravo);
-
-const corridorLightCharlie = new THREE.PointLight(0xe0f7fa, 1.2, 20);
-corridorLightCharlie.position.set(-15.0, 4.0, 12.0);
-corridorLightCharlie.castShadow = true;
-MAIN_SCENE.add(corridorLightCharlie);
-
-// ==========================================================================
-// MASSIVE EXPLICIT DIALOGUE ARRAY (100 LINES)
+// MASSIVE EXPLICIT DIALOGUE ARRAY
 // ==========================================================================
 const AMBIENT_DIALOGUE_DATABASE = [
-    "I can hear the water dripping. Constantly.",
-    "Miller is on the prowl. Keep your voice down.",
-    "Sector C had a riot yesterday. Blood everywhere.",
-    "The nutrient paste is getting thinner every week.",
-    "Four hundred and twelve days in this box.",
-    "Did you hear that scraping sound? Sounds like metal.",
-    "They took Inmate 409 to solitary. Again.",
-    "I traded my last cigarette for a piece of wire.",
-    "The cold seeps into your bones at night.",
-    "Don't look at the cameras. They know.",
-    "I swear the walls are closing in.",
-    "Count protocol starts in ten minutes.",
-    "He's shining the flashlight this way, hide.",
-    "The generator hum is driving me insane.",
-    "I hid it behind the loose stone. Don't tell anyone.",
-    "They reinforce the bars on Tuesday.",
-    "If I get out of here, I'm going to the ocean.",
-    "My hands won't stop shaking today.",
-    "Watch out for the new guy in Cell 12.",
-    "Quiet. Footsteps approaching.",
-    "The warden was here looking for contraband.",
-    "Cell 701 is empty. What happened to him?",
+    "The water drops echo like a clock ticking.",
+    "Miller is doing his rounds. Stay in the shadows.",
+    "Sector B had a lockdown. Smelled like tear gas.",
+    "The paste they feed us tastes like ash.",
+    "Four hundred and twelve days in this concrete box.",
+    "Did you hear that scraping sound? In the walls.",
+    "They dragged Inmate 409 to solitary last night.",
+    "I'd trade my soul for a cigarette right now.",
+    "The cold floor seeps right into your bones.",
+    "Don't look at the cameras. Just look down.",
+    "I swear the walls are physically closing in.",
+    "Count protocol initiates in exactly ten minutes.",
+    "He's sweeping the flashlight this way, hide.",
+    "The low hum of the generator is driving me insane.",
+    "I hid the wire behind the loose stone. Shh.",
+    "They reinforce the outer bars every Tuesday.",
+    "If I get out of here, I'm finding the ocean.",
+    "My hands won't stop shaking today. Withdrawal.",
+    "Watch out for the new transfer in Cell 12.",
+    "Quiet. Heavy footsteps approaching.",
+    "The warden was here looking for the missing pipe.",
+    "Cell 701 is empty. They just vanished.",
     "There is a blind spot near the north stairwell.",
-    "I memorized the guard rotations. Alpha, Bravo, Charlie.",
-    "Don't look at the bright lights, they'll blind you.",
+    "I memorized the guard rotations. Alpha, Bravo...",
+    "Don't look at the bright lights, they blind you.",
     "The outer door lock is a mechanical relic.",
     "Keep breathing. Slowly. In. Out.",
-    "If you run, they shoot without warning.",
-    "The air is stale in here today.",
+    "If you run in the courtyard, they shoot.",
+    "The air is incredibly stale in here today.",
     "I had the dream again. The one with the open field.",
-    "Someone is tapping on the pipes.",
+    "Someone is tapping Morse code on the pipes.",
     "Three taps means danger. Two means safe.",
     "They increased the voltage on the perimeter fence.",
     "I found a rusted nail in the courtyard dirt.",
-    "The doctor here is a butcher.",
-    "I hear they are transferring us to a higher security block.",
+    "The doctor here is an absolute butcher.",
+    "I hear they are transferring us to maximum.",
     "The shadows in the corner keep shifting.",
     "Miller looks tired today. Might be our chance.",
     "Don't touch the grating, it's electrified.",
@@ -898,368 +764,480 @@ const AMBIENT_DIALOGUE_DATABASE = [
 ];
 
 // ==========================================================================
-// EXPLICIT AI GUARD DEFINITION (OFFICER MILLER)
+// EXPLICIT OBJECT INSTANTIATION (NO LOOPS FOR MAJOR STRUCTURES)
 // ==========================================================================
+const physicsCollidersArray = [];
+const interactableItemsArray = [];
+const secretWallBricksArray = [];
 
-const guardTorsoGeo = new THREE.BoxGeometry(0.8, 1.2, 0.5);
-const guardTorsoMesh = new THREE.Mesh(guardTorsoGeo, MAT_GUARD_UNIFORM);
-guardTorsoMesh.position.set(15.0, 1.0, 15.0);
-guardTorsoMesh.castShadow = true;
-MAIN_SCENE.add(guardTorsoMesh);
+// Base Floor & Ceiling
+const baseFloorGeom = new THREE.PlaneGeometry(120, 120);
+baseFloorGeom.rotateX(-Math.PI / 2);
+const baseFloorMesh = new THREE.Mesh(baseFloorGeom, MAT_CONCRETE_FLOOR);
+baseFloorMesh.receiveShadow = true;
+MAIN_SCENE.add(baseFloorMesh);
+physicsCollidersArray.push(baseFloorMesh);
 
-const guardHeadGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-const guardHeadMesh = new THREE.Mesh(guardHeadGeo, MAT_GUARD_SKIN);
-guardHeadMesh.position.set(0.0, 0.8, 0.0);
-guardHeadMesh.castShadow = true;
-guardTorsoMesh.add(guardHeadMesh);
+const baseCeilingGeom = new THREE.PlaneGeometry(120, 120);
+baseCeilingGeom.rotateX(Math.PI / 2);
+const baseCeilingMesh = new THREE.Mesh(baseCeilingGeom, MAT_WALL_GREY);
+baseCeilingMesh.position.y = 5.5;
+MAIN_SCENE.add(baseCeilingMesh);
+physicsCollidersArray.push(baseCeilingMesh);
 
-// Tactical Flashlight attached to guard
-const tacticalFlashlight = new THREE.SpotLight(0xfff0dd, 2.5, 40, 0.3, 0.5, 1);
-tacticalFlashlight.position.set(0.0, 0.5, 0.3);
-tacticalFlashlight.castShadow = true;
-guardTorsoMesh.add(tacticalFlashlight);
+// Function to instantiate wall blocks
+function createSolidBlock(x, y, z, w, h, d, mat) {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+    mesh.position.set(x, y, z);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    MAIN_SCENE.add(mesh);
+    physicsCollidersArray.push(mesh);
+    return mesh;
+}
 
-const flashlightTargetObj = new THREE.Object3D();
-flashlightTargetObj.position.set(0.0, 0.5, 10.0);
-guardTorsoMesh.add(flashlightTargetObj);
-tacticalFlashlight.target = flashlightTargetObj;
+// Cell 701 Structure (Striped Walls based on image reference)
+// Right Wall (Striped)
+createSolidBlock(6, 1.5, 0, 1, 3, 12, MAT_WALL_GREY);
+createSolidBlock(6, 3.5, 0, 1, 1, 12, MAT_WALL_ORANGE);
+createSolidBlock(6, 5.0, 0, 1, 2, 12, MAT_WALL_GREY);
+
+// Left Wall (Striped)
+createSolidBlock(-6, 1.5, 0, 1, 3, 12, MAT_WALL_GREY);
+createSolidBlock(-6, 3.5, 0, 1, 1, 12, MAT_WALL_ORANGE);
+createSolidBlock(-6, 5.0, 0, 1, 2, 12, MAT_WALL_GREY);
+
+// Front Wall (With Door Gap)
+createSolidBlock(-4, 3, 6, 4, 6, 1, MAT_WALL_GREY); 
+createSolidBlock(4, 3, 6, 4, 6, 1, MAT_WALL_GREY);  
+createSolidBlock(0, 5.5, 6, 4, 1, 1, MAT_WALL_GREY);  
+
+// Back Wall (The Complex Wall with the Secret Hole)
+// Solid parts of back wall
+createSolidBlock(-3.5, 3.0, -6, 5, 6, 1, MAT_WALL_GREY); // Left side of back wall
+createSolidBlock(3.5, 3.0, -6, 5, 6, 1, MAT_WALL_GREY);  // Right side of back wall
+createSolidBlock(0, 4.5, -6, 2, 3, 1, MAT_WALL_GREY);    // Top middle above hole
 
 // ==========================================================================
-// GAME STATE, BIOMETRICS & PHYSICS VARIABLES
+// THE SECRET HOLE (20 Explicitly defined fragile bricks)
+// ==========================================================================
+// Area from X: -1.0 to 1.0, Y: 0.0 to 3.0, Z: -6
+const holeGroup = new THREE.Group();
+holeGroup.position.set(0, 0, -6);
+MAIN_SCENE.add(holeGroup);
+
+function createFragileBrick(bx, by, bz) {
+    const brk = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.58, 1.0), MAT_WALL_DARK);
+    brk.position.set(bx, by, bz);
+    brk.castShadow = true;
+    brk.receiveShadow = true;
+    holeGroup.add(brk);
+    secretWallBricksArray.push(brk);
+    physicsCollidersArray.push(brk);
+}
+
+// 4 columns, 5 rows of bricks = 20 bricks explicitly placed
+createFragileBrick(-0.75, 0.3, 0); createFragileBrick(-0.25, 0.3, 0); createFragileBrick(0.25, 0.3, 0); createFragileBrick(0.75, 0.3, 0);
+createFragileBrick(-0.75, 0.9, 0); createFragileBrick(-0.25, 0.9, 0); createFragileBrick(0.25, 0.9, 0); createFragileBrick(0.75, 0.9, 0);
+createFragileBrick(-0.75, 1.5, 0); createFragileBrick(-0.25, 1.5, 0); createFragileBrick(0.25, 1.5, 0); createFragileBrick(0.75, 1.5, 0);
+createFragileBrick(-0.75, 2.1, 0); createFragileBrick(-0.25, 2.1, 0); createFragileBrick(0.25, 2.1, 0); createFragileBrick(0.75, 2.1, 0);
+createFragileBrick(-0.75, 2.7, 0); createFragileBrick(-0.25, 2.7, 0); createFragileBrick(0.25, 2.7, 0); createFragileBrick(0.75, 2.7, 0);
+
+// Invisible interactable hitbox over the secret wall
+const secretWallHitbox = new THREE.Mesh(new THREE.BoxGeometry(2.0, 3.0, 1.2), new THREE.MeshBasicMaterial({visible:false}));
+secretWallHitbox.position.set(0, 1.5, -6);
+MAIN_SCENE.add(secretWallHitbox);
+secretWallHitbox.userData = { entityType: "SECRET_WALL", isBreached: false };
+interactableItemsArray.push(secretWallHitbox);
+
+// The Dark Tunnel Behind the Hole
+const tunnelL = createSolidBlock(-1.5, 1.5, -9, 1, 3, 5, MAT_BLACK_VOID);
+const tunnelR = createSolidBlock(1.5, 1.5, -9, 1, 3, 5, MAT_BLACK_VOID);
+const tunnelT = createSolidBlock(0, 3.5, -9, 4, 1, 5, MAT_BLACK_VOID);
+const tunnelB = createSolidBlock(0, 1.5, -12, 4, 3, 1, MAT_BLACK_VOID); // Back wall of tunnel
+
+// ==========================================================================
+// EXPLICIT CELL FURNITURE
+// ==========================================================================
+// The Sink (Left Wall)
+const sinkBase = createSolidBlock(-5.25, 0.75, 2, 1.5, 1.5, 2, MAT_SINK_PORCELAIN);
+const sinkBasinF = createSolidBlock(-4.6, 1.75, 2, 0.2, 0.5, 2, MAT_SINK_PORCELAIN);
+const sinkBasinB = createSolidBlock(-5.9, 1.75, 2, 0.2, 0.5, 2, MAT_SINK_PORCELAIN);
+const sinkBasinL = createSolidBlock(-5.25, 1.75, 1.1, 1.5, 0.5, 0.2, MAT_SINK_PORCELAIN);
+const sinkBasinR = createSolidBlock(-5.25, 1.75, 2.9, 1.5, 0.5, 0.2, MAT_SINK_PORCELAIN);
+
+// The Tool (Metal Pipe hidden under sink)
+const metalPipeGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.8, 8);
+metalPipeGeo.rotateX(Math.PI/2);
+const metalPipeMesh = new THREE.Mesh(metalPipeGeo, MAT_PIPE_RUSTED);
+metalPipeMesh.position.set(-5.0, 0.2, 2.0);
+MAIN_SCENE.add(metalPipeMesh);
+metalPipeMesh.userData = { entityType: "METAL_PIPE", isCollected: false };
+interactableItemsArray.push(metalPipeMesh);
+
+// The Bunk Bed (Right Wall)
+const bedPost1 = createSolidBlock(3.9, 2, -3.9, 0.2, 4, 0.2, MAT_BUNK_FRAME);
+const bedPost2 = createSolidBlock(5.9, 2, -3.9, 0.2, 4, 0.2, MAT_BUNK_FRAME);
+const bedPost3 = createSolidBlock(3.9, 2, -1.1, 0.2, 4, 0.2, MAT_BUNK_FRAME);
+const bedPost4 = createSolidBlock(5.9, 2, -1.1, 0.2, 4, 0.2, MAT_BUNK_FRAME);
+
+const botFrameF = createSolidBlock(4.9, 1.2, -1.1, 2, 0.2, 0.2, MAT_BUNK_FRAME);
+const botFrameB = createSolidBlock(4.9, 1.2, -3.9, 2, 0.2, 0.2, MAT_BUNK_FRAME);
+const botFrameL = createSolidBlock(3.9, 1.2, -2.5, 0.2, 0.2, 3, MAT_BUNK_FRAME);
+const botFrameR = createSolidBlock(5.9, 1.2, -2.5, 0.2, 0.2, 3, MAT_BUNK_FRAME);
+
+const topFrameF = createSolidBlock(4.9, 3.2, -1.1, 2, 0.2, 0.2, MAT_BUNK_FRAME);
+const topFrameB = createSolidBlock(4.9, 3.2, -3.9, 2, 0.2, 0.2, MAT_BUNK_FRAME);
+const topFrameL = createSolidBlock(3.9, 3.2, -2.5, 0.2, 0.2, 3, MAT_BUNK_FRAME);
+const topFrameR = createSolidBlock(5.9, 3.2, -2.5, 0.2, 0.2, 3, MAT_BUNK_FRAME);
+
+const botMattress = createSolidBlock(4.9, 1.45, -2.5, 1.8, 0.3, 2.6, MAT_BUNK_MATTRESS);
+const topMattress = createSolidBlock(4.9, 3.45, -2.5, 1.8, 0.3, 2.6, MAT_BUNK_MATTRESS);
+
+const botPillow = createSolidBlock(4.9, 1.65, -3.4, 1.2, 0.1, 0.8, MAT_BUNK_PILLOW);
+const topPillow = createSolidBlock(4.9, 3.65, -3.4, 1.2, 0.1, 0.8, MAT_BUNK_PILLOW);
+
+// ==========================================================================
+// EXPLICIT IRON DOOR AND BARS
+// ==========================================================================
+const doorFrameL = createSolidBlock(-1.9, 2.5, 6, 0.2, 5, 0.2, MAT_DOOR_METAL);
+const doorFrameR = createSolidBlock(1.9, 2.5, 6, 0.2, 5, 0.2, MAT_DOOR_METAL);
+const doorFrameT = createSolidBlock(0, 4.9, 6, 4, 0.2, 0.2, MAT_DOOR_METAL);
+const doorFrameB = createSolidBlock(0, 0.1, 6, 4, 0.2, 0.2, MAT_DOOR_METAL);
+const doorFrameM = createSolidBlock(0, 2.5, 6, 4, 0.4, 0.3, MAT_DOOR_METAL);
+
+const doorBarGeo = new THREE.CylinderGeometry(0.06, 0.06, 4.6, 8);
+function createDoorBar(bx) {
+    const bar = new THREE.Mesh(doorBarGeo, MAT_DOOR_METAL);
+    bar.position.set(bx, 2.5, 6);
+    bar.castShadow = true;
+    MAIN_SCENE.add(bar);
+    physicsCollidersArray.push(bar);
+}
+// Explicitly calling 15 bars
+createDoorBar(-1.5); createDoorBar(-1.3); createDoorBar(-1.1); createDoorBar(-0.9); createDoorBar(-0.7);
+createDoorBar(-0.5); createDoorBar(-0.3); createDoorBar(-0.1); createDoorBar(0.1);  createDoorBar(0.3);
+createDoorBar(0.5);  createDoorBar(0.7);  createDoorBar(0.9);  createDoorBar(1.1);  createDoorBar(1.3);
+createDoorBar(1.5);
+
+const doorHitbox = new THREE.Mesh(new THREE.BoxGeometry(4, 5, 0.5), new THREE.MeshBasicMaterial({visible:false}));
+doorHitbox.position.set(0, 2.5, 6);
+MAIN_SCENE.add(doorHitbox);
+doorHitbox.userData = { entityType: "CELL_DOOR", isLocked: true };
+interactableItemsArray.push(doorHitbox);
+physicsCollidersArray.push(doorHitbox);
+
+// ==========================================================================
+// WINDOW & VOLUMETRIC LIGHTING
+// ==========================================================================
+const windowCutout = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 0.1), MAT_WINDOW_HOLE);
+windowCutout.position.set(-5.9, 4.5, -2);
+windowCutout.rotation.y = Math.PI/2;
+MAIN_SCENE.add(windowCutout);
+
+const rayGeo = new THREE.CylinderGeometry(0.5, 3.5, 10.0, 32, 1, true);
+rayGeo.translate(0, -5, 0);
+rayGeo.rotateX(Math.PI/2);
+const lightRay = new THREE.Mesh(rayGeo, MAT_VOLUMETRIC_LIGHT);
+lightRay.position.set(-5.9, 4.5, -2);
+lightRay.lookAt(0, 1.5, 2);
+MAIN_SCENE.add(lightRay);
+
+const ambLight = new THREE.AmbientLight(0x020305, 0.2);
+MAIN_SCENE.add(ambLight);
+
+const windowSpot = new THREE.SpotLight(0xaaccff, 4.0, 25, Math.PI/5, 0.5, 2);
+windowSpot.position.set(-5.9, 4.5, -2);
+windowSpot.target.position.set(0, 1.5, 2);
+windowSpot.castShadow = true;
+windowSpot.shadow.mapSize.width = 2048;
+windowSpot.shadow.mapSize.height = 2048;
+MAIN_SCENE.add(windowSpot);
+MAIN_SCENE.add(windowSpot.target);
+
+const corridorLight = new THREE.PointLight(0xffddaa, 1.0, 15);
+corridorLight.position.set(0, 4, 10);
+corridorLight.castShadow = true;
+MAIN_SCENE.add(corridorLight);
+
+// ==========================================================================
+// AI GUARD DEFINITION
+// ==========================================================================
+const guardGroup = new THREE.Group();
+guardGroup.position.set(10, 1.0, 10);
+MAIN_SCENE.add(guardGroup);
+
+const gTorso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 1.4, 0.6), MAT_GUARD_BODY);
+gTorso.position.y = 0.7;
+gTorso.castShadow = true;
+guardGroup.add(gTorso);
+
+const gHead = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), MAT_GUARD_HEAD);
+gHead.position.y = 1.6;
+gHead.castShadow = true;
+guardGroup.add(gHead);
+
+const gLight = new THREE.SpotLight(0xffffff, 3.0, 25, 0.35, 0.5, 1);
+gLight.position.set(0, 1.2, 0.4);
+gLight.castShadow = true;
+guardGroup.add(gLight);
+
+const gTarget = new THREE.Object3D();
+gTarget.position.set(0, 1.2, 10);
+guardGroup.add(gTarget);
+gLight.target = gTarget;
+
+// ==========================================================================
+// GAME STATE, PHYSICS & PLAYER LOGIC
 // ==========================================================================
 const CLOCK_SYSTEM = new THREE.Clock();
-let DELTA_T = 0.0;
-let TOTAL_UPTIME = 0.0;
+let DELTA_T = 0;
 
 let PLAYER_HEALTH = 100.0;
 let PLAYER_STAMINA = 100.0;
-let PLAYER_OXYGEN = 100.0;
 let PLAYER_BPM = 72.0;
-
 let IS_CROUCHING = false;
 let IS_SPRINTING = false;
-
-let INV_SLOT_01_DATA = "EMPTY";
-
-let PHASE_1_COMPLETE = false;
-let PHASE_2_COMPLETE = false;
-let PHASE_3_COMPLETE = false;
-let PHASE_4_COMPLETE = false;
-let PHASE_5_COMPLETE = false;
-let PHASE_6_COMPLETE = false;
-let PHASE_7_COMPLETE = false;
-let PHASE_8_COMPLETE = false;
-let PHASE_9_COMPLETE = false;
-let PHASE_10_COMPLETE = false;
+let CAN_JUMP = false;
+let HAS_PIPE = false;
+let ESCAPED = false;
 
 let GUARD_AI_STATE = "PATROL_LEFT";
-let GUARD_X_POS = 15.0;
-let GUARD_Z_POS = 15.0;
-let GUARD_FACING_ANGLE = 0.0;
 let GUARD_ALERT_METER = 0.0;
 
-// Player Physics Controller
 const playerVelocity = new THREE.Vector3();
 const playerDirection = new THREE.Vector3();
-let moveInputFwd = false;
-let moveInputBwd = false;
-let moveInputLft = false;
-let moveInputRgt = false;
-let canPlayerJump = false;
+let moveInputFwd = false, moveInputBwd = false, moveInputLft = false, moveInputRgt = false;
 
-let playerYawController = new THREE.Object3D();
-let playerPitchController = new THREE.Object3D();
+const playerYawController = new THREE.Object3D();
+const playerPitchController = new THREE.Object3D();
 playerYawController.position.set(0.0, 1.7, 0.0);
 playerYawController.add(playerPitchController);
 playerPitchController.add(MAIN_CAMERA);
 MAIN_SCENE.add(playerYawController);
 
-// ==========================================================================
-// INPUT HANDLING LOGIC
-// ==========================================================================
 const uiStartBlocker = document.getElementById('initial-loading-blocker');
-const uiStartButton = document.getElementById('start-button-panel');
+const startButton = document.getElementById('start-button-panel');
+const tooltip = document.getElementById('interaction-tooltip');
+const dialogueOverlay = document.getElementById('dialogue-overlay');
+const escapeScreen = document.getElementById('escape-screen');
 
-uiStartButton.addEventListener('click', function () {
-    document.body.requestPointerLock();
-});
+startButton.addEventListener('click', () => { document.body.requestPointerLock(); });
 
-document.addEventListener('pointerlockchange', function () {
+document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement === document.body) {
         uiStartBlocker.style.display = 'none';
     } else {
         uiStartBlocker.style.display = 'flex';
-        moveInputFwd = false; moveInputBwd = false; moveInputLft = false; moveInputRgt = false;
+        moveInputFwd = moveInputBwd = moveInputLft = moveInputRgt = false;
     }
 });
 
-document.addEventListener('mousemove', function(event) {
+document.addEventListener('mousemove', (e) => {
     if (document.pointerLockElement === document.body) {
-        const mx = event.movementX || 0;
-        const my = event.movementY || 0;
-        playerYawController.rotation.y -= mx * 0.002;
-        playerPitchController.rotation.x -= my * 0.002;
+        playerYawController.rotation.y -= (e.movementX || 0) * 0.002;
+        playerPitchController.rotation.x -= (e.movementY || 0) * 0.002;
         playerPitchController.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, playerPitchController.rotation.x));
     }
 });
 
-document.addEventListener('keydown', function(event) {
-    switch(event.code) {
-        case 'ArrowUp': case 'KeyW': moveInputFwd = true; break;
-        case 'ArrowDown': case 'KeyS': moveInputBwd = true; break;
-        case 'ArrowLeft': case 'KeyA': moveInputLft = true; break;
-        case 'ArrowRight': case 'KeyD': moveInputRgt = true; break;
-        case 'Space': 
-            if (canPlayerJump) { playerVelocity.y += 300.0; canPlayerJump = false; }
-            break;
+document.addEventListener('keydown', (e) => {
+    switch(e.code) {
+        case 'KeyW': case 'ArrowUp': moveInputFwd = true; break;
+        case 'KeyS': case 'ArrowDown': moveInputBwd = true; break;
+        case 'KeyA': case 'ArrowLeft': moveInputLft = true; break;
+        case 'KeyD': case 'ArrowRight': moveInputRgt = true; break;
+        case 'Space': if(CAN_JUMP){ playerVelocity.y += 280; CAN_JUMP = false; } break;
         case 'KeyC': IS_CROUCHING = true; playerYawController.position.y = 0.9; break;
-        case 'ShiftLeft': case 'ShiftRight': IS_SPRINTING = true; break;
+        case 'ShiftLeft': IS_SPRINTING = true; break;
         case 'KeyE': executeRaycastInteraction(); break;
     }
 });
 
-document.addEventListener('keyup', function(event) {
-    switch(event.code) {
-        case 'ArrowUp': case 'KeyW': moveInputFwd = false; break;
-        case 'ArrowDown': case 'KeyS': moveInputBwd = false; break;
-        case 'ArrowLeft': case 'KeyA': moveInputLft = false; break;
-        case 'ArrowRight': case 'KeyD': moveInputRgt = false; break;
+document.addEventListener('keyup', (e) => {
+    switch(e.code) {
+        case 'KeyW': case 'ArrowUp': moveInputFwd = false; break;
+        case 'KeyS': case 'ArrowDown': moveInputBwd = false; break;
+        case 'KeyA': case 'ArrowLeft': moveInputLft = false; break;
+        case 'KeyD': case 'ArrowRight': moveInputRgt = false; break;
         case 'KeyC': IS_CROUCHING = false; playerYawController.position.y = 1.7; break;
-        case 'ShiftLeft': case 'ShiftRight': IS_SPRINTING = false; break;
+        case 'ShiftLeft': IS_SPRINTING = false; break;
     }
 });
 
-// ==========================================================================
-// CORE RAYCASTING & INTERACTION LOGIC
-// ==========================================================================
-const coreRaycaster = new THREE.Raycaster();
-const screenCenterVec = new THREE.Vector2(0, 0);
+const raycaster = new THREE.Raycaster();
+const screenCenter = new THREE.Vector2(0, 0);
 
 function executeRaycastInteraction() {
-    coreRaycaster.setFromCamera(screenCenterVec, MAIN_CAMERA);
-    const intersects = coreRaycaster.intersectObjects(interactableItemsArray);
+    raycaster.setFromCamera(screenCenter, MAIN_CAMERA);
+    const hits = raycaster.intersectObjects(interactableItemsArray);
     
-    if (intersects.length > 0 && intersects[0].distance < 3.0) {
-        const targetObj = intersects[0].object;
-        const targetData = targetObj.userData;
+    if (hits.length > 0 && hits[0].distance < 3.0) {
+        const obj = hits[0].object;
+        const data = obj.userData;
         
-        if (targetData.entityType === "CONTAINER_BRICK") {
-            if (targetData.isSearched === false) {
-                targetData.isSearched = true;
-                targetObj.position.z += 0.2;
-                targetObj.rotation.y += 0.2;
-                INV_SLOT_01_DATA = targetData.itemContained;
-                document.getElementById('inv-01').innerText = "SHIV";
-                
-                document.getElementById('obj-1').classList.add('completed');
-                document.getElementById('obj-1').classList.remove('active');
-                document.getElementById('obj-2').classList.add('active');
-                
-                triggerSpatialDialogue("Found a rusted piece of metal. Sharp enough.");
-                evaluateProgressionStage1();
-            }
+        if (data.entityType === "METAL_PIPE" && !data.isCollected) {
+            data.isCollected = true;
+            obj.visible = false;
+            HAS_PIPE = true;
+            document.getElementById('inv-01').innerText = "PIPE";
+            document.getElementById('inv-01').classList.add('equipped');
+            document.getElementById('obj-1').classList.add('completed');
+            document.getElementById('obj-1').classList.remove('active');
+            document.getElementById('obj-2').classList.add('active');
+            triggerSpatialDialogue("Acquired heavy metal pipe. It's rusted but solid.");
         }
-        else if (targetData.entityType === "OBSTACLE_VENT") {
-            if (targetData.isOpen === false) {
-                if (INV_SLOT_01_DATA === "RUSTED_SHIV") {
-                    targetData.isOpen = true;
-                    targetObj.rotation.x = -Math.PI / 2;
-                    targetObj.position.y += 0.5;
-                    targetObj.position.z -= 0.5;
+        else if (data.entityType === "SECRET_WALL") {
+            if (!data.isBreached) {
+                if (HAS_PIPE) {
+                    data.isBreached = true;
+                    // Remove the 20 bricks to reveal tunnel
+                    secretWallBricksArray.forEach(brick => {
+                        holeGroup.remove(brick);
+                        let idx = physicsCollidersArray.indexOf(brick);
+                        if(idx > -1) physicsCollidersArray.splice(idx, 1);
+                    });
                     
                     document.getElementById('obj-2').classList.add('completed');
                     document.getElementById('obj-2').classList.remove('active');
-                    document.getElementById('obj-3').classList.add('active');
+                    document.getElementById('obj-3').classList.add('completed');
+                    document.getElementById('obj-4').classList.add('active');
                     
-                    triggerSpatialDialogue("Pried the grate open. Smells like dead rats in there.");
-                    evaluateProgressionStage2();
+                    triggerSpatialDialogue("The bricks crumbled. There's a dark passage here.");
                 } else {
-                    triggerSpatialDialogue("It's bolted tight. I need something to pry it.");
+                    triggerSpatialDialogue("The mortar here is weak and crumbling. I need a tool to smash it.");
                 }
             }
         }
-        else if (targetData.entityType === "PORTAL_CELL_DOOR") {
-            if (targetData.isLocked === true) {
-                triggerSpatialDialogue("Solid iron. Locked electronically from the outside.");
-            }
+        else if (data.entityType === "CELL_DOOR") {
+            triggerSpatialDialogue("Solid iron bars. Electronic lock engaged on the exterior.");
         }
     }
 }
 
 function triggerSpatialDialogue(textStr) {
-    const diagOverlay = document.getElementById('dialogue-overlay');
-    diagOverlay.innerText = `"${textStr}"`;
-    diagOverlay.style.opacity = 1.0;
-    setTimeout(() => { diagOverlay.style.opacity = 0.0; }, 4000);
+    dialogueOverlay.innerText = `"${textStr}"`;
+    dialogueOverlay.style.opacity = 1.0;
+    setTimeout(() => { dialogueOverlay.style.opacity = 0.0; }, 4000);
 }
 
-// ==========================================================================
-// PROGRESSION EVALUATORS
-// ==========================================================================
-function evaluateProgressionStage1() {
-    if (!PHASE_1_COMPLETE) {
-        PHASE_1_COMPLETE = true;
-        PLAYER_BPM = 85.0;
-    }
-}
-function evaluateProgressionStage2() {
-    if (PHASE_1_COMPLETE && !PHASE_2_COMPLETE) {
-        PHASE_2_COMPLETE = true;
-        PLAYER_BPM = 95.0;
-    }
-}
-function evaluateProgressionStage3() { if (PHASE_2_COMPLETE && !PHASE_3_COMPLETE) { PHASE_3_COMPLETE = true; } }
-function evaluateProgressionStage4() { if (PHASE_3_COMPLETE && !PHASE_4_COMPLETE) { PHASE_4_COMPLETE = true; } }
-function evaluateProgressionStage5() { if (PHASE_4_COMPLETE && !PHASE_5_COMPLETE) { PHASE_5_COMPLETE = true; } }
-function evaluateProgressionStage6() { if (PHASE_5_COMPLETE && !PHASE_6_COMPLETE) { PHASE_6_COMPLETE = true; } }
-function evaluateProgressionStage7() { if (PHASE_6_COMPLETE && !PHASE_7_COMPLETE) { PHASE_7_COMPLETE = true; } }
-function evaluateProgressionStage8() { if (PHASE_7_COMPLETE && !PHASE_8_COMPLETE) { PHASE_8_COMPLETE = true; } }
-function evaluateProgressionStage9() { if (PHASE_8_COMPLETE && !PHASE_9_COMPLETE) { PHASE_9_COMPLETE = true; } }
-function evaluateProgressionStage10() {
-    if (PHASE_9_COMPLETE && !PHASE_10_COMPLETE) {
-        PHASE_10_COMPLETE = true;
-        triggerSpatialDialogue("I'm out. I'm finally out.");
-    }
-}
-
-// ==========================================================================
-// MASSIVE 500-LINE EQUIVALENT VERBOSE AI GUARD LOGIC
-// ==========================================================================
 function updateComplexGuardArtificialIntelligence(dt) {
     if (GUARD_AI_STATE === "PATROL_LEFT") {
-        GUARD_X_POS -= dt * 2.0;
-        guardTorsoMesh.position.x = GUARD_X_POS;
-        guardTorsoMesh.rotation.y = -Math.PI / 2;
+        guardGroup.position.x -= dt * 2.5;
+        guardGroup.rotation.y = -Math.PI / 2;
+        if (guardGroup.position.x < -15.0) GUARD_AI_STATE = "TURN_RIGHT";
         
-        if (GUARD_X_POS < -20.0) {
-            GUARD_AI_STATE = "TURN_RIGHT";
-        }
-        
-        // Raycast logic
-        let distX = playerYawController.position.x - guardTorsoMesh.position.x;
-        let distZ = playerYawController.position.z - guardTorsoMesh.position.z;
-        let distTotal = Math.sqrt(distX*distX + distZ*distZ);
-        
-        if (distTotal < 25.0) {
-            let angleToP = Math.atan2(distX, distZ);
-            let guardAng = guardTorsoMesh.rotation.y;
-            if (Math.abs(angleToP - guardAng) < 1.0) {
+        let dx = playerYawController.position.x - guardGroup.position.x;
+        let dz = playerYawController.position.z - guardGroup.position.z;
+        let dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist < 20.0) {
+            let ang = Math.atan2(dx, dz);
+            let gAng = guardGroup.rotation.y;
+            if (Math.abs(ang - gAng) < 0.9) {
                 GUARD_AI_STATE = "SEARCH_MODE";
-                GUARD_ALERT_METER += 20.0;
+                GUARD_ALERT_METER += 15.0;
             }
         }
     }
     else if (GUARD_AI_STATE === "TURN_RIGHT") {
-        guardTorsoMesh.rotation.y += dt * 2.0;
-        if (guardTorsoMesh.rotation.y > Math.PI / 2) {
-            guardTorsoMesh.rotation.y = Math.PI / 2;
+        guardGroup.rotation.y += dt * 2.5;
+        if (guardGroup.rotation.y > Math.PI / 2) {
+            guardGroup.rotation.y = Math.PI / 2;
             GUARD_AI_STATE = "PATROL_RIGHT";
         }
     }
     else if (GUARD_AI_STATE === "PATROL_RIGHT") {
-        GUARD_X_POS += dt * 2.0;
-        guardTorsoMesh.position.x = GUARD_X_POS;
-        
-        if (GUARD_X_POS > 20.0) {
-            GUARD_AI_STATE = "TURN_LEFT";
-        }
+        guardGroup.position.x += dt * 2.5;
+        if (guardGroup.position.x > 15.0) GUARD_AI_STATE = "TURN_LEFT";
     }
     else if (GUARD_AI_STATE === "TURN_LEFT") {
-        guardTorsoMesh.rotation.y -= dt * 2.0;
-        if (guardTorsoMesh.rotation.y < -Math.PI / 2) {
-            guardTorsoMesh.rotation.y = -Math.PI / 2;
+        guardGroup.rotation.y -= dt * 2.5;
+        if (guardGroup.rotation.y < -Math.PI / 2) {
+            guardGroup.rotation.y = -Math.PI / 2;
             GUARD_AI_STATE = "PATROL_LEFT";
         }
     }
     else if (GUARD_AI_STATE === "SEARCH_MODE") {
-        tacticalFlashlight.color.setHex(0xffaa00);
-        GUARD_ALERT_METER -= dt * 5.0;
+        gLight.color.setHex(0xffaa00);
+        GUARD_ALERT_METER -= dt * 4.0;
         
-        let dirToP = new THREE.Vector3();
-        dirToP.subVectors(playerYawController.position, guardTorsoMesh.position).normalize();
-        let guardRay = new THREE.Raycaster(guardTorsoMesh.position, dirToP);
-        let hits = guardRay.intersectObjects(physicsCollidersArray);
+        let dir = new THREE.Vector3().subVectors(playerYawController.position, guardGroup.position).normalize();
+        let gRay = new THREE.Raycaster(guardGroup.position, dir);
+        let hits = gRay.intersectObjects(physicsCollidersArray);
         
         let canSee = true;
-        if (hits.length > 0) {
-            let wallDist = hits[0].distance;
-            let pDist = playerYawController.position.distanceTo(guardTorsoMesh.position);
-            if (wallDist < pDist) canSee = false;
+        if (hits.length > 0 && hits[0].distance < playerYawController.position.distanceTo(guardGroup.position)) {
+            canSee = false;
         }
         
-        if (canSee && !IS_CROUCHING) {
-            GUARD_ALERT_METER += dt * 40.0;
-        }
+        if (canSee && !IS_CROUCHING) GUARD_ALERT_METER += dt * 35.0;
         
-        if (GUARD_ALERT_METER > 100.0) {
-            GUARD_AI_STATE = "COMBAT_ALERT";
-        } else if (GUARD_ALERT_METER <= 0.0) {
+        if (GUARD_ALERT_METER > 100.0) GUARD_AI_STATE = "COMBAT_ALERT";
+        else if (GUARD_ALERT_METER <= 0.0) {
             GUARD_AI_STATE = "PATROL_LEFT";
-            tacticalFlashlight.color.setHex(0xfff0dd);
+            gLight.color.setHex(0xffffff);
             GUARD_ALERT_METER = 0.0;
         }
     }
     else if (GUARD_AI_STATE === "COMBAT_ALERT") {
-        tacticalFlashlight.color.setHex(0xff0000);
-        triggerSpatialDialogue("STOP RIGHT THERE! LETHAL FORCE AUTHORIZED!");
+        gLight.color.setHex(0xff0000);
+        triggerSpatialDialogue("PRISONER BREACH! LETHAL FORCE ENGAGED!");
         GUARD_AI_STATE = "PURSUIT";
         document.getElementById('damage-vignette').classList.add('damage-vignette-active');
     }
     else if (GUARD_AI_STATE === "PURSUIT") {
-        let dx = playerYawController.position.x - guardTorsoMesh.position.x;
-        let dz = playerYawController.position.z - guardTorsoMesh.position.z;
+        let dx = playerYawController.position.x - guardGroup.position.x;
+        let dz = playerYawController.position.z - guardGroup.position.z;
         let len = Math.sqrt(dx*dx + dz*dz);
-        dx /= len; dz /= len;
         
-        guardTorsoMesh.position.x += dx * dt * 5.0;
-        guardTorsoMesh.position.z += dz * dt * 5.0;
-        guardTorsoMesh.rotation.y = Math.atan2(dx, dz);
+        guardGroup.position.x += (dx/len) * dt * 5.5;
+        guardGroup.position.z += (dz/len) * dt * 5.5;
+        guardGroup.rotation.y = Math.atan2(dx, dz);
         
         if (len < 2.5) {
-            PLAYER_HEALTH -= dt * 75.0;
+            PLAYER_HEALTH -= dt * 60.0;
             if (PLAYER_HEALTH <= 0.0) {
-                document.body.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; width:100vw; height:100vh; background-color:#110000;'><h1 style='color:#ff0000; font-family:Arial; font-size: 72px; font-weight:bold;'>TERMINATED</h1></div>";
+                document.body.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; width:100vw; height:100vh; background-color:#100;'><h1 style='color:#f00; font-family:monospace; font-size: 80px; letter-spacing:15px;'>TERMINATED</h1></div>";
             }
         }
     }
 }
 
 // ==========================================================================
-// MASTER ENGINE LOOP
+// MASTER ENGINE RENDER LOOP
 // ==========================================================================
 function executeMasterRenderLoop() {
-    if (PLAYER_HEALTH <= 0) return;
-    
+    if (PLAYER_HEALTH <= 0 || ESCAPED) return;
     requestAnimationFrame(executeMasterRenderLoop);
     
     DELTA_T = CLOCK_SYSTEM.getDelta();
     TOTAL_UPTIME += DELTA_T;
-
+    
     let sysDate = new Date();
     document.getElementById('clock-display').innerText = sysDate.toISOString().split('T')[1].split('.')[0];
     
+    lightRay.material.opacity = 0.04 + Math.sin(TOTAL_UPTIME * 1.5) * 0.01;
+    
     if (document.pointerLockElement === document.body) {
-        
-        playerVelocity.x -= playerVelocity.x * 10.0 * DELTA_T;
-        playerVelocity.z -= playerVelocity.z * 10.0 * DELTA_T;
-        playerVelocity.y -= 9.8 * 100.0 * DELTA_T; 
+        playerVelocity.x -= playerVelocity.x * 12.0 * DELTA_T;
+        playerVelocity.z -= playerVelocity.z * 12.0 * DELTA_T;
+        playerVelocity.y -= 9.8 * 120.0 * DELTA_T; 
 
         playerDirection.z = Number(moveInputFwd) - Number(moveInputBwd);
         playerDirection.x = Number(moveInputRgt) - Number(moveInputLft);
         playerDirection.normalize();
 
-        let currentSpeedLimit = 40.0;
-        
+        let spd = 45.0;
         if (IS_SPRINTING && PLAYER_STAMINA > 0) {
-            currentSpeedLimit = 85.0;
-            PLAYER_STAMINA -= DELTA_T * 30.0;
-            PLAYER_BPM = 120.0;
+            spd = 90.0;
+            PLAYER_STAMINA -= DELTA_T * 35.0;
+            PLAYER_BPM = 130.0;
         } else if (IS_CROUCHING) {
-            currentSpeedLimit = 20.0;
+            spd = 22.0;
             PLAYER_STAMINA += DELTA_T * 15.0;
         } else {
-            PLAYER_STAMINA += DELTA_T * 10.0;
-            if (PLAYER_BPM > 72.0) PLAYER_BPM -= DELTA_T * 10.0;
+            PLAYER_STAMINA += DELTA_T * 8.0;
+            if (PLAYER_BPM > 72.0) PLAYER_BPM -= DELTA_T * 8.0;
         }
         
         if (PLAYER_STAMINA > 100) PLAYER_STAMINA = 100;
@@ -1267,61 +1245,77 @@ function executeMasterRenderLoop() {
         
         document.getElementById('stamina-fill-bar').style.width = PLAYER_STAMINA + '%';
         document.getElementById('health-fill-bar').style.width = PLAYER_HEALTH + '%';
-        document.getElementById('bpm-readout').innerText = Math.floor(PLAYER_BPM);
         
-        if (PLAYER_BPM > 100) {
-            document.getElementById('bpm-readout').style.color = '#ff0000';
-            document.getElementById('bpm-readout').style.textShadow = '0 0 10px #ff0000';
-        } else {
-            document.getElementById('bpm-readout').style.color = '#7ed321';
-            document.getElementById('bpm-readout').style.textShadow = '0 0 10px #7ed321';
+        let bpmEl = document.getElementById('bpm-readout');
+        bpmEl.innerText = Math.floor(PLAYER_BPM);
+        if (PLAYER_BPM > 110) { bpmEl.style.color = '#ff0000'; bpmEl.style.textShadow = '0 0 10px #f00'; } 
+        else { bpmEl.style.color = '#7ed321'; bpmEl.style.textShadow = '0 0 5px #7ed321'; }
+
+        if (moveInputFwd || moveInputBwd) playerVelocity.z -= playerDirection.z * spd * DELTA_T;
+        if (moveInputLft || moveInputRgt) playerVelocity.x -= playerDirection.x * spd * DELTA_T;
+
+        // Custom continuous collision resolution
+        let pNextX = playerYawController.position.x + playerVelocity.x * DELTA_T;
+        let pNextZ = playerYawController.position.z + playerVelocity.z * DELTA_T;
+        let pNextY = playerYawController.position.y + playerVelocity.y * DELTA_T;
+        
+        // Simple bounding box for main cell (handles basic collision)
+        if (pNextX < -5.5) pNextX = -5.5;
+        if (pNextX > 5.5) pNextX = 5.5;
+        
+        if (pNextZ > 5.5) pNextZ = 5.5; // Front door bounds
+        
+        // Back wall bounds and tunnel logic
+        if (pNextZ < -5.5) {
+            // Check if player is near the hole (-1.5 to 1.5 X)
+            if (secretWallHitbox.userData.isBreached && pNextX > -1.5 && pNextX < 1.5) {
+                // Allow passing into tunnel, bound within tunnel
+                if (pNextZ < -11.5) pNextZ = -11.5; // Deepest tunnel bound
+            } else {
+                pNextZ = -5.5; // Hit solid back wall
+            }
         }
-
-        if (moveInputFwd || moveInputBwd) playerVelocity.z -= playerDirection.z * currentSpeedLimit * DELTA_T;
-        if (moveInputLft || moveInputRgt) playerVelocity.x -= playerDirection.x * currentSpeedLimit * DELTA_T;
-
-        playerYawController.translateX(playerVelocity.x * DELTA_T);
-        playerYawController.translateY(playerVelocity.y * DELTA_T);
-        playerYawController.translateZ(playerVelocity.z * DELTA_T);
+        
+        playerYawController.position.x = pNextX;
+        playerYawController.position.z = pNextZ;
+        playerYawController.position.y = pNextY;
 
         let floorLevelLimit = IS_CROUCHING ? 0.9 : 1.7;
         if (playerYawController.position.y < floorLevelLimit) {
             playerVelocity.y = 0;
             playerYawController.position.y = floorLevelLimit;
-            canPlayerJump = true;
+            CAN_JUMP = true;
         }
         
-        if (playerYawController.position.x < -4.5) playerYawController.position.x = -4.5;
-        if (playerYawController.position.x > 4.5) playerYawController.position.x = 4.5;
-        if (playerYawController.position.z < -4.5) playerYawController.position.z = -4.5;
-        if (playerYawController.position.z > 4.5 && heavyCellDoorMesh.userData.isLocked) {
-            playerYawController.position.z = 4.5;
+        // Win Condition check (Inside deep tunnel)
+        if (playerYawController.position.z < -8.0 && !ESCAPED) {
+            ESCAPED = true;
+            document.exitPointerLock();
+            escapeScreen.style.display = 'flex';
+            setTimeout(() => { escapeScreen.style.opacity = 1.0; }, 100);
         }
         
-        coreRaycaster.setFromCamera(screenCenterVec, MAIN_CAMERA);
-        const pt = coreRaycaster.intersectObjects(interactableItemsArray);
-        if (pt.length > 0 && pt[0].distance < 3.0) {
-            document.getElementById('interaction-tooltip').style.opacity = 1.0;
-        } else {
-            document.getElementById('interaction-tooltip').style.opacity = 0.0;
-        }
+        raycaster.setFromCamera(screenCenter, MAIN_CAMERA);
+        const pt = raycaster.intersectObjects(interactableItemsArray);
+        if (pt.length > 0 && pt[0].distance < 3.0) tooltip.style.opacity = 1.0;
+        else tooltip.style.opacity = 0.0;
         
         updateComplexGuardArtificialIntelligence(DELTA_T);
         
-        if (Math.random() < 0.002) {
-            let randIndex = Math.floor(Math.random() * AMBIENT_DIALOGUE_DATABASE.length);
-            triggerSpatialDialogue(AMBIENT_DIALOGUE_DATABASE[randIndex]);
+        if (Math.random() < 0.001) {
+            let rIdx = Math.floor(Math.random() * AMBIENT_DIALOGUE_DATABASE.length);
+            triggerSpatialDialogue(AMBIENT_DIALOGUE_DATABASE[rIdx]);
         }
     }
 
     MAIN_RENDERER.render(MAIN_SCENE, MAIN_CAMERA);
 }
 
-window.addEventListener('resize', function () {
+window.addEventListener('resize', () => {
     MAIN_CAMERA.aspect = window.innerWidth / window.innerHeight;
     MAIN_CAMERA.updateProjectionMatrix();
     MAIN_RENDERER.setSize(window.innerWidth, window.innerHeight);
-}, false);
+});
 
 executeMasterRenderLoop();
 </script>
