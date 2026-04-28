@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape: The Cell</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+        }
+        #gl-canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+        }
+        #inventory-hud {
+            padding: 20px;
+            color: #ccc;
+            text-shadow: 1px 1px 0 #000;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+        #interaction-prompt {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 24px;
+            text-shadow: 0 0 5px #000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        #blocker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            pointer-events: auto;
+            z-index: 100;
+        }
+        #instructions {
+            text-align: center;
+            cursor: pointer;
+        }
+        .title {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #aa0000;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #888;
+        }
+        #freedom-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #fff;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 3s ease-in;
+        }
+        .freedom-title {
+            font-size: 72px;
+            letter-spacing: 15px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+</head>
+<body>
+
+    <div id="gl-canvas-container"></div>
+
+    <div id="ui-layer">
+        <div id="inventory-hud">INVENTORY: EMPTY</div>
+        <div id="crosshair"></div>
+        <div id="interaction-prompt">[E] INTERACT</div>
+    </div>
+
+    <div id="blocker">
+        <div id="instructions">
+            <div class="title">CELL 404</div>
+            <div class="subtitle">
+                Click to enter<br><br>
+                WASD to Move<br>
+                MOUSE to Look<br>
+                Left Click / E to Interact<br><br>
+                Find a way out.
+            </div>
+        </div>
+    </div>
+
+    <div id="freedom-screen">
+        <div class="freedom-title">FREEDOM</div>
+    </div>
+
+    <script>
+        // ==========================================
+        // GAME CONFIGURATION AND STATE MANAGEMENT
+        // ==========================================
+        const GameState = {
+            inventory: [],
+            hasSpoon: false,
+            hasKey: false,
+            brickRemoved: false,
+            doorUnlocked: false,
+            escaped: false,
+            isNearClue: false
+        };
+
+        const PlayerPhysics = {
+            velocity: new THREE.Vector3(),
+            direction: new THREE.Vector3(),
+            moveForward: false,
+            moveBackward: false,
+            moveLeft: false,
+            moveRight: false,
+            speed: 40.0,
+            mass: 80.0,
+            height: 1.7,
+            canJump: true
+        };
+
+        // ==========================================
+        // THREE.JS INITIALIZATION
+        // ==========================================
+        const container = document.getElementById('gl-canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020202);
+        scene.fog = new THREE.FogExp2(0x050505, 0.15);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.y = PlayerPhysics.height;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        // ==========================================
+        // CUSTOM POINTER LOCK CONTROLLER (FROM SCRATCH)
+        // ==========================================
+        const euler = new THREE.Euler(0, 0, 0, 'YXZ');
+        const PI_2 = Math.PI / 2;
+        let isLocked = false;
+
+        const blocker = document.getElementById('blocker');
+        const instructions = document.getElementById('instructions');
+
+        instructions.addEventListener('click', function () {
+            document.body.requestPointerLock();
+        });
+
+        document.addEventListener('pointerlockchange', function () {
+            if (document.pointerLockElement === document.body) {
+                isLocked = true;
+                blocker.style.display = 'none';
+            } else {
+                isLocked = false;
+                blocker.style.display = 'flex';
+                PlayerPhysics.moveForward = false;
+                PlayerPhysics.moveBackward = false;
+                PlayerPhysics.moveLeft = false;
+                PlayerPhysics.moveRight = false;
+            }
+        });
+
+        document.addEventListener('mousemove', function (event) {
+            if (isLocked === false) return;
+            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+            euler.setFromQuaternion(camera.quaternion);
+            euler.y -= movementX * 0.002;
+            euler.x -= movementY * 0.002;
+            euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+            camera.quaternion.setFromEuler(euler);
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (!isLocked) return;
+            switch (event.code) {
+                case 'ArrowUp':
+                case 'KeyW': PlayerPhysics.moveForward = true; break;
+                case 'ArrowLeft':
+                case 'KeyA': PlayerPhysics.moveLeft = true; break;
+                case 'ArrowDown':
+                case 'KeyS': PlayerPhysics.moveBackward = true; break;
+                case 'ArrowRight':
+                case 'KeyD': PlayerPhysics.moveRight = true; break;
+                case 'KeyE': interact(); break;
+            }
+        });
+
+        document.addEventListener('keyup', function (event) {
+            if (!isLocked) return;
+            switch (event.code) {
+                case 'ArrowUp':
+                case 'KeyW': PlayerPhysics.moveForward = false; break;
+                case 'ArrowLeft':
+                case 'KeyA': PlayerPhysics.moveLeft = false; break;
+                case 'ArrowDown':
+                case 'KeyS': PlayerPhysics.moveBackward = false; break;
+                case 'ArrowRight':
+                case 'KeyD': PlayerPhysics.moveRight = false; break;
+            }
+        });
+
+        document.addEventListener('mousedown', function (event) {
+            if (!isLocked) return;
+            if (event.button === 0) interact();
+        });
+
+        // ==========================================
+        // PROCEDURAL TEXTURE GENERATION
+        // ==========================================
+        function createProceduralGrimeTexture(width, height, baseR, baseG, baseB) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.createImageData(width, height);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = Math.random();
+                const scratch = Math.random() > 0.99 ? 50 : 0;
+                const dampness = Math.sin(i * 0.001) * 20;
+                
+                data[i]     = Math.max(0, Math.min(255, baseR - noise * 40 + scratch - dampness)); // R
+                data[i + 1] = Math.max(0, Math.min(255, baseG - noise * 40 + scratch - dampness)); // G
+                data[i + 2] = Math.max(0, Math.min(255, baseB - noise * 40 + scratch - dampness)); // B
+                data[i + 3] = 255; // Alpha
+            }
+            
+            // Add procedural structural lines (bricks/panels)
+            for(let y = 0; y < height; y++) {
+                for(let x = 0; x < width; x++) {
+                    if(y % 64 === 0 || (x % 128 === 0 && Math.floor(y/64)%2===0) || (x % 128 === 64 && Math.floor(y/64)%2!==0)) {
+                        const index = (y * width + x) * 4;
+                        data[index] = data[index] * 0.5;
+                        data[index+1] = data[index+1] * 0.5;
+                        data[index+2] = data[index+2] * 0.5;
+                    }
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(4, 4);
+            return texture;
+        }
+
+        const wallTexture = createProceduralGrimeTexture(512, 512, 60, 60, 65);
+        const floorTexture = createProceduralGrimeTexture(512, 512, 40, 38, 38);
+        const rustTexture = createProceduralGrimeTexture(256, 256, 120, 50, 20);
+
+        const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture, roughness: 0.9, metalness: 0.1 });
+        const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.8, metalness: 0.2 });
+        const rustMaterial = new THREE.MeshStandardMaterial({ map: rustTexture, roughness: 1.0, metalness: 0.8 });
+
+        // ==========================================
+        // ENVIRONMENT CONSTRUCTION
+        // ==========================================
+        const interactables = [];
+
+        // Room geometry (Inverted Box)
+        const roomSize = 8;
+        const roomHeight = 4;
+        const roomGeometry = new THREE.BoxGeometry(roomSize, roomHeight, roomSize);
+        const roomMaterials = [
+            wallMaterial, // Right
+            wallMaterial, // Left
+            wallMaterial, // Top (Ceiling)
+            floorMaterial, // Bottom (Floor)
+            wallMaterial, // Front
+            wallMaterial  // Back
+        ];
+        const room = new THREE.Mesh(roomGeometry, roomMaterials);
+        room.geometry.scale(-1, -1, -1); // Invert normals
+        room.position.y = roomHeight / 2;
+        room.receiveShadow = true;
+        scene.add(room);
+
+        // The Door
+        const doorGroup = new THREE.Group();
+        doorGroup.position.set(0, 0, roomSize / 2 - 0.05);
+        scene.add(doorGroup);
+
+        const doorGeometry = new THREE.BoxGeometry(2, 3, 0.1);
+        const doorMesh = new THREE.Mesh(doorGeometry, rustMaterial);
+        doorMesh.position.set(1, 1.5, 0); // Offset for hinge
+        doorMesh.castShadow = true;
+        doorMesh.receiveShadow = true;
+        doorGroup.add(doorMesh);
+        
+        doorMesh.userData = { 
+            type: 'door', 
+            interact: function() {
+                if (GameState.hasKey) {
+                    GameState.doorUnlocked = true;
+                    updateHUD("DOOR UNLOCKED. ESCAPE.");
+                    triggerWinSequence();
+                } else {
+                    updateHUD("IT'S LOCKED. FEELS HEAVY.");
+                }
+            }
+        };
+        interactables.push(doorMesh);
+
+        // The Cot (Bed)
+        const bedGroup = new THREE.Group();
+        bedGroup.position.set(-roomSize/2 + 1, 0, -roomSize/2 + 2);
+        scene.add(bedGroup);
+
+        const frameGeom = new THREE.BoxGeometry(1.5, 0.5, 3);
+        const frameMesh = new THREE.Mesh(frameGeom, rustMaterial);
+        frameMesh.position.y = 0.25;
+        frameMesh.castShadow = true;
+        frameMesh.receiveShadow = true;
+        bedGroup.add(frameMesh);
+
+        const mattressGeom = new THREE.BoxGeometry(1.4, 0.2, 2.9);
+        const mattressMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 1.0 });
+        const mattressMesh = new THREE.Mesh(mattressGeom, mattressMat);
+        mattressMesh.position.y = 0.6;
+        mattressMesh.castShadow = true;
+        mattressMesh.receiveShadow = true;
+        bedGroup.add(mattressMesh);
+
+        // The Hidden Spoon (under bed)
+        const spoonGeom = new THREE.CylinderGeometry(0.02, 0.05, 0.3, 8);
+        const spoonMesh = new THREE.Mesh(spoonGeom, new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.2 }));
+        spoonMesh.rotation.x = Math.PI / 2;
+        spoonMesh.position.set(-roomSize/2 + 0.5, 0.05, -roomSize/2 + 1.5);
+        spoonMesh.castShadow = true;
+        scene.add(spoonMesh);
+
+        spoonMesh.userData = {
+            type: 'spoon',
+            interact: function() {
+                scene.remove(spoonMesh);
+                GameState.hasSpoon = true;
+                GameState.inventory.push("RUSTED SPOON");
+                updateHUD("FOUND: RUSTED SPOON");
+            }
+        };
+        interactables.push(spoonMesh);
+
+        // The Loose Brick
+        const brickGeom = new THREE.BoxGeometry(0.4, 0.2, 0.2);
+        const brickMesh = new THREE.Mesh(brickGeom, wallMaterial);
+        brickMesh.position.set(roomSize/2 - 0.1, 1.2, -1.5);
+        scene.add(brickMesh);
+
+        brickMesh.userData = {
+            type: 'brick',
+            interact: function() {
+                if (GameState.hasSpoon) {
+                    if (!GameState.brickRemoved) {
+                        brickMesh.position.z += 0.2;
+                        brickMesh.rotation.y = Math.PI / 8;
+                        brickMesh.position.y -= 0.8;
+                        GameState.brickRemoved = true;
+                        scene.add(keyMesh); // Reveal key
+                        updateHUD("PRYING THE BRICK LOOSE...");
+                    }
+                } else {
+                    updateHUD("A LOOSE BRICK. NEEDS SOMETHING TO PRY IT.");
+                }
+            }
+        };
+        interactables.push(brickMesh);
+
+        // The Hidden Key (Behind brick)
+        const keyGeom = new THREE.TorusGeometry(0.05, 0.02, 8, 16);
+        const keyMesh = new THREE.Mesh(keyGeom, new THREE.MeshStandardMaterial({ color: 0xddaa00, metalness: 1.0, roughness: 0.3 }));
+        keyMesh.position.set(roomSize/2 - 0.15, 1.2, -1.5);
+        // Not added to scene until brick removed
+        
+        keyMesh.userData = {
+            type: 'key',
+            interact: function() {
+                scene.remove(keyMesh);
+                GameState.hasKey = true;
+                GameState.inventory.push("IRON KEY");
+                updateHUD("FOUND: IRON KEY");
+            }
+        };
+        interactables.push(keyMesh);
+
+        // Window and Bars
+        const windowGroup = new THREE.Group();
+        windowGroup.position.set(0, 2.5, -roomSize/2);
+        scene.add(windowGroup);
+
+        const windowHoleGeom = new THREE.BoxGeometry(1.5, 1, 0.2);
+        const windowHoleMesh = new THREE.Mesh(windowHoleGeom, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+        windowGroup.add(windowHoleMesh);
+
+        for (let i = 0; i < 5; i++) {
+            const barGeom = new THREE.CylinderGeometry(0.02, 0.02, 1, 8);
+            const barMesh = new THREE.Mesh(barGeom, rustMaterial);
+            barMesh.position.set(-0.6 + i * 0.3, 0, 0);
+            barMesh.castShadow = true;
+            windowGroup.add(barMesh);
+        }
+
+        // ==========================================
+        // ENVIRONMENTAL CLUTTER (MASSIVE DATA ARRAYS)
+        // ==========================================
+        // Defining thousands of explicit vertices to represent floating dust motes
+        // Procedurally generating the array but storing it explicitly in memory
+        const dustParticleCount = 5000;
+        const dustPositions = new Float32Array(dustParticleCount * 3);
+        const dustOpacities = new Float32Array(dustParticleCount);
+
+        for(let i = 0; i < dustParticleCount; i++) {
+            dustPositions[i*3] = (Math.random() - 0.5) * roomSize;
+            dustPositions[i*3+1] = Math.random() * roomHeight;
+            dustPositions[i*3+2] = (Math.random() - 0.5) * roomSize;
+            dustOpacities[i] = Math.random();
+        }
+
+        const dustGeometry = new THREE.BufferGeometry();
+        dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+        dustGeometry.setAttribute('aOpacity', new THREE.BufferAttribute(dustOpacities, 1));
+
+        // Custom Shader for Dust
+        const dustVertexShader = `
+            attribute float aOpacity;
+            varying float vOpacity;
+            void main() {
+                vOpacity = aOpacity;
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = (2.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+        const dustFragmentShader = `
+            varying float vOpacity;
+            void main() {
+                float dist = length(gl_PointCoord - vec2(0.5));
+                if (dist > 0.5) discard;
+                gl_FragColor = vec4(0.8, 0.8, 0.8, vOpacity * (0.5 - dist));
+            }
+        `;
+
+        const dustMaterial = new THREE.ShaderMaterial({
+            vertexShader: dustVertexShader,
+            fragmentShader: dustFragmentShader,
+            transparent: true,
+            depthWrite: false
+        });
+
+        const dustSystem = new THREE.Points(dustGeometry, dustMaterial);
+        scene.add(dustSystem);
+
+        // ==========================================
+        // LIGHTING & VOLUMETRIC EFFECTS
+        // ==========================================
+        const ambientLight = new THREE.AmbientLight(0x111115, 0.4);
+        scene.add(ambientLight);
+
+        const moonLight = new THREE.SpotLight(0x445588, 2.5);
+        moonLight.position.set(0, 3, -roomSize/2 - 2);
+        moonLight.target.position.set(0, 0, 0);
+        moonLight.castShadow = true;
+        moonLight.angle = Math.PI / 6;
+        moonLight.penumbra = 0.5;
+        moonLight.shadow.mapSize.width = 2048;
+        moonLight.shadow.mapSize.height = 2048;
+        scene.add(moonLight);
+        scene.add(moonLight.target);
+
+        // Fake Volumetric light ray
+        const rayGeometry = new THREE.ConeGeometry(2, 6, 32, 1, true);
+        const rayMaterial = new THREE.MeshBasicMaterial({
+            color: 0x445588,
+            transparent: true,
+            opacity: 0.05,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            side: THREE.DoubleSide
+        });
+        const lightRay = new THREE.Mesh(rayGeometry, rayMaterial);
+        lightRay.position.set(0, 1.5, -roomSize/2 + 2);
+        lightRay.rotation.x = -Math.PI / 4;
+        scene.add(lightRay);
+
+        // ==========================================
+        // CUSTOM POST-PROCESSING SHADERS (Cinematic)
+        // ==========================================
+        const composer = new THREE.EffectComposer(renderer);
+        const renderPass = new THREE.RenderPass(scene, camera);
+        composer.addPass(renderPass);
+
+        const CinematicShader = {
+            uniforms: {
+                "tDiffuse": { value: null },
+                "time": { value: 0.0 },
+                "pulseIntensity": { value: 0.0 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform float time;
+                uniform float pulseIntensity;
+                varying vec2 vUv;
+
+                float random(vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                }
+
+                void main() {
+                    vec2 uv = vUv;
+                    
+                    // Chromatic Aberration
+                    float offset = 0.002 + pulseIntensity * 0.005;
+                    vec4 cr = texture2D(tDiffuse, uv + vec2(offset, 0.0));
+                    vec4 cg = texture2D(tDiffuse, uv);
+                    vec4 cb = texture2D(tDiffuse, uv - vec2(offset, 0.0));
+                    vec4 color = vec4(cr.r, cg.g, cb.b, 1.0);
+
+                    // Film Grain
+                    float noise = (random(uv + time) - 0.5) * 0.15;
+                    color.rgb += noise;
+
+                    // Vignette & Heartbeat Pulse
+                    vec2 center = vec2(0.5, 0.5);
+                    float dist = distance(uv, center);
+                    float baseVignette = smoothstep(0.8, 0.2, dist);
+                    
+                    float pulse = sin(time * 5.0) * cos(time * 2.5);
+                    float dynamicVignette = smoothstep(0.8 - (pulse * 0.1 * pulseIntensity), 0.1, dist);
+                    
+                    color.rgb *= mix(baseVignette, dynamicVignette, pulseIntensity);
+                    
+                    // Darken overall output
+                    color.rgb *= 0.6;
+
+                    gl_FragColor = color;
+                }
+            `
+        };
+
+        const cinematicPass = new THREE.ShaderPass(CinematicShader);
+        composer.addPass(cinematicPass);
+
+        // ==========================================
+        // RAYCASTING & INTERACTION LOGIC
+        // ==========================================
+        const raycaster = new THREE.Raycaster();
+        const centerVector = new THREE.Vector2(0, 0);
+        const promptEl = document.getElementById('interaction-prompt');
+        let currentIntersect = null;
+
+        function updateRaycaster() {
+            raycaster.setFromCamera(centerVector, camera);
+            const intersects = raycaster.intersectObjects(interactables, false);
+
+            if (intersects.length > 0 && intersects[0].distance < 2.5) {
+                currentIntersect = intersects[0].object;
+                promptEl.style.opacity = 1;
+                
+                // Increase pulse intensity if looking at a crucial clue
+                if (currentIntersect.userData.type === 'brick' || currentIntersect.userData.type === 'key') {
+                    CinematicShader.uniforms.pulseIntensity.value = THREE.MathUtils.lerp(CinematicShader.uniforms.pulseIntensity.value, 1.0, 0.1);
+                }
+            } else {
+                currentIntersect = null;
+                promptEl.style.opacity = 0;
+                CinematicShader.uniforms.pulseIntensity.value = THREE.MathUtils.lerp(CinematicShader.uniforms.pulseIntensity.value, 0.0, 0.05);
+            }
+        }
+
+        function interact() {
+            if (currentIntersect && currentIntersect.userData.interact) {
+                currentIntersect.userData.interact();
+            }
+        }
+
+        function updateHUD(message) {
+            const hud = document.getElementById('inventory-hud');
+            let invStr = GameState.inventory.length > 0 ? GameState.inventory.join(' | ') : 'EMPTY';
+            hud.innerHTML = `INVENTORY: ${invStr}<br><br><span style="color:#fff; font-size:14px;">> ${message}</span>`;
+            setTimeout(() => {
+                hud.innerHTML = `INVENTORY: ${invStr}`;
+            }, 4000);
+        }
+
+        function triggerWinSequence() {
+            GameState.escaped = true;
+            document.exitPointerLock();
+            
+            // Animate door opening
+            const openInterval = setInterval(() => {
+                if (doorGroup.rotation.y < Math.PI / 2) {
+                    doorGroup.rotation.y += 0.02;
+                } else {
+                    clearInterval(openInterval);
+                }
+            }, 16);
+
+            // Fade to white
+            setTimeout(() => {
+                const fScreen = document.getElementById('freedom-screen');
+                fScreen.style.display = 'flex';
+                // Trigger reflow
+                void fScreen.offsetWidth;
+                fScreen.style.opacity = 1;
+            }, 1000);
+        }
+
+        // ==========================================
+        // MAIN GAME LOOP
+        // ==========================================
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            CinematicShader.uniforms.time.value = time;
+
+            if (isLocked && !GameState.escaped) {
+                // Physics & Movement
+                PlayerPhysics.velocity.x -= PlayerPhysics.velocity.x * 10.0 * delta;
+                PlayerPhysics.velocity.z -= PlayerPhysics.velocity.z * 10.0 * delta;
+
+                PlayerPhysics.direction.z = Number(PlayerPhysics.moveForward) - Number(PlayerPhysics.moveBackward);
+                PlayerPhysics.direction.x = Number(PlayerPhysics.moveRight) - Number(PlayerPhysics.moveLeft);
+                PlayerPhysics.direction.normalize();
+
+                if (PlayerPhysics.moveForward || PlayerPhysics.moveBackward) PlayerPhysics.velocity.z -= PlayerPhysics.direction.z * PlayerPhysics.speed * delta;
+                if (PlayerPhysics.moveLeft || PlayerPhysics.moveRight) PlayerPhysics.velocity.x -= PlayerPhysics.direction.x * PlayerPhysics.speed * delta;
+
+                // Apply velocity relative to camera orientation
+                const camRot = camera.rotation.y;
+                const moveX = PlayerPhysics.velocity.x * delta;
+                const moveZ = PlayerPhysics.velocity.z * delta;
+
+                const actualMoveX = moveX * Math.cos(camRot) + moveZ * Math.sin(camRot);
+                const actualMoveZ = moveZ * Math.cos(camRot) - moveX * Math.sin(camRot);
+
+                camera.position.x -= actualMoveX;
+                camera.position.z -= actualMoveZ;
+
+                // Simple collision constraints (keep inside room)
+                const bound = roomSize / 2 - 0.5;
+                if (camera.position.x > bound) camera.position.x = bound;
+                if (camera.position.x < -bound) camera.position.x = -bound;
+                if (camera.position.z > bound) camera.position.z = bound;
+                if (camera.position.z < -bound) camera.position.z = -bound;
+
+                // Head bobbing
+                if (PlayerPhysics.moveForward || PlayerPhysics.moveBackward || PlayerPhysics.moveLeft || PlayerPhysics.moveRight) {
+                    camera.position.y = PlayerPhysics.height + Math.sin(time * 10) * 0.05;
+                } else {
+                    camera.position.y = PlayerPhysics.height;
+                }
+
+                updateRaycaster();
+            }
+
+            // Animate dust
+            const positions = dustSystem.geometry.attributes.position.array;
+            for(let i = 0; i < dustParticleCount; i++) {
+                positions[i*3+1] -= delta * 0.1; // Fall slowly
+                positions[i*3] += Math.sin(time + i) * 0.001; // Drift X
+                positions[i*3+2] += Math.cos(time + i) * 0.001; // Drift Z
+                
+                // Reset if hits floor
+                if(positions[i*3+1] < 0) {
+                    positions[i*3+1] = roomHeight;
+                }
+            }
+            dustSystem.geometry.attributes.position.needsUpdate = true;
+
+            composer.render();
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Start
+        animate();
+    </script>
+</body>
+</html>
