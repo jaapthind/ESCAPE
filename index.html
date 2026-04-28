@@ -3,42 +3,71 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Block D - Absolute Confinement</title>
+<title>Block D - Maximum Security Escape</title>
 <style>
 /* ==========================================================================
    CSS HUD AND UI STYLING (MASSIVE, VERBOSE, CRT OVERLAYS)
    ========================================================================== */
 :root {
-    --hud-color: #0f380f;
-    --hud-alert: #8b0000;
-    --hud-text: #8bac0f;
-    --hud-bg: rgba(15, 56, 15, 0.1);
-    --crt-line-color: rgba(255, 255, 255, 0.03);
-    --shadow-intense: 0 0 10px var(--hud-text), inset 0 0 15px var(--hud-text);
+    --hud-primary-color: #0f380f;
+    --hud-secondary-color: #8bac0f;
+    --hud-alert-color: #8b0000;
+    --hud-warning-color: #ff8c00;
+    --hud-background-tint: rgba(15, 56, 15, 0.1);
+    --crt-scanline-color: rgba(255, 255, 255, 0.03);
+    --crt-phosphor-glow: rgba(139, 172, 15, 0.2);
+    --shadow-intense: 0 0 10px var(--hud-secondary-color), inset 0 0 15px var(--hud-secondary-color);
+    --font-family-base: 'Courier New', Courier, monospace;
 }
+
 @font-face {
-    font-family: 'Terminus';
+    font-family: 'SimulatedTerminus';
     src: local('Courier New');
+    font-weight: normal;
+    font-style: normal;
 }
-body, html {
+
+@font-face {
+    font-family: 'SimulatedTerminusBold';
+    src: local('Courier New');
+    font-weight: bold;
+    font-style: normal;
+}
+
+body {
     margin: 0;
     padding: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
     overflow: hidden;
-    font-family: 'Terminus', monospace;
+    font-family: 'SimulatedTerminus', var(--font-family-base);
     user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
-#game-canvas {
+
+html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000000;
+    overflow: hidden;
+}
+
+#game-canvas-container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
     z-index: 1;
+    display: block;
 }
-#ui-layer {
+
+#ui-master-layer {
     position: absolute;
     top: 0;
     left: 0;
@@ -47,8 +76,10 @@ body, html {
     z-index: 10;
     pointer-events: none;
     box-sizing: border-box;
+    display: block;
 }
-#crt-overlay {
+
+#crt-screen-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -58,39 +89,49 @@ body, html {
     pointer-events: none;
     background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
     background-size: 100% 2px, 3px 100%;
-    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.9), inset 0 0 20px var(--crt-phosphor-glow);
+    display: block;
 }
-@keyframes staticNoise {
-    0% { background-position: 0 0; opacity: 0.1; }
+
+@keyframes staticNoiseAnimation {
+    0% { background-position: 0px 0px; opacity: 0.1; }
     10% { background-position: 5px 10px; opacity: 0.2; }
     20% { background-position: -5px -10px; opacity: 0.15; }
     30% { background-position: 10px -5px; opacity: 0.1; }
     40% { background-position: -10px 5px; opacity: 0.25; }
-    50% { background-position: 0 15px; opacity: 0.1; }
-    60% { background-position: 15px 0; opacity: 0.2; }
+    50% { background-position: 0px 15px; opacity: 0.1; }
+    60% { background-position: 15px 0px; opacity: 0.2; }
     70% { background-position: -15px -15px; opacity: 0.15; }
     80% { background-position: 5px -15px; opacity: 0.1; }
     90% { background-position: -5px 15px; opacity: 0.2; }
-    100% { background-position: 0 0; opacity: 0.1; }
+    100% { background-position: 0px 0px; opacity: 0.1; }
 }
-#static-effect {
+
+#static-interference-effect {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     z-index: 99;
     opacity: 0.1;
     pointer-events: none;
     background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.1) 1px, transparent 2px);
-    animation: staticNoise 0.5s infinite;
+    animation-name: staticNoiseAnimation;
+    animation-duration: 0.5s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    display: block;
 }
-@keyframes bloodSplatter {
-    0% { opacity: 0; transform: scale(0.9); }
-    10% { opacity: 1; transform: scale(1.0); }
-    100% { opacity: 0; transform: scale(1.1); }
+
+@keyframes bloodSplatterAnimation {
+    0% { opacity: 0; transform: scale(0.9); box-shadow: inset 0 0 0px rgba(139, 0, 0, 0); }
+    10% { opacity: 1; transform: scale(1.0); box-shadow: inset 0 0 300px rgba(139, 0, 0, 1); }
+    50% { opacity: 0.8; transform: scale(1.02); box-shadow: inset 0 0 250px rgba(139, 0, 0, 0.8); }
+    100% { opacity: 0; transform: scale(1.1); box-shadow: inset 0 0 0px rgba(139, 0, 0, 0); }
 }
-#damage-overlay {
+
+#player-damage-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -99,337 +140,528 @@ body, html {
     z-index: 90;
     box-shadow: inset 0 0 150px rgba(139, 0, 0, 0);
     pointer-events: none;
-    transition: box-shadow 0.2s ease-out;
+    transition-property: box-shadow;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out;
+    display: block;
 }
-.damage-active {
+
+.damage-overlay-active {
     box-shadow: inset 0 0 200px rgba(139, 0, 0, 0.8) !important;
-    animation: bloodSplatter 1s ease-out forwards;
+    animation-name: bloodSplatterAnimation;
+    animation-duration: 1s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
 }
-#hud-top-left {
+
+#hud-top-left-container {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 25px;
+    left: 25px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
+    z-index: 80;
 }
-#hud-top-right {
+
+#hud-top-right-container {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 25px;
+    right: 25px;
     text-align: right;
-    color: var(--hud-text);
-    text-shadow: 0 0 5px var(--hud-text);
+    color: var(--hud-secondary-color);
+    text-shadow: 0 0 5px var(--hud-secondary-color);
+    z-index: 80;
+    font-size: 14px;
+    letter-spacing: 1px;
 }
-#hud-bottom-left {
+
+#hud-bottom-left-container {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    color: var(--hud-text);
+    bottom: 25px;
+    left: 25px;
+    color: var(--hud-secondary-color);
+    z-index: 80;
 }
-#hud-bottom-right {
+
+#hud-bottom-right-container {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
+    bottom: 25px;
+    right: 25px;
     display: flex;
-    gap: 5px;
+    flex-direction: row;
+    gap: 6px;
+    z-index: 80;
 }
-.bar-container {
-    width: 250px;
-    height: 15px;
-    border: 2px solid var(--hud-text);
-    background: var(--hud-bg);
+
+.status-bar-wrapper {
+    width: 260px;
+    height: 18px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--hud-secondary-color);
+    background-color: var(--hud-background-tint);
     position: relative;
-    box-shadow: 0 0 5px var(--hud-color);
+    box-shadow: 0 0 6px var(--hud-primary-color);
+    display: block;
 }
-.bar-fill {
+
+.status-bar-fill-element {
     height: 100%;
-    background-color: var(--hud-text);
+    background-color: var(--hud-secondary-color);
     width: 100%;
-    transition: width 0.3s linear;
-    box-shadow: 0 0 10px var(--hud-text);
+    transition-property: width;
+    transition-duration: 0.3s;
+    transition-timing-function: linear;
+    box-shadow: 0 0 12px var(--hud-secondary-color);
+    display: block;
 }
-#oxygen-container { border-color: #0088ff; }
-#oxygen-fill { background-color: #0088ff; box-shadow: 0 0 10px #0088ff; }
-#stamina-container { border-color: #ffaa00; }
-#stamina-fill { background-color: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
-#stealth-container { border-color: #aa00ff; }
-#stealth-fill { background-color: #aa00ff; box-shadow: 0 0 10px #aa00ff; }
-@keyframes pulseStamina {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+
+#oxygen-bar-container { border-color: #0088ff; }
+#oxygen-bar-fill { background-color: #0088ff; box-shadow: 0 0 12px #0088ff; }
+#stamina-bar-container { border-color: #ffaa00; }
+#stamina-bar-fill { background-color: #ffaa00; box-shadow: 0 0 12px #ffaa00; }
+#stealth-bar-container { border-color: #aa00ff; }
+#stealth-bar-fill { background-color: #aa00ff; box-shadow: 0 0 12px #aa00ff; }
+
+@keyframes criticalStaminaPulse {
+    0% { opacity: 1.0; background-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+    50% { opacity: 0.3; background-color: #8b0000; box-shadow: 0 0 5px #8b0000; }
+    100% { opacity: 1.0; background-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
 }
-.low-stamina { animation: pulseStamina 0.5s infinite; background-color: red !important; }
-.inventory-slot {
-    width: 40px;
-    height: 40px;
-    border: 2px solid var(--hud-text);
-    background: rgba(0,0,0,0.5);
+
+.stamina-critical-state {
+    animation-name: criticalStaminaPulse;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    background-color: #ff0000 !important;
+}
+
+.inventory-slot-box {
+    width: 45px;
+    height: 45px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #555555;
+    background-color: rgba(0,0,0,0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #fff;
-    font-size: 10px;
-    box-shadow: 0 0 5px var(--hud-color);
+    color: #ffffff;
+    font-size: 11px;
+    box-shadow: 0 0 5px var(--hud-primary-color);
+    transition-property: border-color, box-shadow;
+    transition-duration: 0.2s;
+    text-align: center;
 }
-#inventory-slot-1 { border-color: #555; }
-#inventory-slot-2 { border-color: #555; }
-#inventory-slot-3 { border-color: #555; }
-#inventory-slot-4 { border-color: #555; }
-#inventory-slot-5 { border-color: #555; }
-#inventory-slot-6 { border-color: #555; }
-#inventory-slot-7 { border-color: #555; }
-#inventory-slot-8 { border-color: #555; }
-#inventory-slot-9 { border-color: #555; }
-#inventory-slot-10 { border-color: #555; }
-.inventory-active {
-    border-color: var(--hud-text) !important;
-    box-shadow: var(--shadow-intense);
+
+#inv-slot-01 { border-color: #555555; }
+#inv-slot-02 { border-color: #555555; }
+#inv-slot-03 { border-color: #555555; }
+#inv-slot-04 { border-color: #555555; }
+#inv-slot-05 { border-color: #555555; }
+#inv-slot-06 { border-color: #555555; }
+#inv-slot-07 { border-color: #555555; }
+#inv-slot-08 { border-color: #555555; }
+#inv-slot-09 { border-color: #555555; }
+#inv-slot-10 { border-color: #555555; }
+
+.inventory-slot-active {
+    border-color: var(--hud-secondary-color) !important;
+    box-shadow: var(--shadow-intense) !important;
+    background-color: rgba(139, 172, 15, 0.2);
 }
-#crosshair-center {
+
+#crosshair-center-dot {
     position: absolute;
     top: 50%;
     left: 50%;
     width: 4px;
     height: 4px;
-    background: var(--hud-text);
+    background-color: var(--hud-secondary-color);
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    box-shadow: 0 0 5px var(--hud-text);
+    box-shadow: 0 0 6px var(--hud-secondary-color);
+    z-index: 95;
+    display: block;
 }
-#crosshair-top { position: absolute; top: calc(50% - 10px); left: 50%; width: 2px; height: 6px; background: var(--hud-text); transform: translateX(-50%); }
-#crosshair-bottom { position: absolute; top: calc(50% + 4px); left: 50%; width: 2px; height: 6px; background: var(--hud-text); transform: translateX(-50%); }
-#crosshair-left { position: absolute; top: 50%; left: calc(50% - 10px); width: 6px; height: 2px; background: var(--hud-text); transform: translateY(-50%); }
-#crosshair-right { position: absolute; top: 50%; left: calc(50% + 4px); width: 6px; height: 2px; background: var(--hud-text); transform: translateY(-50%); }
 
-#interaction-prompt {
+#crosshair-top-line {
     position: absolute;
-    top: 60%;
+    top: calc(50% - 12px);
+    left: 50%;
+    width: 2px;
+    height: 8px;
+    background-color: var(--hud-secondary-color);
+    transform: translateX(-50%);
+    box-shadow: 0 0 4px var(--hud-secondary-color);
+    z-index: 95;
+    display: block;
+}
+
+#crosshair-bottom-line {
+    position: absolute;
+    top: calc(50% + 4px);
+    left: 50%;
+    width: 2px;
+    height: 8px;
+    background-color: var(--hud-secondary-color);
+    transform: translateX(-50%);
+    box-shadow: 0 0 4px var(--hud-secondary-color);
+    z-index: 95;
+    display: block;
+}
+
+#crosshair-left-line {
+    position: absolute;
+    top: 50%;
+    left: calc(50% - 12px);
+    width: 8px;
+    height: 2px;
+    background-color: var(--hud-secondary-color);
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px var(--hud-secondary-color);
+    z-index: 95;
+    display: block;
+}
+
+#crosshair-right-line {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 4px);
+    width: 8px;
+    height: 2px;
+    background-color: var(--hud-secondary-color);
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px var(--hud-secondary-color);
+    z-index: 95;
+    display: block;
+}
+
+#dynamic-interaction-prompt {
+    position: absolute;
+    top: 65%;
     left: 50%;
     transform: translateX(-50%);
-    color: #fff;
-    font-size: 18px;
+    color: #ffffff;
+    font-size: 20px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    opacity: 0;
-    transition: opacity 0.2s;
-    text-shadow: 2px 2px 0px #000;
+    letter-spacing: 3px;
+    opacity: 0.0;
+    transition-property: opacity;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+    text-shadow: 2px 2px 0px #000000, 0 0 10px #ffffff;
+    z-index: 85;
+    display: block;
+    font-family: 'SimulatedTerminusBold', monospace;
 }
-#dialogue-container {
+
+#spatial-dialogue-container {
     position: absolute;
-    bottom: 100px;
+    bottom: 120px;
     left: 50%;
     transform: translateX(-50%);
-    width: 600px;
+    width: 650px;
     text-align: center;
-    color: #fff;
-    font-size: 16px;
-    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
-    opacity: 0;
-    transition: opacity 0.3s;
+    color: #ffffff;
+    font-size: 18px;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 0 0 8px #ffffff;
+    opacity: 0.0;
+    transition-property: opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-in-out;
+    z-index: 85;
+    display: block;
+    font-style: italic;
 }
-#heart-rate-monitor {
+
+#biometric-heart-rate-monitor {
     position: absolute;
-    top: 150px;
-    left: 20px;
-    color: var(--hud-alert);
-    font-size: 24px;
+    top: 160px;
+    left: 25px;
+    color: var(--hud-secondary-color);
+    font-size: 26px;
     font-weight: bold;
-    text-shadow: 0 0 10px var(--hud-alert);
+    text-shadow: 0 0 12px var(--hud-secondary-color);
+    z-index: 80;
+    display: block;
 }
-@keyframes heartbeat {
-    0% { transform: scale(1); }
-    15% { transform: scale(1.2); }
-    30% { transform: scale(1); }
+
+@keyframes heartbeatPulseNormal {
+    0% { transform: scale(1.0); }
+    15% { transform: scale(1.15); }
+    30% { transform: scale(1.0); }
     45% { transform: scale(1.1); }
-    60% { transform: scale(1); }
-    100% { transform: scale(1); }
+    60% { transform: scale(1.0); }
+    100% { transform: scale(1.0); }
 }
-.hr-fast { animation: heartbeat 0.4s infinite; }
-.hr-normal { animation: heartbeat 1s infinite; }
-.hr-slow { animation: heartbeat 1.5s infinite; }
-#objective-log {
+
+@keyframes heartbeatPulseElevated {
+    0% { transform: scale(1.0); color: var(--hud-warning-color); text-shadow: 0 0 15px var(--hud-warning-color); }
+    20% { transform: scale(1.2); color: var(--hud-warning-color); text-shadow: 0 0 20px var(--hud-warning-color); }
+    40% { transform: scale(1.0); color: var(--hud-warning-color); text-shadow: 0 0 15px var(--hud-warning-color); }
+    100% { transform: scale(1.0); color: var(--hud-warning-color); text-shadow: 0 0 15px var(--hud-warning-color); }
+}
+
+@keyframes heartbeatPulseCritical {
+    0% { transform: scale(1.0); color: var(--hud-alert-color); text-shadow: 0 0 20px var(--hud-alert-color); }
+    25% { transform: scale(1.3); color: #ff0000; text-shadow: 0 0 30px #ff0000; }
+    50% { transform: scale(1.0); color: var(--hud-alert-color); text-shadow: 0 0 20px var(--hud-alert-color); }
+    100% { transform: scale(1.0); color: var(--hud-alert-color); text-shadow: 0 0 20px var(--hud-alert-color); }
+}
+
+.hr-state-normal {
+    animation-name: heartbeatPulseNormal;
+    animation-duration: 1.0s;
+    animation-iteration-count: infinite;
+}
+
+.hr-state-elevated {
+    animation-name: heartbeatPulseElevated;
+    animation-duration: 0.6s;
+    animation-iteration-count: infinite;
+}
+
+.hr-state-critical {
+    animation-name: heartbeatPulseCritical;
+    animation-duration: 0.35s;
+    animation-iteration-count: infinite;
+}
+
+#mission-objective-log-container {
     position: absolute;
-    top: 60px;
-    right: 20px;
-    width: 250px;
-    color: #aaa;
-    font-size: 12px;
+    top: 80px;
+    right: 25px;
+    width: 280px;
+    color: #aaaaaa;
+    font-size: 13px;
     text-align: right;
-    line-height: 1.5;
+    line-height: 1.6;
+    z-index: 80;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
-#objective-log .completed { text-decoration: line-through; color: #555; }
-#objective-log .active { color: var(--hud-text); font-weight: bold; text-shadow: 0 0 5px var(--hud-text); }
-#blocker {
+
+.objective-log-header {
+    color: #ffffff;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-bottom-color: #555555;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+}
+
+.objective-item-completed {
+    text-decoration: line-through;
+    color: #444444;
+}
+
+.objective-item-active {
+    color: var(--hud-secondary-color);
+    font-weight: bold;
+    text-shadow: 0 0 6px var(--hud-secondary-color);
+}
+
+.objective-item-pending {
+    color: #777777;
+}
+
+#initial-blocker-screen {
     position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.95);
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0,0,0,0.98);
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    color: var(--hud-text);
+    color: var(--hud-secondary-color);
     text-align: center;
 }
-#instructions { cursor: pointer; padding: 20px; border: 1px solid var(--hud-text); background: rgba(0,0,0,0.8); }
+
+#game-start-instructions-panel {
+    cursor: pointer;
+    padding: 30px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: var(--hud-secondary-color);
+    background-color: rgba(10, 20, 10, 0.9);
+    box-shadow: 0 0 20px var(--hud-secondary-color);
+}
+
+.title-header-main {
+    text-shadow: 0 0 15px var(--hud-secondary-color);
+    letter-spacing: 8px;
+    font-size: 32px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--hud-secondary-color);
+    padding-bottom: 10px;
+}
+
+.instruction-text-line {
+    margin: 10px 0;
+    font-size: 16px;
+    color: #cccccc;
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-<div id="blocker">
-    <div id="instructions">
-        <h1 style="text-shadow: 0 0 10px var(--hud-text); letter-spacing: 5px;">BLOCK D : CONTAINMENT</h1>
-        <p>CLICK TO INITIALIZE NEURAL LINK</p>
-        <p>W, A, S, D = MOVE | MOUSE = LOOK</p>
-        <p>E = INTERACT | SPACE = VAULT | C = CROUCH</p>
+<div id="initial-blocker-screen">
+    <div id="game-start-instructions-panel">
+        <h1 class="title-header-main">BLOCK D : PROTOCOL ZERO</h1>
+        <p class="instruction-text-line">CLICK TO INITIALIZE NEURAL LINK PROTOCOL</p>
+        <p class="instruction-text-line">W, A, S, D / ARROWS = TRAVERSE ENVIRONMENT</p>
+        <p class="instruction-text-line">MOUSE = ADJUST VISUAL RECEPTORS</p>
+        <p class="instruction-text-line">E = INTERACT WITH PHYSICAL WORLD</p>
+        <p class="instruction-text-line">SPACE = VERTICAL PROPULSION</p>
+        <p class="instruction-text-line">C = LOWER CENTER OF MASS</p>
+        <p class="instruction-text-line">SHIFT = INCREASE KINETIC OUTPUT</p>
     </div>
 </div>
 
-<div id="game-canvas"></div>
+<div id="game-canvas-container"></div>
 
-<div id="ui-layer">
-    <div id="crt-overlay"></div>
-    <div id="static-effect"></div>
-    <div id="damage-overlay"></div>
+<div id="ui-master-layer">
+    <div id="crt-screen-overlay"></div>
+    <div id="static-interference-effect"></div>
+    <div id="player-damage-overlay"></div>
     
-    <div id="hud-top-left">
-        <div>O2 <div class="bar-container" id="oxygen-container"><div class="bar-fill" id="oxygen-fill"></div></div></div>
-        <div>STM <div class="bar-container" id="stamina-container"><div class="bar-fill" id="stamina-fill"></div></div></div>
-        <div>VIS <div class="bar-container" id="stealth-container"><div class="bar-fill" id="stealth-fill"></div></div></div>
+    <div id="hud-top-left-container">
+        <div>O2_LEVEL <div class="status-bar-wrapper" id="oxygen-bar-container"><div class="status-bar-fill-element" id="oxygen-bar-fill"></div></div></div>
+        <div>STAMINA <div class="status-bar-wrapper" id="stamina-bar-container"><div class="status-bar-fill-element" id="stamina-bar-fill"></div></div></div>
+        <div>VISIBILITY <div class="status-bar-wrapper" id="stealth-bar-container"><div class="status-bar-fill-element" id="stealth-bar-fill"></div></div></div>
     </div>
     
-    <div id="heart-rate-monitor" class="hr-normal">BPM: 72</div>
+    <div id="biometric-heart-rate-monitor" class="hr-state-normal">BPM: 072</div>
     
-    <div id="hud-top-right">
-        <div>SYS_TIME: <span id="sys-time">00:00:00</span></div>
-        <div>LOC: SECTOR_7G</div>
+    <div id="hud-top-right-container">
+        <div>SYSTEM_CLOCK: <span id="system-time-display">00:00:00:000</span></div>
+        <div>LOCAL_COORD: SEC_7G_BLD_4</div>
+        <div>THREAT_LVL: MAXIMUM</div>
     </div>
 
-    <div id="objective-log">
-        <div>> PRIMARY DIRECTIVES:</div>
-        <div id="obj-1" class="active">01. ACQUIRE IMPROVISED TOOL</div>
-        <div id="obj-2">02. BREACH CELL VENTILATION</div>
-        <div id="obj-3">03. TRAVERSE CATWALK SUB-SYSTEM</div>
-        <div id="obj-4">04. BYPASS OFFICER MILLER</div>
-        <div id="obj-5">05. ACCESS COURTYARD PERIMETER</div>
-        <div id="obj-6">06. DISABLE SECURITY GRID</div>
-        <div id="obj-7">07. BREACH OUTER WALL</div>
-        <div id="obj-8">08. REACH EXTRACTION POINT</div>
-        <div id="obj-9">09. SURVIVE</div>
-        <div id="obj-10">10. ESCAPE</div>
+    <div id="mission-objective-log-container">
+        <div class="objective-log-header">> ACTIVE_DIRECTIVES_LOG:</div>
+        <div id="mission-obj-01" class="objective-item-active">01. LOCATE_IMPROVISED_IMPLEMENT</div>
+        <div id="mission-obj-02" class="objective-item-pending">02. BREACH_VENTILATION_GRATING</div>
+        <div id="mission-obj-03" class="objective-item-pending">03. TRAVERSE_UPPER_CATWALKS</div>
+        <div id="mission-obj-04" class="objective-item-pending">04. EVADE_OFFICER_MILLER</div>
+        <div id="mission-obj-05" class="objective-item-pending">05. ACCESS_COURTYARD_DOOR</div>
+        <div id="mission-obj-06" class="objective-item-pending">06. SABOTAGE_SECURITY_GRID</div>
+        <div id="mission-obj-07" class="objective-item-pending">07. BREACH_PERIMETER_WALL</div>
+        <div id="mission-obj-08" class="objective-item-pending">08. REACH_EXTRACTION_ZONE</div>
+        <div id="mission-obj-09" class="objective-item-pending">09. MAINTAIN_VITAL_SIGNS</div>
+        <div id="mission-obj-10" class="objective-item-pending">10. EXECUTE_FINAL_ESCAPE</div>
     </div>
     
-    <div id="crosshair-center"></div>
-    <div id="crosshair-top"></div>
-    <div id="crosshair-bottom"></div>
-    <div id="crosshair-left"></div>
-    <div id="crosshair-right"></div>
+    <div id="crosshair-center-dot"></div>
+    <div id="crosshair-top-line"></div>
+    <div id="crosshair-bottom-line"></div>
+    <div id="crosshair-left-line"></div>
+    <div id="crosshair-right-line"></div>
     
-    <div id="interaction-prompt">[E] EXAMINE</div>
-    <div id="dialogue-container">"HEY... YOU AWAKE IN THERE?"</div>
+    <div id="dynamic-interaction-prompt">[E] INITIATE_ACTION</div>
+    <div id="spatial-dialogue-container">"SYSTEM_INITIALIZING..."</div>
     
-    <div id="hud-bottom-right">
-        <div class="inventory-slot inventory-active" id="inventory-slot-1">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-2">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-3">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-4">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-5">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-6">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-7">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-8">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-9">EMP</div>
-        <div class="inventory-slot" id="inventory-slot-10">EMP</div>
+    <div id="hud-bottom-right-container">
+        <div class="inventory-slot-box inventory-slot-active" id="inv-slot-01">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-02">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-03">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-04">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-05">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-06">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-07">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-08">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-09">NULL</div>
+        <div class="inventory-slot-box" id="inv-slot-10">NULL</div>
     </div>
 </div>
 
 <script>
 // ==========================================================================
-// CORE THREE.JS INITIALIZATION
+// CORE THREE.JS INITIALIZATION EXPLICIT DEFINITION
 // ==========================================================================
-const container = document.getElementById('game-canvas');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050505);
-scene.fog = new THREE.FogExp2(0x050505, 0.08);
+const webGLContainerElement = document.getElementById('game-canvas-container');
+const masterSceneObject = new THREE.Scene();
+masterSceneObject.background = new THREE.Color(0x060608);
+masterSceneObject.fog = new THREE.FogExp2(0x060608, 0.06);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio > 1 ? 1 : 1);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-container.appendChild(renderer.domElement);
-
-// ==========================================================================
-// GLOBAL STATE AND VERBOSE VARIABLES
-// ==========================================================================
-let GAME_TIME = 0;
-let DELTA_TIME = 0;
-const CLOCK = new THREE.Clock();
-
-let PLAYER_OXYGEN = 100.0;
-let PLAYER_STAMINA = 100.0;
-let PLAYER_STEALTH = 100.0;
-let PLAYER_HEART_RATE = 72;
-let PLAYER_HEALTH = 100.0;
-let PLAYER_IS_CROUCHING = false;
-let PLAYER_IS_SPRINTING = false;
-let PLAYER_IS_VAULTING = false;
-
-let INVENTORY_SLOT_1_ITEM = "EMPTY";
-let INVENTORY_SLOT_2_ITEM = "EMPTY";
-let INVENTORY_SLOT_3_ITEM = "EMPTY";
-let INVENTORY_SLOT_4_ITEM = "EMPTY";
-let INVENTORY_SLOT_5_ITEM = "EMPTY";
-let INVENTORY_SLOT_6_ITEM = "EMPTY";
-let INVENTORY_SLOT_7_ITEM = "EMPTY";
-let INVENTORY_SLOT_8_ITEM = "EMPTY";
-let INVENTORY_SLOT_9_ITEM = "EMPTY";
-let INVENTORY_SLOT_10_ITEM = "EMPTY";
-
-let ESCAPE_STAGE_1_COMPLETE = false;
-let ESCAPE_STAGE_2_COMPLETE = false;
-let ESCAPE_STAGE_3_COMPLETE = false;
-let ESCAPE_STAGE_4_COMPLETE = false;
-let ESCAPE_STAGE_5_COMPLETE = false;
-let ESCAPE_STAGE_6_COMPLETE = false;
-let ESCAPE_STAGE_7_COMPLETE = false;
-let ESCAPE_STAGE_8_COMPLETE = false;
-let ESCAPE_STAGE_9_COMPLETE = false;
-let ESCAPE_STAGE_10_COMPLETE = false;
-
-let GUARD_MILLER_STATE = "IDLE"; // IDLE, PATROL, SUSPICIOUS, SEARCHING, ALERT, PURSUIT
-let GUARD_MILLER_X = 15.0;
-let GUARD_MILLER_Y = 0.0;
-let GUARD_MILLER_Z = 20.0;
-let GUARD_MILLER_ROTATION = 0.0;
-let GUARD_MILLER_ALERT_LEVEL = 0.0;
-let GUARD_MILLER_FOV = Math.PI / 3;
-let GUARD_MILLER_SIGHT_RANGE = 25.0;
-
-let INMATE_702_STATE = "SLEEPING";
-let INMATE_409_STATE = "PACING";
+const masterPerspectiveCamera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 2000);
+const masterWebGLRenderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", precision: "highp" });
+masterWebGLRenderer.setSize(window.innerWidth, window.innerHeight);
+masterWebGLRenderer.setPixelRatio(window.devicePixelRatio > 1.0 ? 1.0 : 1.0);
+masterWebGLRenderer.shadowMap.enabled = true;
+masterWebGLRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+masterWebGLRenderer.physicallyCorrectLights = true;
+webGLContainerElement.appendChild(masterWebGLRenderer.domElement);
 
 // ==========================================================================
-// MASSIVE PATHFINDING GRID (100x100 HARDCODED 2D ARRAY FOR AI)
+// GLOBAL STATE, BIOMETRICS, AND EXTREMELY VERBOSE VARIABLES
 // ==========================================================================
-const PATH_GRID_WIDTH = 100;
-const PATH_GRID_HEIGHT = 100;
-const PATHFINDING_MAP = [
+let GLOBAL_ENGINE_UPTIME_SECONDS = 0.0;
+let GLOBAL_DELTA_TIME_VALUE = 0.0;
+const GLOBAL_THREE_CLOCK_INSTANCE = new THREE.Clock();
+
+let PLAYER_BIOMETRIC_OXYGEN_LEVEL = 100.0;
+let PLAYER_BIOMETRIC_STAMINA_LEVEL = 100.0;
+let PLAYER_BIOMETRIC_STEALTH_RATING = 100.0;
+let PLAYER_BIOMETRIC_HEART_RATE_BPM = 72.0;
+let PLAYER_BIOMETRIC_HEALTH_POINTS = 100.0;
+let PLAYER_STATE_IS_CURRENTLY_CROUCHING = false;
+let PLAYER_STATE_IS_CURRENTLY_SPRINTING = false;
+let PLAYER_STATE_IS_CURRENTLY_VAULTING = false;
+let PLAYER_STATE_IS_CURRENTLY_AIRBORNE = false;
+let PLAYER_STATE_IS_CURRENTLY_DEAD = false;
+
+let INVENTORY_DATA_SLOT_01_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_02_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_03_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_04_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_05_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_06_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_07_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_08_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_09_CONTENTS = "EMPTY_SLOT";
+let INVENTORY_DATA_SLOT_10_CONTENTS = "EMPTY_SLOT";
+
+let PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE = false;
+let PROGRESSION_ESCAPE_STAGE_10_IS_COMPLETE = false;
+
+let ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_ALPHA";
+let ENTITY_GUARD_MILLER_POSITION_COORD_X = 20.0;
+let ENTITY_GUARD_MILLER_POSITION_COORD_Y = 0.0;
+let ENTITY_GUARD_MILLER_POSITION_COORD_Z = 20.0;
+let ENTITY_GUARD_MILLER_ROTATION_EULER_Y = 0.0;
+let ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE = 0.0;
+let ENTITY_GUARD_MILLER_VISION_CONE_ANGLE_RAD = 1.04719755;
+let ENTITY_GUARD_MILLER_VISION_MAX_DISTANCE = 30.0;
+let ENTITY_GUARD_MILLER_WALKING_SPEED_SCALAR = 2.5;
+let ENTITY_GUARD_MILLER_RUNNING_SPEED_SCALAR = 6.0;
+
+let ENTITY_INMATE_702_CURRENT_BEHAVIORAL_STATE = "RECUMBENT_SLEEPING_STATE";
+let ENTITY_INMATE_409_CURRENT_BEHAVIORAL_STATE = "AGITATED_PACING_STATE";
+
+// ==========================================================================
+// MASSIVE EXPLICIT 2D ARRAY FOR PATHFINDING AND NAVMESH (100x100)
+// ==========================================================================
+const SYSTEM_PATHFINDING_GRID_MATRIX_100x100 = [
     [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
@@ -442,710 +674,787 @@ const PATHFINDING_MAP = [
 ];
 
 // ==========================================================================
-// MASSIVE DIALOGUE STRINGS ARRAY
+// MASSIVE EXPLICIT DIALOGUE STRING ARRAY
 // ==========================================================================
-const PRISON_CHATTER = [
-    "I heard the generators are acting up again.",
-    "Miller is on edge tonight. Don't make a sound.",
-    "Did you hear that scraping noise?",
-    "Four hundred days... four hundred days...",
-    "They took 409 to solitary. Again.",
-    "I need a smoke. I'd kill for a smoke.",
-    "Keep your eyes down. Don't look at the cameras.",
-    "The food... it tastes like copper.",
-    "Someone tried the vent in block C. Didn't end well.",
-    "Water's dripping. Always dripping.",
-    "If I get out... first thing I do is see the ocean.",
-    "Quiet. Footsteps.",
-    "He's shining the light this way.",
-    "I hid the shiv behind the loose stone.",
-    "Don't trust the new guy in cell 12.",
-    "Count is in ten minutes. Stand by your door.",
-    "It's so cold in here.",
-    "Lights out soon. Then the real work begins.",
-    "I swear I saw a shadow move in the corner.",
-    "My hands are shaking. Can't stop them."
+const ENVIRONMENT_DIALOGUE_STRINGS_ARRAY_DATA = [
+    "I heard the backup generators are failing again.",
+    "Miller is patrolling Sector 4. Keep your head down.",
+    "Did you hear that scraping sound behind the wall?",
+    "Four hundred days... exactly four hundred days...",
+    "They dragged 409 to solitary confinement. Again.",
+    "I need a cigarette. I would kill for a cigarette.",
+    "Avert your eyes from the security cameras.",
+    "The nutrient paste... it tastes strongly of copper today.",
+    "Someone attempted the ventilation shaft in Block C. Lethal outcome.",
+    "The water is dripping. It is always dripping.",
+    "If I survive this... the first thing I will do is see the ocean.",
+    "Silence. Heavy footfalls approaching.",
+    "He is sweeping the high-intensity flashlight in this direction.",
+    "I concealed the shiv behind the loose masonry block.",
+    "Do not trust the new transfer in Cell Block 12.",
+    "Headcount protocol initiates in ten minutes. Stand by the iron door.",
+    "The ambient temperature is dropping rapidly.",
+    "Lights out protocol soon. Then the actual labor commences.",
+    "I swear I observed a shadow moving independently in the corner.",
+    "My hands are experiencing severe tremors. I cannot stop them.",
+    "The warden was here yesterday. Looking for something.",
+    "Cell 701 is empty now. What happened to him?",
+    "There's a blind spot near the north stairwell.",
+    "They reinforce the bars every Tuesday.",
+    "I memorized the guard rotations. Alpha, Bravo, Charlie.",
+    "Don't look at the lights, they'll burn your retinas.",
+    "I traded three rations for this piece of wire.",
+    "The lock mechanism on the outer door is a mechanical relic.",
+    "Keep breathing. In, out. Slowly.",
+    "If you run, they shoot. No warning."
 ];
 
 // ==========================================================================
-// CONTROLS & PHYSICS
+// PHYSICS AND MOVEMENT CONTROLLER LOGIC
 // ==========================================================================
-const velocity = new THREE.Vector3();
-const direction = new THREE.Vector3();
-let moveForward = false;
-let moveBackward = false;
-let moveLeft = false;
-let moveRight = false;
-let canJump = false;
+const playerMovementVelocityVector = new THREE.Vector3();
+const playerMovementDirectionVector = new THREE.Vector3();
+let inputFlagMoveForward = false;
+let inputFlagMoveBackward = false;
+let inputFlagMoveLeft = false;
+let inputFlagMoveRight = false;
+let inputFlagCanPerformJump = false;
 
-const blocker = document.getElementById('blocker');
-const instructions = document.getElementById('instructions');
+const htmlElementBlockerScreen = document.getElementById('initial-blocker-screen');
+const htmlElementInstructionsPanel = document.getElementById('game-start-instructions-panel');
 
-instructions.addEventListener('click', function () {
+htmlElementInstructionsPanel.addEventListener('click', function () {
     document.body.requestPointerLock();
 });
 
 document.addEventListener('pointerlockchange', function () {
     if (document.pointerLockElement === document.body) {
-        blocker.style.display = 'none';
+        htmlElementBlockerScreen.style.display = 'none';
     } else {
-        blocker.style.display = 'flex';
-        moveForward = false;
-        moveBackward = false;
-        moveLeft = false;
-        moveRight = false;
+        htmlElementBlockerScreen.style.display = 'flex';
+        inputFlagMoveForward = false;
+        inputFlagMoveBackward = false;
+        inputFlagMoveLeft = false;
+        inputFlagMoveRight = false;
     }
 });
 
-let pitchObject = new THREE.Object3D();
-let yawObject = new THREE.Object3D();
-yawObject.position.y = 1.7; // Player height
-yawObject.add(pitchObject);
-pitchObject.add(camera);
-scene.add(yawObject);
+let playerPitchControlObject = new THREE.Object3D();
+let playerYawControlObject = new THREE.Object3D();
+playerYawControlObject.position.y = 1.75; 
+playerYawControlObject.add(playerPitchControlObject);
+playerPitchControlObject.add(masterPerspectiveCamera);
+masterSceneObject.add(playerYawControlObject);
 
-const PI_2 = Math.PI / 2;
-const onMouseMove = function (event) {
+const MATHEMATICAL_PI_DIVIDED_BY_TWO = Math.PI / 2.0;
+
+const functionHandleMouseMovementInput = function (eventMouseData) {
     if (document.pointerLockElement === document.body) {
-        const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-        const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-        yawObject.rotation.y -= movementX * 0.002;
-        pitchObject.rotation.x -= movementY * 0.002;
-        pitchObject.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitchObject.rotation.x));
+        const mouseMovementDeltaX = eventMouseData.movementX || eventMouseData.mozMovementX || eventMouseData.webkitMovementX || 0;
+        const mouseMovementDeltaY = eventMouseData.movementY || eventMouseData.mozMovementY || eventMouseData.webkitMovementY || 0;
+        playerYawControlObject.rotation.y -= mouseMovementDeltaX * 0.0022;
+        playerPitchControlObject.rotation.x -= mouseMovementDeltaY * 0.0022;
+        playerPitchControlObject.rotation.x = Math.max(-MATHEMATICAL_PI_DIVIDED_BY_TWO, Math.min(MATHEMATICAL_PI_DIVIDED_BY_TWO, playerPitchControlObject.rotation.x));
     }
 };
-document.addEventListener('mousemove', onMouseMove, false);
+document.addEventListener('mousemove', functionHandleMouseMovementInput, false);
 
-const onKeyDown = function (event) {
-    switch (event.code) {
+const functionHandleKeyDownInput = function (eventKeyboardData) {
+    switch (eventKeyboardData.code) {
         case 'ArrowUp':
-        case 'KeyW': moveForward = true; break;
+        case 'KeyW': inputFlagMoveForward = true; break;
         case 'ArrowLeft':
-        case 'KeyA': moveLeft = true; break;
+        case 'KeyA': inputFlagMoveLeft = true; break;
         case 'ArrowDown':
-        case 'KeyS': moveBackward = true; break;
+        case 'KeyS': inputFlagMoveBackward = true; break;
         case 'ArrowRight':
-        case 'KeyD': moveRight = true; break;
-        case 'Space': if (canJump === true) velocity.y += 350; canJump = false; break;
-        case 'KeyC': PLAYER_IS_CROUCHING = true; yawObject.position.y = 1.0; break;
-        case 'ShiftLeft': PLAYER_IS_SPRINTING = true; break;
-        case 'KeyE': executeInteraction(); break;
+        case 'KeyD': inputFlagMoveRight = true; break;
+        case 'Space': 
+            if (inputFlagCanPerformJump === true) {
+                playerMovementVelocityVector.y += 350.0; 
+                inputFlagCanPerformJump = false; 
+                PLAYER_STATE_IS_CURRENTLY_AIRBORNE = true;
+            }
+            break;
+        case 'KeyC': 
+            PLAYER_STATE_IS_CURRENTLY_CROUCHING = true; 
+            playerYawControlObject.position.y = 0.95; 
+            break;
+        case 'ShiftLeft': 
+        case 'ShiftRight':
+            PLAYER_STATE_IS_CURRENTLY_SPRINTING = true; 
+            break;
+        case 'KeyE': 
+            functionExecutePrimaryInteractionRaycast(); 
+            break;
     }
 };
 
-const onKeyUp = function (event) {
-    switch (event.code) {
+const functionHandleKeyUpInput = function (eventKeyboardData) {
+    switch (eventKeyboardData.code) {
         case 'ArrowUp':
-        case 'KeyW': moveForward = false; break;
+        case 'KeyW': inputFlagMoveForward = false; break;
         case 'ArrowLeft':
-        case 'KeyA': moveLeft = false; break;
+        case 'KeyA': inputFlagMoveLeft = false; break;
         case 'ArrowDown':
-        case 'KeyS': moveBackward = false; break;
+        case 'KeyS': inputFlagMoveBackward = false; break;
         case 'ArrowRight':
-        case 'KeyD': moveRight = false; break;
-        case 'KeyC': PLAYER_IS_CROUCHING = false; yawObject.position.y = 1.7; break;
-        case 'ShiftLeft': PLAYER_IS_SPRINTING = false; break;
+        case 'KeyD': inputFlagMoveRight = false; break;
+        case 'KeyC': 
+            PLAYER_STATE_IS_CURRENTLY_CROUCHING = false; 
+            playerYawControlObject.position.y = 1.75; 
+            break;
+        case 'ShiftLeft': 
+        case 'ShiftRight':
+            PLAYER_STATE_IS_CURRENTLY_SPRINTING = false; 
+            break;
     }
 };
-document.addEventListener('keydown', onKeyDown, false);
-document.addEventListener('keyup', onKeyUp, false);
+document.addEventListener('keydown', functionHandleKeyDownInput, false);
+document.addEventListener('keyup', functionHandleKeyUpInput, false);
 
 // ==========================================================================
-// PROCEDURAL GEOMETRY (MASSIVE EXPLICIT ARRAYS)
+// MASSIVE PROCEDURAL GEOMETRY GENERATION (FLOAT32ARRAYS)
 // ==========================================================================
 
-const customWallMaterial = new THREE.MeshLambertMaterial({ 
-    color: 0x1a1a1a, 
+const renderingMaterialWallSurface = new THREE.MeshLambertMaterial({ 
+    color: 0x121215, 
     wireframe: false,
     flatShading: true 
 });
 
-const customFloorMaterial = new THREE.MeshLambertMaterial({
-    color: 0x0f0f0f,
+const renderingMaterialFloorSurface = new THREE.MeshLambertMaterial({
+    color: 0x09090b,
     flatShading: true
 });
 
-const customCeilingMaterial = new THREE.MeshLambertMaterial({
-    color: 0x0a0a0a,
+const renderingMaterialCeilingSurface = new THREE.MeshLambertMaterial({
+    color: 0x050507,
     flatShading: true
 });
 
-const ironMaterial = new THREE.MeshStandardMaterial({
-    color: 0x222222,
-    metalness: 0.9,
-    roughness: 0.5
+const renderingMaterialRustedIron = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    metalness: 0.85,
+    roughness: 0.65
 });
 
-// VERY LARGE VERTEX ARRAY FOR DETAILED CRACKED FLOOR
-const FLOOR_VERTEX_COUNT = 10000;
-const floorVerticesArray = new Float32Array(FLOOR_VERTEX_COUNT * 3);
-const floorNormalsArray = new Float32Array(FLOOR_VERTEX_COUNT * 3);
-let vIndex = 0;
-for(let x = -50; x < 50; x++) {
-    for(let z = -50; z < 50; z++) {
-        // Procedural height variation for "cracks" and "dents"
-        let dent = Math.sin(x*0.5) * Math.cos(z*0.5) * 0.05;
-        let crack = (x % 5 === 0 && z % 5 === 0) ? -0.2 : 0;
-        let heightY = dent + crack;
+const arraySizeForFloorVertices = 60000; 
+const rawDataArrayFloorVertices = new Float32Array(arraySizeForFloorVertices * 3);
+const rawDataArrayFloorNormals = new Float32Array(arraySizeForFloorVertices * 3);
+let integerIndexForVertexData = 0;
+
+for(let coordinateAxisX = -100; coordinateAxisX < 100; coordinateAxisX++) {
+    for(let coordinateAxisZ = -100; coordinateAxisZ < 100; coordinateAxisZ++) {
+        let proceduralDentCalculation = Math.sin(coordinateAxisX * 0.43) * Math.cos(coordinateAxisZ * 0.37) * 0.08;
+        let proceduralCrackCalculation = (coordinateAxisX % 7 === 0 && coordinateAxisZ % 9 === 0) ? -0.35 : 0.0;
+        let finalCalculatedHeightY = proceduralDentCalculation + proceduralCrackCalculation;
         
-        floorVerticesArray[vIndex] = x;
-        floorVerticesArray[vIndex+1] = heightY;
-        floorVerticesArray[vIndex+2] = z;
+        rawDataArrayFloorVertices[integerIndexForVertexData] = coordinateAxisX;
+        rawDataArrayFloorVertices[integerIndexForVertexData+1] = finalCalculatedHeightY;
+        rawDataArrayFloorVertices[integerIndexForVertexData+2] = coordinateAxisZ;
         
-        floorNormalsArray[vIndex] = 0;
-        floorNormalsArray[vIndex+1] = 1;
-        floorNormalsArray[vIndex+2] = 0;
+        rawDataArrayFloorNormals[integerIndexForVertexData] = 0.0;
+        rawDataArrayFloorNormals[integerIndexForVertexData+1] = 1.0;
+        rawDataArrayFloorNormals[integerIndexForVertexData+2] = 0.0;
         
-        vIndex += 3;
+        integerIndexForVertexData += 3;
     }
 }
-const massiveFloorGeometry = new THREE.BufferGeometry();
-massiveFloorGeometry.setAttribute('position', new THREE.BufferAttribute(floorVerticesArray, 3));
-massiveFloorGeometry.setAttribute('normal', new THREE.BufferAttribute(floorNormalsArray, 3));
-// Since it's a point cloud/mesh, we will use Points for the fine dirt/gravel on the floor
-const gravelMaterial = new THREE.PointsMaterial({ color: 0x333333, size: 0.1 });
-const massiveGravelMesh = new THREE.Points(massiveFloorGeometry, gravelMaterial);
-scene.add(massiveGravelMesh);
 
-// Base solid floor
-const baseFloorGeo = new THREE.PlaneGeometry(100, 100);
-baseFloorGeo.rotateX(-Math.PI / 2);
-const baseFloorMesh = new THREE.Mesh(baseFloorGeo, customFloorMaterial);
-baseFloorMesh.position.y = -0.1;
-scene.add(baseFloorMesh);
+const customBufferGeometryFloor = new THREE.BufferGeometry();
+customBufferGeometryFloor.setAttribute('position', new THREE.BufferAttribute(rawDataArrayFloorVertices, 3));
+customBufferGeometryFloor.setAttribute('normal', new THREE.BufferAttribute(rawDataArrayFloorNormals, 3));
 
-// Base solid ceiling
-const baseCeilingGeo = new THREE.PlaneGeometry(100, 100);
-baseCeilingGeo.rotateX(Math.PI / 2);
-const baseCeilingMesh = new THREE.Mesh(baseCeilingGeo, customCeilingMaterial);
-baseCeilingMesh.position.y = 5.0;
-scene.add(baseCeilingMesh);
+const renderingMaterialFloorGravelPoints = new THREE.PointsMaterial({ color: 0x222225, size: 0.15 });
+const generatedMeshObjectFloorGravel = new THREE.Points(customBufferGeometryFloor, renderingMaterialFloorGravelPoints);
+masterSceneObject.add(generatedMeshObjectFloorGravel);
+
+const primitiveGeometryBaseFloorPlane = new THREE.PlaneGeometry(200, 200);
+primitiveGeometryBaseFloorPlane.rotateX(-Math.PI / 2);
+const generatedMeshObjectBaseFloorSolid = new THREE.Mesh(primitiveGeometryBaseFloorPlane, renderingMaterialFloorSurface);
+generatedMeshObjectBaseFloorSolid.position.y = -0.15;
+masterSceneObject.add(generatedMeshObjectBaseFloorSolid);
+
+const primitiveGeometryBaseCeilingPlane = new THREE.PlaneGeometry(200, 200);
+primitiveGeometryBaseCeilingPlane.rotateX(Math.PI / 2);
+const generatedMeshObjectBaseCeilingSolid = new THREE.Mesh(primitiveGeometryBaseCeilingPlane, renderingMaterialCeilingSurface);
+generatedMeshObjectBaseCeilingSolid.position.y = 5.5;
+masterSceneObject.add(generatedMeshObjectBaseCeilingSolid);
 
 // ==========================================================================
-// VERBOSE OBJECT CREATION (NO LOOPS FOR CELL BARS - EXPLICIT DEFINITION)
+// HIGHLY VERBOSE OBJECT CREATION (UNROLLED LOOPS, EXPLICIT DEFINITION)
 // ==========================================================================
-const collidableObjects = [];
-const interactableObjects = [];
+const arrayListCollidableSolidObjects = [];
+const arrayListInteractableDynamicObjects = [];
 
-function createWallBlock(x, y, z, w, h, d) {
-    const geo = new THREE.BoxGeometry(w, h, d);
-    const mesh = new THREE.Mesh(geo, customWallMaterial);
-    mesh.position.set(x, y, z);
-    scene.add(mesh);
-    collidableObjects.push(mesh);
-    return mesh;
+function helperFunctionInstantiateWallBlock(paramX, paramY, paramZ, paramWidth, paramHeight, paramDepth) {
+    const localGeometryBox = new THREE.BoxGeometry(paramWidth, paramHeight, paramDepth);
+    const localMeshObject = new THREE.Mesh(localGeometryBox, renderingMaterialWallSurface);
+    localMeshObject.position.set(paramX, paramY, paramZ);
+    masterSceneObject.add(localMeshObject);
+    arrayListCollidableSolidObjects.push(localMeshObject);
+    return localMeshObject;
 }
 
-// Player Cell (Cell 701) Walls
-const cell_701_wall_back = createWallBlock(0, 2.5, -5, 10, 5, 1);
-const cell_701_wall_left = createWallBlock(-5, 2.5, 0, 1, 5, 10);
-const cell_701_wall_right = createWallBlock(5, 2.5, 0, 1, 5, 10);
-const cell_701_wall_front_left = createWallBlock(-3.5, 2.5, 5, 2, 5, 1);
-const cell_701_wall_front_right = createWallBlock(3.5, 2.5, 5, 2, 5, 1);
-const cell_701_wall_front_top = createWallBlock(0, 4.5, 5, 5, 1, 1);
+const structureCell701WallBackwards = helperFunctionInstantiateWallBlock(0, 2.75, -6, 12, 5.5, 1);
+const structureCell701WallLeftwards = helperFunctionInstantiateWallBlock(-6, 2.75, 0, 1, 5.5, 12);
+const structureCell701WallRightwards = helperFunctionInstantiateWallBlock(6, 2.75, 0, 1, 5.5, 12);
+const structureCell701WallFrontLeftPiece = helperFunctionInstantiateWallBlock(-4.5, 2.75, 6, 2, 5.5, 1);
+const structureCell701WallFrontRightPiece = helperFunctionInstantiateWallBlock(4.5, 2.75, 6, 2, 5.5, 1);
+const structureCell701WallFrontTopHeader = helperFunctionInstantiateWallBlock(0, 4.75, 6, 7, 1.5, 1);
 
-// EXPLICIT DEFINITION OF CELL BARS
-const barGeo = new THREE.CylinderGeometry(0.05, 0.05, 4, 8);
+const primitiveGeometryIronBarCylinder = new THREE.CylinderGeometry(0.06, 0.06, 4.5, 12);
 
-const cell_701_bar_1 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_1.position.set(-2.0, 2.0, 5);
-scene.add(cell_701_bar_1);
-collidableObjects.push(cell_701_bar_1);
+const specificInstanceCell701IronBarNumber01 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber01.position.set(-3.0, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber01);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber01);
 
-const cell_701_bar_2 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_2.position.set(-1.6, 2.0, 5);
-scene.add(cell_701_bar_2);
-collidableObjects.push(cell_701_bar_2);
+const specificInstanceCell701IronBarNumber02 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber02.position.set(-2.6, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber02);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber02);
 
-const cell_701_bar_3 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_3.position.set(-1.2, 2.0, 5);
-scene.add(cell_701_bar_3);
-collidableObjects.push(cell_701_bar_3);
+const specificInstanceCell701IronBarNumber03 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber03.position.set(-2.2, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber03);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber03);
 
-const cell_701_bar_4 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_4.position.set(-0.8, 2.0, 5);
-scene.add(cell_701_bar_4);
-collidableObjects.push(cell_701_bar_4);
+const specificInstanceCell701IronBarNumber04 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber04.position.set(-1.8, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber04);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber04);
 
-const cell_701_bar_5 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_5.position.set(-0.4, 2.0, 5);
-scene.add(cell_701_bar_5);
-collidableObjects.push(cell_701_bar_5);
+const specificInstanceCell701IronBarNumber05 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber05.position.set(-1.4, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber05);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber05);
 
-const cell_701_bar_6 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_6.position.set(0.0, 2.0, 5);
-scene.add(cell_701_bar_6);
-collidableObjects.push(cell_701_bar_6);
+const specificInstanceCell701IronBarNumber06 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber06.position.set(-1.0, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber06);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber06);
 
-const cell_701_bar_7 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_7.position.set(0.4, 2.0, 5);
-scene.add(cell_701_bar_7);
-collidableObjects.push(cell_701_bar_7);
+const specificInstanceCell701IronBarNumber07 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber07.position.set(-0.6, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber07);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber07);
 
-const cell_701_bar_8 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_8.position.set(0.8, 2.0, 5);
-scene.add(cell_701_bar_8);
-collidableObjects.push(cell_701_bar_8);
+const specificInstanceCell701IronBarNumber08 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber08.position.set(-0.2, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber08);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber08);
 
-const cell_701_bar_9 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_9.position.set(1.2, 2.0, 5);
-scene.add(cell_701_bar_9);
-collidableObjects.push(cell_701_bar_9);
+const specificInstanceCell701IronBarNumber09 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber09.position.set(0.2, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber09);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber09);
 
-const cell_701_bar_10 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_10.position.set(1.6, 2.0, 5);
-scene.add(cell_701_bar_10);
-collidableObjects.push(cell_701_bar_10);
+const specificInstanceCell701IronBarNumber10 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber10.position.set(0.6, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber10);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber10);
 
-const cell_701_bar_11 = new THREE.Mesh(barGeo, ironMaterial);
-cell_701_bar_11.position.set(2.0, 2.0, 5);
-scene.add(cell_701_bar_11);
-collidableObjects.push(cell_701_bar_11);
+const specificInstanceCell701IronBarNumber11 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber11.position.set(1.0, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber11);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber11);
 
-// INTERACTABLES
-const bedGeo = new THREE.BoxGeometry(2, 0.5, 4);
-const bedMesh = new THREE.Mesh(bedGeo, customWallMaterial);
-bedMesh.position.set(-3.5, 0.25, -2);
-scene.add(bedMesh);
-collidableObjects.push(bedMesh);
+const specificInstanceCell701IronBarNumber12 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber12.position.set(1.4, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber12);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber12);
 
-const ventGeo = new THREE.BoxGeometry(1, 1, 0.1);
-const ventMesh = new THREE.Mesh(ventGeo, ironMaterial);
-ventMesh.position.set(0, 4, -4.9);
-scene.add(ventMesh);
-ventMesh.userData = { id: "VENT_COVER", type: "OBSTACLE", open: false, requiredItem: "SCREWDRIVER" };
-interactableObjects.push(ventMesh);
+const specificInstanceCell701IronBarNumber13 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber13.position.set(1.8, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber13);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber13);
 
-const looseBrickGeo = new THREE.BoxGeometry(0.5, 0.2, 0.2);
-const looseBrickMesh = new THREE.Mesh(looseBrickGeo, new THREE.MeshLambertMaterial({color: 0x333333}));
-looseBrickMesh.position.set(3, 1, -4.9);
-scene.add(looseBrickMesh);
-looseBrickMesh.userData = { id: "LOOSE_BRICK", type: "CONTAINER", searched: false, contains: "SCREWDRIVER" };
-interactableObjects.push(looseBrickMesh);
+const specificInstanceCell701IronBarNumber14 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber14.position.set(2.2, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber14);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber14);
 
-const cellDoorGeo = new THREE.BoxGeometry(1.5, 4, 0.1);
-const cellDoorMesh = new THREE.Mesh(cellDoorGeo, ironMaterial);
-cellDoorMesh.position.set(0, 2, 5);
-scene.add(cellDoorMesh);
-cellDoorMesh.userData = { id: "CELL_DOOR", type: "DOOR", open: false, locked: true, requiredItem: "CELL_KEY" };
-interactableObjects.push(cellDoorMesh);
-collidableObjects.push(cellDoorMesh);
+const specificInstanceCell701IronBarNumber15 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber15.position.set(2.6, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber15);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber15);
 
-// ==========================================================================
-// LIGHTING SETUP
-// ==========================================================================
-const ambientLight1 = new THREE.AmbientLight(0x0a0a1a, 0.2);
-scene.add(ambientLight1);
+const specificInstanceCell701IronBarNumber16 = new THREE.Mesh(primitiveGeometryIronBarCylinder, renderingMaterialRustedIron);
+specificInstanceCell701IronBarNumber16.position.set(3.0, 2.25, 6.0);
+masterSceneObject.add(specificInstanceCell701IronBarNumber16);
+arrayListCollidableSolidObjects.push(specificInstanceCell701IronBarNumber16);
 
-const cellLight1 = new THREE.PointLight(0x556655, 0.5, 10);
-cellLight1.position.set(0, 4, 0);
-scene.add(cellLight1);
+const primitiveGeometryBedStructure = new THREE.BoxGeometry(2.5, 0.6, 4.5);
+const meshObjectInmateBedUnit = new THREE.Mesh(primitiveGeometryBedStructure, renderingMaterialWallSurface);
+meshObjectInmateBedUnit.position.set(-4.5, 0.3, -3.0);
+masterSceneObject.add(meshObjectInmateBedUnit);
+arrayListCollidableSolidObjects.push(meshObjectInmateBedUnit);
 
-const hallwayLight1 = new THREE.PointLight(0xaaaa55, 0.8, 20);
-hallwayLight1.position.set(0, 4, 15);
-scene.add(hallwayLight1);
+const primitiveGeometryVentilationCover = new THREE.BoxGeometry(1.2, 1.2, 0.15);
+const meshObjectVentilationCoverPlate = new THREE.Mesh(primitiveGeometryVentilationCover, renderingMaterialRustedIron);
+meshObjectVentilationCoverPlate.position.set(0.0, 4.2, -5.9);
+masterSceneObject.add(meshObjectVentilationCoverPlate);
+meshObjectVentilationCoverPlate.userData = { uniqueIdentifierString: "VENTILATION_GRATING_OBJ", categorizationType: "ENVIRONMENTAL_OBSTACLE", booleanIsOpenedState: false, stringRequiredInventoryItemToBypass: "IMPROVISED_SCREWDRIVER_TOOL" };
+arrayListInteractableDynamicObjects.push(meshObjectVentilationCoverPlate);
 
-const hallwayLight2 = new THREE.PointLight(0xaaaa55, 0.8, 20);
-hallwayLight2.position.set(20, 4, 15);
-scene.add(hallwayLight2);
+const primitiveGeometryLooseBrickObject = new THREE.BoxGeometry(0.6, 0.3, 0.3);
+const renderingMaterialLooseBrickSurface = new THREE.MeshLambertMaterial({color: 0x2b2b2b});
+const meshObjectInteractiveLooseBrick = new THREE.Mesh(primitiveGeometryLooseBrickObject, renderingMaterialLooseBrickSurface);
+meshObjectInteractiveLooseBrick.position.set(4.0, 1.2, -5.9);
+masterSceneObject.add(meshObjectInteractiveLooseBrick);
+meshObjectInteractiveLooseBrick.userData = { uniqueIdentifierString: "LOOSE_MASONRY_BRICK_OBJ", categorizationType: "HIDDEN_CONTAINER", booleanHasBeenSearchedState: false, stringContainsInventoryItem: "IMPROVISED_SCREWDRIVER_TOOL" };
+arrayListInteractableDynamicObjects.push(meshObjectInteractiveLooseBrick);
 
-const hallwayLight3 = new THREE.PointLight(0xaaaa55, 0.8, 20);
-hallwayLight3.position.set(-20, 4, 15);
-scene.add(hallwayLight3);
-
-// ==========================================================================
-// AI GUARD VERBOSE DEFINITION (GUARD MILLER)
-// ==========================================================================
-const guardMillerGeo = new THREE.BoxGeometry(1, 1.8, 1);
-const guardMillerMat = new THREE.MeshLambertMaterial({ color: 0x000055 });
-const guardMillerMesh = new THREE.Mesh(guardMillerGeo, guardMillerMat);
-guardMillerMesh.position.set(GUARD_MILLER_X, 0.9, GUARD_MILLER_Z);
-scene.add(guardMillerMesh);
-
-const guardFlashlight = new THREE.SpotLight(0xffffff, 2.0, 30, Math.PI / 8, 0.5, 1);
-guardFlashlight.position.set(0, 1.5, 0.5);
-guardMillerMesh.add(guardFlashlight);
-const guardFlashlightTarget = new THREE.Object3D();
-guardFlashlightTarget.position.set(0, 1.5, 10);
-guardMillerMesh.add(guardFlashlightTarget);
-guardFlashlight.target = guardFlashlightTarget;
+const primitiveGeometryIronCellDoor = new THREE.BoxGeometry(1.8, 4.5, 0.15);
+const meshObjectHeavyIronCellDoor = new THREE.Mesh(primitiveGeometryIronCellDoor, renderingMaterialRustedIron);
+meshObjectHeavyIronCellDoor.position.set(0.0, 2.25, 6.0);
+masterSceneObject.add(meshObjectHeavyIronCellDoor);
+meshObjectHeavyIronCellDoor.userData = { uniqueIdentifierString: "HEAVY_IRON_CELL_DOOR_OBJ", categorizationType: "LOCKED_PORTAL", booleanIsOpenedState: false, booleanIsLockedState: true, stringRequiredInventoryItemToBypass: "SECURITY_LEVEL_4_KEYCARD" };
+arrayListInteractableDynamicObjects.push(meshObjectHeavyIronCellDoor);
+arrayListCollidableSolidObjects.push(meshObjectHeavyIronCellDoor);
 
 // ==========================================================================
-// INTERACTION LOGIC (RAYCASTING)
+// SCENE LIGHTING CONFIGURATION
 // ==========================================================================
-const raycaster = new THREE.Raycaster();
-const centerScreen = new THREE.Vector2(0, 0);
+const instanceAmbientLightGlobal = new THREE.AmbientLight(0x050508, 0.25);
+masterSceneObject.add(instanceAmbientLightGlobal);
 
-function executeInteraction() {
-    raycaster.setFromCamera(centerScreen, camera);
-    const intersects = raycaster.intersectObjects(interactableObjects);
+const instancePointLightCellInterior = new THREE.PointLight(0x445544, 0.6, 12);
+instancePointLightCellInterior.position.set(0.0, 4.8, 0.0);
+masterSceneObject.add(instancePointLightCellInterior);
+
+const instancePointLightHallwaySectorAlpha = new THREE.PointLight(0x888844, 1.0, 25);
+instancePointLightHallwaySectorAlpha.position.set(0.0, 4.8, 15.0);
+masterSceneObject.add(instancePointLightHallwaySectorAlpha);
+
+const instancePointLightHallwaySectorBravo = new THREE.PointLight(0x888844, 1.0, 25);
+instancePointLightHallwaySectorBravo.position.set(25.0, 4.8, 15.0);
+masterSceneObject.add(instancePointLightHallwaySectorBravo);
+
+const instancePointLightHallwaySectorCharlie = new THREE.PointLight(0x888844, 1.0, 25);
+instancePointLightHallwaySectorCharlie.position.set(-25.0, 4.8, 15.0);
+masterSceneObject.add(instancePointLightHallwaySectorCharlie);
+
+// ==========================================================================
+// GUARD AI INITIALIZATION EXPLICIT DEFINITION
+// ==========================================================================
+const primitiveGeometryGuardMillerBody = new THREE.BoxGeometry(1.2, 1.9, 1.2);
+const renderingMaterialGuardMillerUniform = new THREE.MeshLambertMaterial({ color: 0x0a1128 });
+const generatedMeshObjectGuardMillerEntity = new THREE.Mesh(primitiveGeometryGuardMillerBody, renderingMaterialGuardMillerUniform);
+generatedMeshObjectGuardMillerEntity.position.set(ENTITY_GUARD_MILLER_POSITION_COORD_X, 0.95, ENTITY_GUARD_MILLER_POSITION_COORD_Z);
+masterSceneObject.add(generatedMeshObjectGuardMillerEntity);
+
+const instanceSpotLightGuardFlashlightDevice = new THREE.SpotLight(0xffffff, 2.5, 35, 0.35, 0.6, 1);
+instanceSpotLightGuardFlashlightDevice.position.set(0.0, 1.6, 0.6);
+generatedMeshObjectGuardMillerEntity.add(instanceSpotLightGuardFlashlightDevice);
+
+const abstractObjectGuardFlashlightTargetNode = new THREE.Object3D();
+abstractObjectGuardFlashlightTargetNode.position.set(0.0, 1.6, 15.0);
+generatedMeshObjectGuardMillerEntity.add(abstractObjectGuardFlashlightTargetNode);
+instanceSpotLightGuardFlashlightDevice.target = abstractObjectGuardFlashlightTargetNode;
+
+// ==========================================================================
+// INTERACTION AND RAYCASTING LOGIC SUBROUTINES
+// ==========================================================================
+const utilityInstanceRaycasterObject = new THREE.Raycaster();
+const utilityInstanceCenterScreenVector = new THREE.Vector2(0, 0);
+
+function functionExecutePrimaryInteractionRaycast() {
+    utilityInstanceRaycasterObject.setFromCamera(utilityInstanceCenterScreenVector, masterPerspectiveCamera);
+    const arrayIntersectionResults = utilityInstanceRaycasterObject.intersectObjects(arrayListInteractableDynamicObjects);
     
-    if (intersects.length > 0 && intersects[0].distance < 2.5) {
-        const object = intersects[0].object;
-        const data = object.userData;
+    if (arrayIntersectionResults.length > 0 && arrayIntersectionResults[0].distance < 3.0) {
+        const referenceToIntersectedObject = arrayIntersectionResults[0].object;
+        const referenceToUserDataPayload = referenceToIntersectedObject.userData;
         
-        if (data.id === "LOOSE_BRICK" && data.searched === false) {
-            data.searched = true;
-            object.position.z += 0.2;
-            object.rotation.y += 0.2;
-            INVENTORY_SLOT_1_ITEM = data.contains;
-            document.getElementById('inventory-slot-1').innerText = "SCREW";
-            document.getElementById('inventory-slot-1').style.borderColor = "#fff";
-            document.getElementById('obj-1').classList.add('completed');
-            document.getElementById('obj-1').classList.remove('active');
-            document.getElementById('obj-2').classList.add('active');
-            showDialogue("Found something. A rusty screwdriver.");
-            checkEscapeStage1();
+        if (referenceToUserDataPayload.uniqueIdentifierString === "LOOSE_MASONRY_BRICK_OBJ") {
+            if (referenceToUserDataPayload.booleanHasBeenSearchedState === false) {
+                referenceToUserDataPayload.booleanHasBeenSearchedState = true;
+                referenceToIntersectedObject.position.z += 0.25;
+                referenceToIntersectedObject.rotation.y += 0.25;
+                INVENTORY_DATA_SLOT_01_CONTENTS = referenceToUserDataPayload.stringContainsInventoryItem;
+                document.getElementById('inv-slot-01').innerText = "TOOL";
+                document.getElementById('inv-slot-01').style.borderColor = "#ffffff";
+                document.getElementById('mission-obj-01').classList.add('objective-item-completed');
+                document.getElementById('mission-obj-01').classList.remove('objective-item-active');
+                document.getElementById('mission-obj-02').classList.add('objective-item-active');
+                document.getElementById('mission-obj-02').classList.remove('objective-item-pending');
+                functionDisplaySpatialDialogueTextOnScreen("I retrieved a corroded implement. It will serve my purpose.");
+                functionExecuteProgressionCheckForStage01();
+            }
         }
-        else if (data.id === "VENT_COVER") {
-            if (data.open === false) {
-                if (INVENTORY_SLOT_1_ITEM === "SCREWDRIVER" || INVENTORY_SLOT_2_ITEM === "SCREWDRIVER") {
-                    data.open = true;
-                    object.rotation.x = -Math.PI / 2;
-                    object.position.y += 0.5;
-                    object.position.z -= 0.5;
-                    document.getElementById('obj-2').classList.add('completed');
-                    document.getElementById('obj-2').classList.remove('active');
-                    document.getElementById('obj-3').classList.add('active');
-                    showDialogue("Vent is open. Time to crawl.");
-                    checkEscapeStage2();
+        else if (referenceToUserDataPayload.uniqueIdentifierString === "VENTILATION_GRATING_OBJ") {
+            if (referenceToUserDataPayload.booleanIsOpenedState === false) {
+                if (INVENTORY_DATA_SLOT_01_CONTENTS === "IMPROVISED_SCREWDRIVER_TOOL") {
+                    referenceToUserDataPayload.booleanIsOpenedState = true;
+                    referenceToIntersectedObject.rotation.x = -1.57079633;
+                    referenceToIntersectedObject.position.y += 0.6;
+                    referenceToIntersectedObject.position.z -= 0.6;
+                    document.getElementById('mission-obj-02').classList.add('objective-item-completed');
+                    document.getElementById('mission-obj-02').classList.remove('objective-item-active');
+                    document.getElementById('mission-obj-03').classList.add('objective-item-active');
+                    document.getElementById('mission-obj-03').classList.remove('objective-item-pending');
+                    functionDisplaySpatialDialogueTextOnScreen("The securing bolts have been removed. The pathway is clear.");
+                    functionExecuteProgressionCheckForStage02();
                 } else {
-                    showDialogue("It's screwed shut tightly.");
+                    functionDisplaySpatialDialogueTextOnScreen("The industrial fasteners require a specialized leverage tool.");
                 }
             }
         }
-        else if (data.id === "CELL_DOOR") {
-            if (data.locked === true) {
-                showDialogue("Locked from the outside. Solid iron.");
+        else if (referenceToUserDataPayload.uniqueIdentifierString === "HEAVY_IRON_CELL_DOOR_OBJ") {
+            if (referenceToUserDataPayload.booleanIsLockedState === true) {
+                functionDisplaySpatialDialogueTextOnScreen("The electronic deadbolt is engaged from the exterior terminal.");
             }
         }
     }
 }
 
-function showDialogue(text) {
-    const diag = document.getElementById('dialogue-container');
-    diag.innerText = `"${text}"`;
-    diag.style.opacity = 1;
-    setTimeout(() => { diag.style.opacity = 0; }, 3000);
+function functionDisplaySpatialDialogueTextOnScreen(paramStringTextPayload) {
+    const htmlElementDialogueContainer = document.getElementById('spatial-dialogue-container');
+    htmlElementDialogueContainer.innerText = `"${paramStringTextPayload}"`;
+    htmlElementDialogueContainer.style.opacity = 1.0;
+    setTimeout(() => { htmlElementDialogueContainer.style.opacity = 0.0; }, 3500);
 }
 
 // ==========================================================================
-// UPDATE TICKS (INDIVIDUAL FUNCTIONS FOR VERBOSITY)
+// UNROLLED EXPLICIT TICK UPDATE SUBROUTINES FOR INDIVIDUAL OBJECTS
 // ==========================================================================
-function updateBar1() { cell_701_bar_1.rotation.y += 0.0001; }
-function updateBar2() { cell_701_bar_2.rotation.y -= 0.0001; }
-function updateBar3() { cell_701_bar_3.rotation.y += 0.0001; }
-function updateBar4() { cell_701_bar_4.rotation.y -= 0.0001; }
-function updateBar5() { cell_701_bar_5.rotation.y += 0.0001; }
-function updateBar6() { cell_701_bar_6.rotation.y -= 0.0001; }
-function updateBar7() { cell_701_bar_7.rotation.y += 0.0001; }
-function updateBar8() { cell_701_bar_8.rotation.y -= 0.0001; }
-function updateBar9() { cell_701_bar_9.rotation.y += 0.0001; }
-function updateBar10() { cell_701_bar_10.rotation.y -= 0.0001; }
-
-// ==========================================================================
-// ESCAPE SEQUENCE LOGIC STAGES (VERBOSE)
-// ==========================================================================
-function checkEscapeStage1() {
-    if (ESCAPE_STAGE_1_COMPLETE === false) {
-        ESCAPE_STAGE_1_COMPLETE = true;
-        PLAYER_HEART_RATE = 85;
-        document.getElementById('heart-rate-monitor').innerText = `BPM: ${PLAYER_HEART_RATE}`;
-        document.getElementById('heart-rate-monitor').className = 'hr-fast';
-    }
-}
-
-function checkEscapeStage2() {
-    if (ESCAPE_STAGE_1_COMPLETE === true && ESCAPE_STAGE_2_COMPLETE === false) {
-        ESCAPE_STAGE_2_COMPLETE = true;
-        PLAYER_HEART_RATE = 95;
-        document.getElementById('heart-rate-monitor').innerText = `BPM: ${PLAYER_HEART_RATE}`;
-    }
-}
-
-function checkEscapeStage3() {
-    if (ESCAPE_STAGE_2_COMPLETE === true && ESCAPE_STAGE_3_COMPLETE === false) {
-        ESCAPE_STAGE_3_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage4() {
-    if (ESCAPE_STAGE_3_COMPLETE === true && ESCAPE_STAGE_4_COMPLETE === false) {
-        ESCAPE_STAGE_4_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage5() {
-    if (ESCAPE_STAGE_4_COMPLETE === true && ESCAPE_STAGE_5_COMPLETE === false) {
-        ESCAPE_STAGE_5_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage6() {
-    if (ESCAPE_STAGE_5_COMPLETE === true && ESCAPE_STAGE_6_COMPLETE === false) {
-        ESCAPE_STAGE_6_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage7() {
-    if (ESCAPE_STAGE_6_COMPLETE === true && ESCAPE_STAGE_7_COMPLETE === false) {
-        ESCAPE_STAGE_7_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage8() {
-    if (ESCAPE_STAGE_7_COMPLETE === true && ESCAPE_STAGE_8_COMPLETE === false) {
-        ESCAPE_STAGE_8_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage9() {
-    if (ESCAPE_STAGE_8_COMPLETE === true && ESCAPE_STAGE_9_COMPLETE === false) {
-        ESCAPE_STAGE_9_COMPLETE = true;
-    }
-}
-
-function checkEscapeStage10() {
-    if (ESCAPE_STAGE_9_COMPLETE === true && ESCAPE_STAGE_10_COMPLETE === false) {
-        ESCAPE_STAGE_10_COMPLETE = true;
-        showDialogue("I'm out... I'm finally out.");
-    }
-}
+function executeTickUpdateRoutineForIronBarNumber01() { specificInstanceCell701IronBarNumber01.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber02() { specificInstanceCell701IronBarNumber02.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber03() { specificInstanceCell701IronBarNumber03.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber04() { specificInstanceCell701IronBarNumber04.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber05() { specificInstanceCell701IronBarNumber05.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber06() { specificInstanceCell701IronBarNumber06.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber07() { specificInstanceCell701IronBarNumber07.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber08() { specificInstanceCell701IronBarNumber08.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber09() { specificInstanceCell701IronBarNumber09.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber10() { specificInstanceCell701IronBarNumber10.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber11() { specificInstanceCell701IronBarNumber11.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber12() { specificInstanceCell701IronBarNumber12.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber13() { specificInstanceCell701IronBarNumber13.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber14() { specificInstanceCell701IronBarNumber14.rotation.y -= 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber15() { specificInstanceCell701IronBarNumber15.rotation.y += 0.00015; }
+function executeTickUpdateRoutineForIronBarNumber16() { specificInstanceCell701IronBarNumber16.rotation.y -= 0.00015; }
 
 // ==========================================================================
-// AI GUARD STATE MACHINE (500 LINE EQUIVALENT VERBOSE LOGIC)
+// 10-STAGE ESCAPE SEQUENCE PROGRESSION LOGIC BLOCKS
 // ==========================================================================
-function updateGuardMillerAI(delta) {
-    if (GUARD_MILLER_STATE === "IDLE") {
-        GUARD_MILLER_ROTATION += delta * 0.5;
-        guardMillerMesh.rotation.y = Math.sin(GUARD_MILLER_ROTATION) * 1.5;
+function functionExecuteProgressionCheckForStage01() {
+    if (PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE = true;
+        PLAYER_BIOMETRIC_HEART_RATE_BPM = 88.0;
+        const htmlElementHeartRateDisplay = document.getElementById('biometric-heart-rate-monitor');
+        htmlElementHeartRateDisplay.innerText = `BPM: 088`;
+        htmlElementHeartRateDisplay.className = 'hr-state-elevated';
+    }
+}
+
+function functionExecuteProgressionCheckForStage02() {
+    if (PROGRESSION_ESCAPE_STAGE_01_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE = true;
+        PLAYER_BIOMETRIC_HEART_RATE_BPM = 98.0;
+        const htmlElementHeartRateDisplay = document.getElementById('biometric-heart-rate-monitor');
+        htmlElementHeartRateDisplay.innerText = `BPM: 098`;
+    }
+}
+
+function functionExecuteProgressionCheckForStage03() {
+    if (PROGRESSION_ESCAPE_STAGE_02_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage04() {
+    if (PROGRESSION_ESCAPE_STAGE_03_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage05() {
+    if (PROGRESSION_ESCAPE_STAGE_04_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage06() {
+    if (PROGRESSION_ESCAPE_STAGE_05_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage07() {
+    if (PROGRESSION_ESCAPE_STAGE_06_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage08() {
+    if (PROGRESSION_ESCAPE_STAGE_07_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage09() {
+    if (PROGRESSION_ESCAPE_STAGE_08_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE = true;
+    }
+}
+
+function functionExecuteProgressionCheckForStage10() {
+    if (PROGRESSION_ESCAPE_STAGE_09_IS_COMPLETE === true && PROGRESSION_ESCAPE_STAGE_10_IS_COMPLETE === false) {
+        PROGRESSION_ESCAPE_STAGE_10_IS_COMPLETE = true;
+        functionDisplaySpatialDialogueTextOnScreen("System terminal accessed. Perimeter is breached.");
+    }
+}
+
+// ==========================================================================
+// MASSIVE 500-LINE EQUIVALENT GUARD AI STATE MACHINE LOGIC
+// ==========================================================================
+function functionExecuteGuardMillerArtificialIntelligenceLogicRoutine(paramFloatDeltaTime) {
+    if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "IDLE_STATIONARY_STATE") {
+        ENTITY_GUARD_MILLER_ROTATION_EULER_Y += paramFloatDeltaTime * 0.45;
+        generatedMeshObjectGuardMillerEntity.rotation.y = Math.sin(ENTITY_GUARD_MILLER_ROTATION_EULER_Y) * 1.25;
         
-        // Random patrol transition
-        if (Math.random() < 0.005) {
-            GUARD_MILLER_STATE = "PATROL";
+        let randomTransitionProbabilityValue = Math.random();
+        if (randomTransitionProbabilityValue < 0.0035) {
+            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_ALPHA";
         }
     } 
-    else if (GUARD_MILLER_STATE === "PATROL") {
-        GUARD_MILLER_X -= delta * 1.0;
-        guardMillerMesh.position.x = GUARD_MILLER_X;
-        guardMillerMesh.rotation.y = -Math.PI / 2;
+    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "PATROL_ROUTINE_ALPHA") {
+        ENTITY_GUARD_MILLER_POSITION_COORD_X -= paramFloatDeltaTime * ENTITY_GUARD_MILLER_WALKING_SPEED_SCALAR;
+        generatedMeshObjectGuardMillerEntity.position.x = ENTITY_GUARD_MILLER_POSITION_COORD_X;
+        generatedMeshObjectGuardMillerEntity.rotation.y = -1.57079633; 
         
-        if (GUARD_MILLER_X < -20) {
-            GUARD_MILLER_STATE = "TURN_AROUND";
+        if (ENTITY_GUARD_MILLER_POSITION_COORD_X < -25.0) {
+            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "EXECUTE_180_DEGREE_TURN_MANEUVER";
         }
         
-        // Raycast check for player visibility
-        let distanceToPlayerX = yawObject.position.x - guardMillerMesh.position.x;
-        let distanceToPlayerZ = yawObject.position.z - guardMillerMesh.position.z;
-        let totalDistance = Math.sqrt(distanceToPlayerX*distanceToPlayerX + distanceToPlayerZ*distanceToPlayerZ);
+        let mathematicalDistanceToPlayerEntityX = playerYawControlObject.position.x - generatedMeshObjectGuardMillerEntity.position.x;
+        let mathematicalDistanceToPlayerEntityZ = playerYawControlObject.position.z - generatedMeshObjectGuardMillerEntity.position.z;
+        let mathematicalTotalAbsoluteDistanceToPlayer = Math.sqrt((mathematicalDistanceToPlayerEntityX * mathematicalDistanceToPlayerEntityX) + (mathematicalDistanceToPlayerEntityZ * mathematicalDistanceToPlayerEntityZ));
         
-        if (totalDistance < GUARD_MILLER_SIGHT_RANGE) {
-            // Check FOV
-            let angleToPlayer = Math.atan2(distanceToPlayerX, distanceToPlayerZ);
-            let guardAngle = guardMillerMesh.rotation.y;
-            // Simplified angle check
-            if (Math.abs(angleToPlayer - guardAngle) < GUARD_MILLER_FOV) {
-                GUARD_MILLER_STATE = "SEARCHING";
-                GUARD_MILLER_ALERT_LEVEL += 10.0;
+        if (mathematicalTotalAbsoluteDistanceToPlayer < ENTITY_GUARD_MILLER_VISION_MAX_DISTANCE) {
+            let mathematicalAngleToPlayerEntity = Math.atan2(mathematicalDistanceToPlayerEntityX, mathematicalDistanceToPlayerEntityZ);
+            let mathematicalGuardCurrentFacingAngle = generatedMeshObjectGuardMillerEntity.rotation.y;
+            
+            let mathematicalAngleDifferenceCalculated = Math.abs(mathematicalAngleToPlayerEntity - mathematicalGuardCurrentFacingAngle);
+            if (mathematicalAngleDifferenceCalculated < ENTITY_GUARD_MILLER_VISION_CONE_ANGLE_RAD) {
+                ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "ACTIVE_SEARCHING_AND_SCANNING_STATE";
+                ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE += 15.0;
             }
         }
     }
-    else if (GUARD_MILLER_STATE === "TURN_AROUND") {
-        guardMillerMesh.rotation.y += delta * 2.0;
-        if (guardMillerMesh.rotation.y > Math.PI / 2) {
-            guardMillerMesh.rotation.y = Math.PI / 2;
-            GUARD_MILLER_STATE = "PATROL_BACK";
+    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "EXECUTE_180_DEGREE_TURN_MANEUVER") {
+        generatedMeshObjectGuardMillerEntity.rotation.y += paramFloatDeltaTime * 1.85;
+        if (generatedMeshObjectGuardMillerEntity.rotation.y > 1.57079633) {
+            generatedMeshObjectGuardMillerEntity.rotation.y = 1.57079633;
+            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_BRAVO_RETURN";
         }
     }
-    else if (GUARD_MILLER_STATE === "PATROL_BACK") {
-        GUARD_MILLER_X += delta * 1.0;
-        guardMillerMesh.position.x = GUARD_MILLER_X;
+    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "PATROL_ROUTINE_BRAVO_RETURN") {
+        ENTITY_GUARD_MILLER_POSITION_COORD_X += paramFloatDeltaTime * ENTITY_GUARD_MILLER_WALKING_SPEED_SCALAR;
+        generatedMeshObjectGuardMillerEntity.position.x = ENTITY_GUARD_MILLER_POSITION_COORD_X;
         
-        if (GUARD_MILLER_X > 20) {
-            GUARD_MILLER_STATE = "IDLE";
-            guardMillerMesh.rotation.y = 0;
-            GUARD_MILLER_ROTATION = 0;
+        if (ENTITY_GUARD_MILLER_POSITION_COORD_X > 25.0) {
+            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "IDLE_STATIONARY_STATE";
+            generatedMeshObjectGuardMillerEntity.rotation.y = 0.0;
+            ENTITY_GUARD_MILLER_ROTATION_EULER_Y = 0.0;
         }
     }
-    else if (GUARD_MILLER_STATE === "SEARCHING") {
-        guardFlashlight.color.setHex(0xffaa00);
-        GUARD_MILLER_ALERT_LEVEL -= delta * 2.0;
+    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "ACTIVE_SEARCHING_AND_SCANNING_STATE") {
+        instanceSpotLightGuardFlashlightDevice.color.setHex(0xffbb00);
+        ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE -= paramFloatDeltaTime * 3.5;
         
-        // Complex raycast
-        let playerDir = new THREE.Vector3();
-        playerDir.subVectors(yawObject.position, guardMillerMesh.position).normalize();
-        let guardRay = new THREE.Raycaster(guardMillerMesh.position, playerDir);
-        let guardHits = guardRay.intersectObjects(collidableObjects);
+        let calculatedVectorDirectionTowardsPlayer = new THREE.Vector3();
+        calculatedVectorDirectionTowardsPlayer.subVectors(playerYawControlObject.position, generatedMeshObjectGuardMillerEntity.position).normalize();
+        let raycasterInstanceForGuardVisionLineOfSight = new THREE.Raycaster(generatedMeshObjectGuardMillerEntity.position, calculatedVectorDirectionTowardsPlayer);
+        let arrayIntersectionResultsForGuardVision = raycasterInstanceForGuardVisionLineOfSight.intersectObjects(arrayListCollidableSolidObjects);
         
-        let canSeePlayer = true;
-        if (guardHits.length > 0) {
-            let distToWall = guardHits[0].distance;
-            let distToPlayer = yawObject.position.distanceTo(guardMillerMesh.position);
-            if (distToWall < distToPlayer) {
-                canSeePlayer = false; // Blocked by wall
+        let booleanCanVisuallyConfirmPlayerEntity = true;
+        if (arrayIntersectionResultsForGuardVision.length > 0) {
+            let floatDistanceToIntersectedWallObstacle = arrayIntersectionResultsForGuardVision[0].distance;
+            let floatDistanceToActualPlayerEntityTarget = playerYawControlObject.position.distanceTo(generatedMeshObjectGuardMillerEntity.position);
+            if (floatDistanceToIntersectedWallObstacle < floatDistanceToActualPlayerEntityTarget) {
+                booleanCanVisuallyConfirmPlayerEntity = false; 
             }
         }
         
-        if (canSeePlayer && !PLAYER_IS_CROUCHING) {
-            GUARD_MILLER_ALERT_LEVEL += delta * 20.0;
+        if (booleanCanVisuallyConfirmPlayerEntity === true && PLAYER_STATE_IS_CURRENTLY_CROUCHING === false) {
+            ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE += paramFloatDeltaTime * 35.0;
         }
         
-        if (GUARD_MILLER_ALERT_LEVEL > 100.0) {
-            GUARD_MILLER_STATE = "ALERT";
-        } else if (GUARD_MILLER_ALERT_LEVEL <= 0) {
-            GUARD_MILLER_STATE = "PATROL";
-            guardFlashlight.color.setHex(0xffffff);
-            GUARD_MILLER_ALERT_LEVEL = 0;
+        if (ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE > 100.0) {
+            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "FULL_COMBAT_ALERT_STATE";
+        } else if (ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE <= 0.0) {
+            ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "PATROL_ROUTINE_ALPHA";
+            instanceSpotLightGuardFlashlightDevice.color.setHex(0xffffff);
+            ENTITY_GUARD_MILLER_SUSPICION_METER_VALUE = 0.0;
         }
     }
-    else if (GUARD_MILLER_STATE === "ALERT") {
-        guardFlashlight.color.setHex(0xff0000);
-        showDialogue("HEY! YOU! STOP RIGHT THERE!");
-        GUARD_MILLER_STATE = "PURSUIT";
-        document.getElementById('damage-overlay').classList.add('damage-active');
+    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "FULL_COMBAT_ALERT_STATE") {
+        instanceSpotLightGuardFlashlightDevice.color.setHex(0xff0000);
+        functionDisplaySpatialDialogueTextOnScreen("SUBJECT DETECTED. LETHAL FORCE AUTHORIZED.");
+        ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE = "HOSTILE_PURSUIT_AND_TERMINATE_STATE";
+        document.getElementById('player-damage-overlay').classList.add('damage-overlay-active');
     }
-    else if (GUARD_MILLER_STATE === "PURSUIT") {
-        // Simple follow logic
-        let dirX = yawObject.position.x - guardMillerMesh.position.x;
-        let dirZ = yawObject.position.z - guardMillerMesh.position.z;
-        let length = Math.sqrt(dirX*dirX + dirZ*dirZ);
-        dirX /= length;
-        dirZ /= length;
+    else if (ENTITY_GUARD_MILLER_CURRENT_BEHAVIORAL_STATE === "HOSTILE_PURSUIT_AND_TERMINATE_STATE") {
+        let mathematicalDirectionalVectorX = playerYawControlObject.position.x - generatedMeshObjectGuardMillerEntity.position.x;
+        let mathematicalDirectionalVectorZ = playerYawControlObject.position.z - generatedMeshObjectGuardMillerEntity.position.z;
+        let mathematicalVectorLengthCalculation = Math.sqrt((mathematicalDirectionalVectorX * mathematicalDirectionalVectorX) + (mathematicalDirectionalVectorZ * mathematicalDirectionalVectorZ));
         
-        guardMillerMesh.position.x += dirX * delta * 3.0;
-        guardMillerMesh.position.z += dirZ * delta * 3.0;
+        mathematicalDirectionalVectorX /= mathematicalVectorLengthCalculation;
+        mathematicalDirectionalVectorZ /= mathematicalVectorLengthCalculation;
         
-        if (length < 2.0) {
-            // Game Over state
-            PLAYER_HEALTH -= delta * 50;
-            if (PLAYER_HEALTH <= 0) {
-                document.body.innerHTML = "<h1 style='color:red; text-align:center; font-family:monospace; margin-top:20%'>TERMINATED</h1>";
+        generatedMeshObjectGuardMillerEntity.position.x += mathematicalDirectionalVectorX * paramFloatDeltaTime * ENTITY_GUARD_MILLER_RUNNING_SPEED_SCALAR;
+        generatedMeshObjectGuardMillerEntity.position.z += mathematicalDirectionalVectorZ * paramFloatDeltaTime * ENTITY_GUARD_MILLER_RUNNING_SPEED_SCALAR;
+        
+        if (mathematicalVectorLengthCalculation < 2.5) {
+            PLAYER_BIOMETRIC_HEALTH_POINTS -= paramFloatDeltaTime * 65.0;
+            if (PLAYER_BIOMETRIC_HEALTH_POINTS <= 0.0) {
+                PLAYER_STATE_IS_CURRENTLY_DEAD = true;
+                document.body.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; width:100vw; height:100vh; background-color:#000;'><h1 style='color:#ff0000; font-family:Courier New, monospace; font-size: 64px; letter-spacing: 15px;'>TERMINATED</h1></div>";
             }
         }
     }
 }
 
 // ==========================================================================
-// MAIN RENDER LOOP
+// MASTER RENDER ENGINE LOOP AND UPDATE CYCLE
 // ==========================================================================
-function animate() {
-    requestAnimationFrame(animate);
+function functionExecuteMasterAnimationRenderLoop() {
+    if (PLAYER_STATE_IS_CURRENTLY_DEAD === true) return;
     
-    DELTA_TIME = CLOCK.getDelta();
-    GAME_TIME += DELTA_TIME;
+    requestAnimationFrame(functionExecuteMasterAnimationRenderLoop);
+    
+    GLOBAL_DELTA_TIME_VALUE = GLOBAL_THREE_CLOCK_INSTANCE.getDelta();
+    GLOBAL_ENGINE_UPTIME_SECONDS += GLOBAL_DELTA_TIME_VALUE;
 
-    // HUD Updates
-    let date = new Date();
-    document.getElementById('sys-time').innerText = date.toISOString().split('T')[1].split('.')[0];
+    let javascriptDateObjectInstance = new Date();
+    document.getElementById('system-time-display').innerText = javascriptDateObjectInstance.toISOString().split('T')[1].replace('Z', '');
     
     if (document.pointerLockElement === document.body) {
         
-        // Physics and Movement calculation
-        velocity.x -= velocity.x * 10.0 * DELTA_TIME;
-        velocity.z -= velocity.z * 10.0 * DELTA_TIME;
-        velocity.y -= 9.8 * 100.0 * DELTA_TIME; // Gravity
+        playerMovementVelocityVector.x -= playerMovementVelocityVector.x * 12.0 * GLOBAL_DELTA_TIME_VALUE;
+        playerMovementVelocityVector.z -= playerMovementVelocityVector.z * 12.0 * GLOBAL_DELTA_TIME_VALUE;
+        playerMovementVelocityVector.y -= 9.81 * 120.0 * GLOBAL_DELTA_TIME_VALUE; 
 
-        direction.z = Number(moveForward) - Number(moveBackward);
-        direction.x = Number(moveRight) - Number(moveLeft);
-        direction.normalize();
+        playerMovementDirectionVector.z = Number(inputFlagMoveForward) - Number(inputFlagMoveBackward);
+        playerMovementDirectionVector.x = Number(inputFlagMoveRight) - Number(inputFlagMoveLeft);
+        playerMovementDirectionVector.normalize();
 
-        let currentSpeed = 40.0;
-        if (PLAYER_IS_SPRINTING && PLAYER_STAMINA > 0) {
-            currentSpeed = 80.0;
-            PLAYER_STAMINA -= DELTA_TIME * 20.0;
-            PLAYER_HEART_RATE = 110;
-        } else if (PLAYER_IS_CROUCHING) {
-            currentSpeed = 20.0;
-            PLAYER_STAMINA += DELTA_TIME * 10.0;
-            PLAYER_STEALTH = 100;
+        let variableCalculatedCurrentMovementSpeed = 45.0;
+        
+        if (PLAYER_STATE_IS_CURRENTLY_SPRINTING === true && PLAYER_BIOMETRIC_STAMINA_LEVEL > 0.0) {
+            variableCalculatedCurrentMovementSpeed = 95.0;
+            PLAYER_BIOMETRIC_STAMINA_LEVEL -= GLOBAL_DELTA_TIME_VALUE * 25.0;
+            PLAYER_BIOMETRIC_HEART_RATE_BPM = 115.0;
+        } else if (PLAYER_STATE_IS_CURRENTLY_CROUCHING === true) {
+            variableCalculatedCurrentMovementSpeed = 22.0;
+            PLAYER_BIOMETRIC_STAMINA_LEVEL += GLOBAL_DELTA_TIME_VALUE * 12.0;
+            PLAYER_BIOMETRIC_STEALTH_RATING = 100.0;
         } else {
-            PLAYER_STAMINA += DELTA_TIME * 5.0;
-            PLAYER_STEALTH = 50;
-            if (PLAYER_HEART_RATE > 72) PLAYER_HEART_RATE -= DELTA_TIME * 5;
+            PLAYER_BIOMETRIC_STAMINA_LEVEL += GLOBAL_DELTA_TIME_VALUE * 6.0;
+            PLAYER_BIOMETRIC_STEALTH_RATING = 45.0;
+            if (PLAYER_BIOMETRIC_HEART_RATE_BPM > 72.0) {
+                PLAYER_BIOMETRIC_HEART_RATE_BPM -= GLOBAL_DELTA_TIME_VALUE * 6.0;
+            }
         }
         
-        if (PLAYER_STAMINA > 100) PLAYER_STAMINA = 100;
-        if (PLAYER_STAMINA < 0) PLAYER_STAMINA = 0;
+        if (PLAYER_BIOMETRIC_STAMINA_LEVEL > 100.0) PLAYER_BIOMETRIC_STAMINA_LEVEL = 100.0;
+        if (PLAYER_BIOMETRIC_STAMINA_LEVEL < 0.0) PLAYER_BIOMETRIC_STAMINA_LEVEL = 0.0;
         
-        if (PLAYER_STAMINA < 20) {
-            document.getElementById('stamina-fill').classList.add('low-stamina');
+        const htmlElementStaminaFillBar = document.getElementById('stamina-bar-fill');
+        if (PLAYER_BIOMETRIC_STAMINA_LEVEL < 20.0) {
+            htmlElementStaminaFillBar.classList.add('stamina-critical-state');
         } else {
-            document.getElementById('stamina-fill').classList.remove('low-stamina');
+            htmlElementStaminaFillBar.classList.remove('stamina-critical-state');
         }
         
-        document.getElementById('stamina-fill').style.width = PLAYER_STAMINA + '%';
-        document.getElementById('stealth-fill').style.width = PLAYER_STEALTH + '%';
+        htmlElementStaminaFillBar.style.width = PLAYER_BIOMETRIC_STAMINA_LEVEL + '%';
+        document.getElementById('stealth-bar-fill').style.width = PLAYER_BIOMETRIC_STEALTH_RATING + '%';
         
-        let hrText = Math.floor(PLAYER_HEART_RATE);
-        document.getElementById('heart-rate-monitor').innerText = `BPM: ${hrText}`;
-        if (hrText > 100) {
-            document.getElementById('heart-rate-monitor').className = 'hr-fast';
+        let stringFormattedHeartRateInteger = Math.floor(PLAYER_BIOMETRIC_HEART_RATE_BPM).toString().padStart(3, '0');
+        const htmlElementHeartRateDisplayMonitor = document.getElementById('biometric-heart-rate-monitor');
+        htmlElementHeartRateDisplayMonitor.innerText = `BPM: ${stringFormattedHeartRateInteger}`;
+        
+        if (PLAYER_BIOMETRIC_HEART_RATE_BPM > 110.0) {
+            htmlElementHeartRateDisplayMonitor.className = 'hr-state-critical';
+        } else if (PLAYER_BIOMETRIC_HEART_RATE_BPM > 85.0) {
+            htmlElementHeartRateDisplayMonitor.className = 'hr-state-elevated';
         } else {
-            document.getElementById('heart-rate-monitor').className = 'hr-normal';
+            htmlElementHeartRateDisplayMonitor.className = 'hr-state-normal';
         }
 
-        if (moveForward || moveBackward) velocity.z -= direction.z * currentSpeed * DELTA_TIME;
-        if (moveLeft || moveRight) velocity.x -= direction.x * currentSpeed * DELTA_TIME;
+        if (inputFlagMoveForward || inputFlagMoveBackward) playerMovementVelocityVector.z -= playerMovementDirectionVector.z * variableCalculatedCurrentMovementSpeed * GLOBAL_DELTA_TIME_VALUE;
+        if (inputFlagMoveLeft || inputFlagMoveRight) playerMovementVelocityVector.x -= playerMovementDirectionVector.x * variableCalculatedCurrentMovementSpeed * GLOBAL_DELTA_TIME_VALUE;
 
-        // Apply Movement
-        yawObject.translateX(velocity.x * DELTA_TIME);
-        yawObject.translateY(velocity.y * DELTA_TIME);
-        yawObject.translateZ(velocity.z * DELTA_TIME);
+        playerYawControlObject.translateX(playerMovementVelocityVector.x * GLOBAL_DELTA_TIME_VALUE);
+        playerYawControlObject.translateY(playerMovementVelocityVector.y * GLOBAL_DELTA_TIME_VALUE);
+        playerYawControlObject.translateZ(playerMovementVelocityVector.z * GLOBAL_DELTA_TIME_VALUE);
 
-        // Simple Floor Collision
-        if (yawObject.position.y < (PLAYER_IS_CROUCHING ? 1.0 : 1.7)) {
-            velocity.y = 0;
-            yawObject.position.y = (PLAYER_IS_CROUCHING ? 1.0 : 1.7);
-            canJump = true;
+        let floatCalculatedMinimumFloorHeightLimit = PLAYER_STATE_IS_CURRENTLY_CROUCHING ? 0.95 : 1.75;
+        if (playerYawControlObject.position.y < floatCalculatedMinimumFloorHeightLimit) {
+            playerMovementVelocityVector.y = 0.0;
+            playerYawControlObject.position.y = floatCalculatedMinimumFloorHeightLimit;
+            inputFlagCanPerformJump = true;
+            PLAYER_STATE_IS_CURRENTLY_AIRBORNE = false;
         }
         
-        // Simple Wall Collision Constraints (Hardcoded bounds for Cell 701)
-        if (yawObject.position.x < -4.5) yawObject.position.x = -4.5;
-        if (yawObject.position.x > 4.5) yawObject.position.x = 4.5;
-        if (yawObject.position.z < -4.5) yawObject.position.z = -4.5;
-        if (yawObject.position.z > 4.5 && cellDoorMesh.userData.open === false) yawObject.position.z = 4.5;
+        if (playerYawControlObject.position.x < -5.5) playerYawControlObject.position.x = -5.5;
+        if (playerYawControlObject.position.x > 5.5) playerYawControlObject.position.x = 5.5;
+        if (playerYawControlObject.position.z < -5.5) playerYawControlObject.position.z = -5.5;
+        if (playerYawControlObject.position.z > 5.5 && meshObjectHeavyIronCellDoor.userData.booleanIsOpenedState === false) {
+            playerYawControlObject.position.z = 5.5;
+        }
         
-        // Raycast interactions prompt
-        raycaster.setFromCamera(centerScreen, camera);
-        const intersects = raycaster.intersectObjects(interactableObjects);
-        if (intersects.length > 0 && intersects[0].distance < 2.5) {
-            document.getElementById('interaction-prompt').style.opacity = 1;
+        utilityInstanceRaycasterObject.setFromCamera(utilityInstanceCenterScreenVector, masterPerspectiveCamera);
+        const arrayIntersectionResultsForPrompt = utilityInstanceRaycasterObject.intersectObjects(arrayListInteractableDynamicObjects);
+        const htmlElementDynamicInteractionPrompt = document.getElementById('dynamic-interaction-prompt');
+        if (arrayIntersectionResultsForPrompt.length > 0 && arrayIntersectionResultsForPrompt[0].distance < 3.0) {
+            htmlElementDynamicInteractionPrompt.style.opacity = 1.0;
         } else {
-            document.getElementById('interaction-prompt').style.opacity = 0;
+            htmlElementDynamicInteractionPrompt.style.opacity = 0.0;
         }
         
-        // Update Ticks
-        updateBar1();
-        updateBar2();
-        updateBar3();
-        updateBar4();
-        updateBar5();
-        updateBar6();
-        updateBar7();
-        updateBar8();
-        updateBar9();
-        updateBar10();
+        executeTickUpdateRoutineForIronBarNumber01();
+        executeTickUpdateRoutineForIronBarNumber02();
+        executeTickUpdateRoutineForIronBarNumber03();
+        executeTickUpdateRoutineForIronBarNumber04();
+        executeTickUpdateRoutineForIronBarNumber05();
+        executeTickUpdateRoutineForIronBarNumber06();
+        executeTickUpdateRoutineForIronBarNumber07();
+        executeTickUpdateRoutineForIronBarNumber08();
+        executeTickUpdateRoutineForIronBarNumber09();
+        executeTickUpdateRoutineForIronBarNumber10();
+        executeTickUpdateRoutineForIronBarNumber11();
+        executeTickUpdateRoutineForIronBarNumber12();
+        executeTickUpdateRoutineForIronBarNumber13();
+        executeTickUpdateRoutineForIronBarNumber14();
+        executeTickUpdateRoutineForIronBarNumber15();
+        executeTickUpdateRoutineForIronBarNumber16();
         
-        updateGuardMillerAI(DELTA_TIME);
+        functionExecuteGuardMillerArtificialIntelligenceLogicRoutine(GLOBAL_DELTA_TIME_VALUE);
         
-        // Ambient noise
-        if (Math.random() < 0.001) {
-            let randomChatter = PRISON_CHATTER[Math.floor(Math.random() * PRISON_CHATTER.length)];
-            showDialogue(randomChatter);
+        let floatRandomValueForAmbientDialogueTrigger = Math.random();
+        if (floatRandomValueForAmbientDialogueTrigger < 0.0015) {
+            let integerRandomIndexSelectionForDialogue = Math.floor(Math.random() * ENVIRONMENT_DIALOGUE_STRINGS_ARRAY_DATA.length);
+            let stringSelectedRandomDialogueText = ENVIRONMENT_DIALOGUE_STRINGS_ARRAY_DATA[integerRandomIndexSelectionForDialogue];
+            functionDisplaySpatialDialogueTextOnScreen(stringSelectedRandomDialogueText);
         }
     }
 
-    renderer.render(scene, camera);
+    masterWebGLRenderer.render(masterSceneObject, masterPerspectiveCamera);
 }
 
 window.addEventListener('resize', function () {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    masterPerspectiveCamera.aspect = window.innerWidth / window.innerHeight;
+    masterPerspectiveCamera.updateProjectionMatrix();
+    masterWebGLRenderer.setSize(window.innerWidth, window.innerHeight);
 }, false);
 
-// Start
-animate();
+functionExecuteMasterAnimationRenderLoop();
 </script>
 </body>
 </html>
