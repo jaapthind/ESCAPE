@@ -1,554 +1,704 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escape: The Cell</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: #000;
-            font-family: 'Courier New', Courier, monospace;
-            user-select: none;
-        }
-        #gl-canvas-container {
-            width: 100vw;
-            height: 100vh;
-            display: block;
-        }
-        #ui-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        #crosshair {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 4px;
-            height: 4px;
-            background-color: rgba(255, 255, 255, 0.5);
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-        }
-        #inventory-hud {
-            padding: 20px;
-            color: #ccc;
-            text-shadow: 1px 1px 0 #000;
-            font-size: 18px;
-            letter-spacing: 2px;
-        }
-        #interaction-prompt {
-            position: absolute;
-            top: 60%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 24px;
-            text-shadow: 0 0 5px #000;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        #blocker {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            pointer-events: auto;
-            z-index: 100;
-        }
-        #instructions {
-            text-align: center;
-            cursor: pointer;
-        }
-        .title {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #aa0000;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-        }
-        .subtitle {
-            font-size: 16px;
-            color: #888;
-        }
-        #freedom-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #fff;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #000;
-            z-index: 200;
-            opacity: 0;
-            transition: opacity 3s ease-in;
-        }
-        .freedom-title {
-            font-size: 72px;
-            letter-spacing: 15px;
-        }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<meta charset="UTF-8">
+<title>Block D - The Escape</title>
+<style>
+    body { margin: 0; overflow: hidden; background: #000; font-family: monospace; user-select: none; }
+    #game-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
+    #ui-layer { position: absolute; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; }
+    #crosshair { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255,255,255,0.8); transform: translate(-50%, -50%); border-radius: 50%; }
+    #hud { position: absolute; bottom: 20px; left: 20px; color: #fff; text-shadow: 1px 1px 2px #000; font-size: 14px; }
+    #inventory-display { position: absolute; top: 20px; right: 20px; color: #aaa; text-align: right; }
+    #subtitles { position: absolute; bottom: 10vh; width: 100%; text-align: center; color: #e0e0e0; font-size: 18px; font-weight: bold; text-shadow: 0 0 5px #000; opacity: 0; transition: opacity 0.3s; }
+    #blocker { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; cursor: pointer; }
+    .title { font-size: 48px; color: #555; text-transform: uppercase; letter-spacing: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+    .instructions { font-size: 16px; color: #888; text-align: center; line-height: 1.5; }
+    .fade-overlay { position: absolute; width: 100%; height: 100%; background: #000; z-index: 5; pointer-events: none; opacity: 0; transition: opacity 2s; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
 
-    <div id="gl-canvas-container"></div>
-
-    <div id="ui-layer">
-        <div id="inventory-hud">INVENTORY: EMPTY</div>
-        <div id="crosshair"></div>
-        <div id="interaction-prompt">[E] INTERACT</div>
+<div id="blocker">
+    <div class="title">BLOCK D</div>
+    <div class="instructions">
+        CLICK TO COMMENCE<br><br>
+        W A S D - MOVEMENT<br>
+        MOUSE - LOOK<br>
+        E - INTERACT<br>
+        SPACE - VAULT/JUMP<br>
+        C - CROUCH<br>
     </div>
+</div>
 
-    <div id="blocker">
-        <div id="instructions">
-            <div class="title">CELL 404</div>
-            <div class="subtitle">
-                Click to enter<br><br>
-                WASD to Move<br>
-                MOUSE to Look<br>
-                Left Click / E to Interact<br><br>
-                Find a way out.
-            </div>
-        </div>
-    </div>
+<div id="ui-layer">
+    <div id="crosshair"></div>
+    <div id="hud">STATE: CONFINED<br>PHASE 1: PREPARATION</div>
+    <div id="inventory-display">INVENTORY<br>---------<br><span id="inv-items">EMPTY</span></div>
+    <div id="subtitles"></div>
+</div>
+<div id="fade-overlay" class="fade-overlay"></div>
+<div id="game-container"></div>
 
-    <div id="freedom-screen">
-        <div class="freedom-title">FREEDOM</div>
-    </div>
+<script>
+const GameMasterState = {
+    phase: 1, // 1: Prep, 2: Distract, 3: Act, 4: Nav
+    timeOfDay: 0.0, // 0 to 24
+    daySpeed: 0.001,
+    weather: 'rain',
+    guardAlertLevel: 0, // 0: Patrol, 1: Suspicious, 2: Alert, 3: Pursuit
+    playerDetected: false,
+    ventOpen: false,
+    cellDoorOpen: false,
+    distractionActive: false,
+    distractionLocation: new THREE.Vector3(0,0,0)
+};
 
-    <script>
-        // ==========================================
-        // GAME CONFIGURATION AND STATE MANAGEMENT
-        // ==========================================
-        const GameState = {
-            inventory: [],
-            hasSpoon: false,
-            hasKey: false,
-            brickRemoved: false,
-            doorUnlocked: false,
-            escaped: false,
-            isNearClue: false
-        };
+const ComplexInventoryDataSystem = {
+    items: [],
+    slots: 5,
+    selectedSlot: 0,
+    equipped: null,
+    addItem: function(itemObject) {
+        if (this.items.length < this.slots) {
+            this.items.push(itemObject);
+            this.updateUI();
+            return true;
+        }
+        return false;
+    },
+    hasItem: function(itemId) {
+        for (let i = 0; i < this.items.length; i++) {
+            if (this.items[i].id === itemId) return true;
+        }
+        return false;
+    },
+    updateUI: function() {
+        const el = document.getElementById('inv-items');
+        if (this.items.length === 0) { el.innerHTML = 'EMPTY'; return; }
+        let html = '';
+        for (let i = 0; i < this.items.length; i++) {
+            html += this.items[i].displayName + ' [HP: ' + this.items[i].condition + ']<br>';
+        }
+        el.innerHTML = html;
+    }
+};
 
-        const PlayerPhysics = {
-            velocity: new THREE.Vector3(),
-            direction: new THREE.Vector3(),
-            moveForward: false,
-            moveBackward: false,
-            moveLeft: false,
-            moveRight: false,
-            speed: 40.0,
-            mass: 80.0,
-            height: 1.7,
-            canJump: true
-        };
+const PhysicalCollisionWorldBoundingBoxes = [];
 
-        // ==========================================
-        // THREE.JS INITIALIZATION
-        // ==========================================
-        const container = document.getElementById('gl-canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x020202);
-        scene.fog = new THREE.FogExp2(0x050505, 0.15);
+const RendererSetupParameters = {
+    antialias: false,
+    powerPreference: "high-performance",
+    logarithmicDepthBuffer: true
+};
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.y = PlayerPhysics.height;
+const SceneConfigurationObject = {
+    fogColorNight: 0x050508,
+    fogColorDay: 0x22252a,
+    fogDensityNight: 0.04,
+    fogDensityDay: 0.015,
+    ambientNight: 0x0a0a0f,
+    ambientDay: 0x334455
+};
 
-        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        container.appendChild(renderer.domElement);
+const container = document.getElementById('game-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(SceneConfigurationObject.fogColorNight);
+scene.fog = new THREE.FogExp2(SceneConfigurationObject.fogColorNight, SceneConfigurationObject.fogDensityNight);
 
-        // ==========================================
-        // CUSTOM POINTER LOCK CONTROLLER (FROM SCRATCH)
-        // ==========================================
-        const euler = new THREE.Euler(0, 0, 0, 'YXZ');
-        const PI_2 = Math.PI / 2;
-        let isLocked = false;
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer(RendererSetupParameters);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.8;
+container.appendChild(renderer.domElement);
 
-        const blocker = document.getElementById('blocker');
-        const instructions = document.getElementById('instructions');
+const CameraEulerRotationSystem = new THREE.Euler(0, 0, 0, 'YXZ');
+const HalfPiConstantValue = Math.PI / 2;
+let ControllerPointerIsLocked = false;
+let PlayerMovementStateForward = false;
+let PlayerMovementStateBackward = false;
+let PlayerMovementStateLeft = false;
+let PlayerMovementStateRight = false;
+let PlayerMovementStateCrouch = false;
+let PlayerMovementStateJump = false;
 
-        instructions.addEventListener('click', function () {
-            document.body.requestPointerLock();
-        });
+const PlayerPhysicalProperties = {
+    velocity: new THREE.Vector3(0, 0, 0),
+    direction: new THREE.Vector3(0, 0, 0),
+    speed: 35.0,
+    crouchSpeed: 15.0,
+    mass: 85.0,
+    heightStanding: 1.75,
+    heightCrouching: 0.9,
+    currentHeight: 1.75,
+    jumpForce: 15.0,
+    isGrounded: false,
+    radius: 0.3
+};
+camera.position.set(0, PlayerPhysicalProperties.currentHeight, 0);
 
-        document.addEventListener('pointerlockchange', function () {
-            if (document.pointerLockElement === document.body) {
-                isLocked = true;
-                blocker.style.display = 'none';
-            } else {
-                isLocked = false;
-                blocker.style.display = 'flex';
-                PlayerPhysics.moveForward = false;
-                PlayerPhysics.moveBackward = false;
-                PlayerPhysics.moveLeft = false;
-                PlayerPhysics.moveRight = false;
+document.getElementById('blocker').addEventListener('click', function () {
+    document.body.requestPointerLock();
+});
+
+document.addEventListener('pointerlockchange', function () {
+    if (document.pointerLockElement === document.body) {
+        ControllerPointerIsLocked = true;
+        document.getElementById('blocker').style.display = 'none';
+    } else {
+        ControllerPointerIsLocked = false;
+        document.getElementById('blocker').style.display = 'flex';
+        PlayerMovementStateForward = false;
+        PlayerMovementStateBackward = false;
+        PlayerMovementStateLeft = false;
+        PlayerMovementStateRight = false;
+    }
+});
+
+document.addEventListener('mousemove', function (event) {
+    if (ControllerPointerIsLocked === false) return;
+    const movementXData = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+    const movementYData = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+    CameraEulerRotationSystem.setFromQuaternion(camera.quaternion);
+    CameraEulerRotationSystem.y -= movementXData * 0.002;
+    CameraEulerRotationSystem.x -= movementYData * 0.002;
+    CameraEulerRotationSystem.x = Math.max(-HalfPiConstantValue, Math.min(HalfPiConstantValue, CameraEulerRotationSystem.x));
+    camera.quaternion.setFromEuler(CameraEulerRotationSystem);
+});
+
+document.addEventListener('keydown', function (event) {
+    if (!ControllerPointerIsLocked) return;
+    switch (event.code) {
+        case 'ArrowUp':
+        case 'KeyW': PlayerMovementStateForward = true; break;
+        case 'ArrowLeft':
+        case 'KeyA': PlayerMovementStateLeft = true; break;
+        case 'ArrowDown':
+        case 'KeyS': PlayerMovementStateBackward = true; break;
+        case 'ArrowRight':
+        case 'KeyD': PlayerMovementStateRight = true; break;
+        case 'KeyC': PlayerMovementStateCrouch = true; break;
+        case 'Space': 
+            if (PlayerPhysicalProperties.isGrounded) {
+                PlayerPhysicalProperties.velocity.y = PlayerPhysicalProperties.jumpForce;
+                PlayerPhysicalProperties.isGrounded = false;
             }
-        });
+            break;
+        case 'KeyE': ExecutePrimaryInteractionRaycast(); break;
+    }
+});
 
-        document.addEventListener('mousemove', function (event) {
-            if (isLocked === false) return;
-            const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-            const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-            euler.setFromQuaternion(camera.quaternion);
-            euler.y -= movementX * 0.002;
-            euler.x -= movementY * 0.002;
-            euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
-            camera.quaternion.setFromEuler(euler);
-        });
+document.addEventListener('keyup', function (event) {
+    if (!ControllerPointerIsLocked) return;
+    switch (event.code) {
+        case 'ArrowUp':
+        case 'KeyW': PlayerMovementStateForward = false; break;
+        case 'ArrowLeft':
+        case 'KeyA': PlayerMovementStateLeft = false; break;
+        case 'ArrowDown':
+        case 'KeyS': PlayerMovementStateBackward = false; break;
+        case 'ArrowRight':
+        case 'KeyD': PlayerMovementStateRight = false; break;
+        case 'KeyC': PlayerMovementStateCrouch = false; break;
+    }
+});
 
-        document.addEventListener('keydown', function (event) {
-            if (!isLocked) return;
-            switch (event.code) {
-                case 'ArrowUp':
-                case 'KeyW': PlayerPhysics.moveForward = true; break;
-                case 'ArrowLeft':
-                case 'KeyA': PlayerPhysics.moveLeft = true; break;
-                case 'ArrowDown':
-                case 'KeyS': PlayerPhysics.moveBackward = true; break;
-                case 'ArrowRight':
-                case 'KeyD': PlayerPhysics.moveRight = true; break;
-                case 'KeyE': interact(); break;
-            }
-        });
+const CustomProceduralGrimeMaterialShader = {
+    uniforms: {
+        time: { value: 0.0 },
+        baseColor: { value: new THREE.Color(0x1a1a1a) },
+        noiseScale: { value: 15.0 }
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        varying vec3 vNormal;
+        void main() {
+            vUv = uv;
+            vPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+            vNormal = normalMatrix * normal;
+            gl_Position = projectionMatrix * viewMatrix * vec4(vPosition, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform float time;
+        uniform vec3 baseColor;
+        uniform float noiseScale;
+        varying vec2 vUv;
+        varying vec3 vPosition;
+        varying vec3 vNormal;
 
-        document.addEventListener('keyup', function (event) {
-            if (!isLocked) return;
-            switch (event.code) {
-                case 'ArrowUp':
-                case 'KeyW': PlayerPhysics.moveForward = false; break;
-                case 'ArrowLeft':
-                case 'KeyA': PlayerPhysics.moveLeft = false; break;
-                case 'ArrowDown':
-                case 'KeyS': PlayerPhysics.moveBackward = false; break;
-                case 'ArrowRight':
-                case 'KeyD': PlayerPhysics.moveRight = false; break;
-            }
-        });
+        float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
+        float noise(vec2 x) {
+            vec2 i = floor(x);
+            vec2 f = fract(x);
+            float a = hash(i);
+            float b = hash(i + vec2(1.0, 0.0));
+            float c = hash(i + vec2(0.0, 1.0));
+            float d = hash(i + vec2(1.0, 1.0));
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+        }
 
-        document.addEventListener('mousedown', function (event) {
-            if (!isLocked) return;
-            if (event.button === 0) interact();
-        });
-
-        // ==========================================
-        // PROCEDURAL TEXTURE GENERATION
-        // ==========================================
-        function createProceduralGrimeTexture(width, height, baseR, baseG, baseB) {
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            const imgData = ctx.createImageData(width, height);
-            const data = imgData.data;
-
-            for (let i = 0; i < data.length; i += 4) {
-                const noise = Math.random();
-                const scratch = Math.random() > 0.99 ? 50 : 0;
-                const dampness = Math.sin(i * 0.001) * 20;
-                
-                data[i]     = Math.max(0, Math.min(255, baseR - noise * 40 + scratch - dampness)); // R
-                data[i + 1] = Math.max(0, Math.min(255, baseG - noise * 40 + scratch - dampness)); // G
-                data[i + 2] = Math.max(0, Math.min(255, baseB - noise * 40 + scratch - dampness)); // B
-                data[i + 3] = 255; // Alpha
-            }
+        void main() {
+            float n = noise(vPosition.xz * noiseScale) * 0.5 + noise(vPosition.xy * noiseScale * 2.0) * 0.25;
+            vec3 finalColor = mix(baseColor, vec3(0.05, 0.05, 0.05), n);
+            float light = dot(normalize(vNormal), vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
             
-            // Add procedural structural lines (bricks/panels)
-            for(let y = 0; y < height; y++) {
-                for(let x = 0; x < width; x++) {
-                    if(y % 64 === 0 || (x % 128 === 0 && Math.floor(y/64)%2===0) || (x % 128 === 64 && Math.floor(y/64)%2!==0)) {
-                        const index = (y * width + x) * 4;
-                        data[index] = data[index] * 0.5;
-                        data[index+1] = data[index+1] * 0.5;
-                        data[index+2] = data[index+2] * 0.5;
-                    }
-                }
-            }
+            // Artificial ambient occlusion simulation
+            float ao = smoothstep(0.0, 0.5, vPosition.y);
+            finalColor *= (light * 0.5 + 0.5) * ao;
 
-            ctx.putImageData(imgData, 0, 0);
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.repeat.set(4, 4);
-            return texture;
+            gl_FragColor = vec4(finalColor, 1.0);
         }
+    `
+};
 
-        const wallTexture = createProceduralGrimeTexture(512, 512, 60, 60, 65);
-        const floorTexture = createProceduralGrimeTexture(512, 512, 40, 38, 38);
-        const rustTexture = createProceduralGrimeTexture(256, 256, 120, 50, 20);
+const CustomRustySteelMaterialShader = {
+    uniforms: {
+        time: { value: 0.0 },
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        varying vec3 vPos;
+        void main() {
+            vUv = uv;
+            vPos = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        varying vec2 vUv;
+        varying vec3 vPos;
+        float rand(vec2 co){ return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }
+        void main() {
+            float rust = rand(floor(vUv * 100.0)) * rand(floor(vUv * 20.0));
+            vec3 color = mix(vec3(0.1, 0.1, 0.1), vec3(0.4, 0.15, 0.05), step(0.6, rust));
+            // Simulate grating gaps
+            float gratingX = mod(vPos.x * 20.0, 1.0);
+            float gratingZ = mod(vPos.z * 20.0, 1.0);
+            if (gratingX < 0.1 || gratingZ < 0.1) discard;
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `
+};
 
-        const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTexture, roughness: 0.9, metalness: 0.1 });
-        const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture, roughness: 0.8, metalness: 0.2 });
-        const rustMaterial = new THREE.MeshStandardMaterial({ map: rustTexture, roughness: 1.0, metalness: 0.8 });
+const WallMaterialInstance = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.clone(CustomProceduralGrimeMaterialShader.uniforms),
+    vertexShader: CustomProceduralGrimeMaterialShader.vertexShader,
+    fragmentShader: CustomProceduralGrimeMaterialShader.fragmentShader
+});
 
-        // ==========================================
-        // ENVIRONMENT CONSTRUCTION
-        // ==========================================
-        const interactables = [];
+const SteelGratingMaterialInstance = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.clone(CustomRustySteelMaterialShader.uniforms),
+    vertexShader: CustomRustySteelMaterialShader.vertexShader,
+    fragmentShader: CustomRustySteelMaterialShader.fragmentShader,
+    side: THREE.DoubleSide
+});
 
-        // Room geometry (Inverted Box)
-        const roomSize = 8;
-        const roomHeight = 4;
-        const roomGeometry = new THREE.BoxGeometry(roomSize, roomHeight, roomSize);
-        const roomMaterials = [
-            wallMaterial, // Right
-            wallMaterial, // Left
-            wallMaterial, // Top (Ceiling)
-            floorMaterial, // Bottom (Floor)
-            wallMaterial, // Front
-            wallMaterial  // Back
-        ];
-        const room = new THREE.Mesh(roomGeometry, roomMaterials);
-        room.geometry.scale(-1, -1, -1); // Invert normals
-        room.position.y = roomHeight / 2;
-        room.receiveShadow = true;
-        scene.add(room);
+const AmbientLightSystem = new THREE.AmbientLight(SceneConfigurationObject.ambientNight);
+scene.add(AmbientLightSystem);
 
-        // The Door
-        const doorGroup = new THREE.Group();
-        doorGroup.position.set(0, 0, roomSize / 2 - 0.05);
-        scene.add(doorGroup);
+const MoonDirectionalLightSystem = new THREE.DirectionalLight(0x8899aa, 0.5);
+MoonDirectionalLightSystem.position.set(50, 100, 50);
+MoonDirectionalLightSystem.castShadow = true;
+MoonDirectionalLightSystem.shadow.camera.left = -50;
+MoonDirectionalLightSystem.shadow.camera.right = 50;
+MoonDirectionalLightSystem.shadow.camera.top = 50;
+MoonDirectionalLightSystem.shadow.camera.bottom = -50;
+MoonDirectionalLightSystem.shadow.bias = -0.001;
+scene.add(MoonDirectionalLightSystem);
 
-        const doorGeometry = new THREE.BoxGeometry(2, 3, 0.1);
-        const doorMesh = new THREE.Mesh(doorGeometry, rustMaterial);
-        doorMesh.position.set(1, 1.5, 0); // Offset for hinge
-        doorMesh.castShadow = true;
-        doorMesh.receiveShadow = true;
-        doorGroup.add(doorMesh);
+const MainCourtyardSpotlight = new THREE.SpotLight(0xffddaa, 2.0);
+MainCourtyardSpotlight.position.set(0, 20, 0);
+MainCourtyardSpotlight.angle = Math.PI / 4;
+MainCourtyardSpotlight.penumbra = 0.5;
+MainCourtyardSpotlight.decay = 2;
+MainCourtyardSpotlight.distance = 50;
+MainCourtyardSpotlight.castShadow = true;
+scene.add(MainCourtyardSpotlight);
+
+const EnvironmentMeshGroups = {
+    walls: new THREE.Group(),
+    floors: new THREE.Group(),
+    doors: new THREE.Group(),
+    details: new THREE.Group()
+};
+scene.add(EnvironmentMeshGroups.walls);
+scene.add(EnvironmentMeshGroups.floors);
+scene.add(EnvironmentMeshGroups.doors);
+scene.add(EnvironmentMeshGroups.details);
+
+function GenerateBoxGeometryWithExplicitVerticesAndIndices(width, height, depth) {
+    const geo = new THREE.BufferGeometry();
+    const hw = width / 2; const hh = height / 2; const hd = depth / 2;
+    const vertices = new Float32Array([
+        hw, hh, hd,  hw, -hh, hd,  hw, hh, -hd,  hw, -hh, -hd,
+        -hw, hh, hd, -hw, -hh, hd, -hw, hh, -hd, -hw, -hh, -hd,
+        hw, hh, hd, -hw, hh, hd,  hw, hh, -hd, -hw, hh, -hd,
+        hw, -hh, hd, -hw, -hh, hd, hw, -hh, -hd, -hw, -hh, -hd,
+        hw, hh, hd, -hw, hh, hd,  hw, -hh, hd, -hw, -hh, hd,
+        hw, hh, -hd, -hw, hh, -hd, hw, -hh, -hd, -hw, -hh, -hd
+    ]);
+    const indices = [
+        0,2,1, 2,3,1, 4,6,5, 6,7,5, 8,9,10, 9,11,10, 
+        12,14,13, 14,15,13, 16,18,17, 18,19,17, 20,21,22, 21,23,22
+    ];
+    geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+    return geo;
+}
+
+function RegisterBoundingBoxForCollisionWorld(x, y, z, w, h, d) {
+    PhysicalCollisionWorldBoundingBoxes.push({
+        minX: x - w/2, maxX: x + w/2,
+        minY: y - h/2, maxY: y + h/2,
+        minZ: z - d/2, maxZ: z + d/2
+    });
+}
+
+const CourtyardFloorGeometry = GenerateBoxGeometryWithExplicitVerticesAndIndices(60, 1, 40);
+const CourtyardFloorMesh = new THREE.Mesh(CourtyardFloorGeometry, WallMaterialInstance);
+CourtyardFloorMesh.position.set(0, -0.5, 0);
+CourtyardFloorMesh.receiveShadow = true;
+EnvironmentMeshGroups.floors.add(CourtyardFloorMesh);
+RegisterBoundingBoxForCollisionWorld(0, -0.5, 0, 60, 1, 40);
+
+const CatwalkGeometryLevel1 = GenerateBoxGeometryWithExplicitVerticesAndIndices(50, 0.2, 4);
+const CatwalkMeshLevel1 = new THREE.Mesh(CatwalkGeometryLevel1, SteelGratingMaterialInstance);
+CatwalkMeshLevel1.position.set(0, 4, -15);
+CatwalkMeshLevel1.receiveShadow = true;
+CatwalkMeshLevel1.castShadow = true;
+EnvironmentMeshGroups.floors.add(CatwalkMeshLevel1);
+RegisterBoundingBoxForCollisionWorld(0, 4, -15, 50, 0.2, 4);
+
+function ConstructPrisonCellUnit(cellXOffset, cellZOffset, cellLevelHeight, isPlayerCell) {
+    const cellSize = 4;
+    const cellHeight = 3.5;
+    const cellWallThickness = 0.5;
+
+    const backWallGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellSize, cellHeight, cellWallThickness);
+    const backWall = new THREE.Mesh(backWallGeom, WallMaterialInstance);
+    backWall.position.set(cellXOffset, cellLevelHeight + cellHeight/2, cellZOffset - cellSize/2 - cellWallThickness/2);
+    EnvironmentMeshGroups.walls.add(backWall);
+    RegisterBoundingBoxForCollisionWorld(backWall.position.x, backWall.position.y, backWall.position.z, cellSize, cellHeight, cellWallThickness);
+
+    const leftWallGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellWallThickness, cellHeight, cellSize);
+    const leftWall = new THREE.Mesh(leftWallGeom, WallMaterialInstance);
+    leftWall.position.set(cellXOffset - cellSize/2 - cellWallThickness/2, cellLevelHeight + cellHeight/2, cellZOffset);
+    EnvironmentMeshGroups.walls.add(leftWall);
+    RegisterBoundingBoxForCollisionWorld(leftWall.position.x, leftWall.position.y, leftWall.position.z, cellWallThickness, cellHeight, cellSize);
+
+    const rightWallGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellWallThickness, cellHeight, cellSize);
+    const rightWall = new THREE.Mesh(rightWallGeom, WallMaterialInstance);
+    rightWall.position.set(cellXOffset + cellSize/2 + cellWallThickness/2, cellLevelHeight + cellHeight/2, cellZOffset);
+    EnvironmentMeshGroups.walls.add(rightWall);
+    RegisterBoundingBoxForCollisionWorld(rightWall.position.x, rightWall.position.y, rightWall.position.z, cellWallThickness, cellHeight, cellSize);
+
+    const ceilingGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellSize + cellWallThickness*2, cellWallThickness, cellSize + cellWallThickness);
+    const ceiling = new THREE.Mesh(ceilingGeom, WallMaterialInstance);
+    ceiling.position.set(cellXOffset, cellLevelHeight + cellHeight + cellWallThickness/2, cellZOffset - cellWallThickness/2);
+    EnvironmentMeshGroups.walls.add(ceiling);
+    RegisterBoundingBoxForCollisionWorld(ceiling.position.x, ceiling.position.y, ceiling.position.z, cellSize + cellWallThickness*2, cellWallThickness, cellSize + cellWallThickness);
+
+    const doorFrameGroup = new THREE.Group();
+    doorFrameGroup.position.set(cellXOffset, cellLevelHeight, cellZOffset + cellSize/2);
+    
+    for (let barIdx = 0; barIdx < 10; barIdx++) {
+        const barGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.05, cellHeight, 0.05);
+        const barMesh = new THREE.Mesh(barGeom, new THREE.MeshStandardMaterial({color: 0x222222, metalness: 0.8, roughness: 0.4}));
+        barMesh.position.set(-cellSize/2 + 0.2 + barIdx * 0.4, cellHeight/2, 0);
+        barMesh.castShadow = true;
+        doorFrameGroup.add(barMesh);
+        RegisterBoundingBoxForCollisionWorld(doorFrameGroup.position.x + barMesh.position.x, doorFrameGroup.position.y + barMesh.position.y, doorFrameGroup.position.z, 0.05, cellHeight, 0.05);
+    }
+    EnvironmentMeshGroups.walls.add(doorFrameGroup);
+
+    if (isPlayerCell) {
+        const bedGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(1.5, 0.5, 3.0);
+        const bedMesh = new THREE.Mesh(bedGeom, new THREE.MeshStandardMaterial({color: 0x333333}));
+        bedMesh.position.set(cellXOffset - cellSize/2 + 0.8, cellLevelHeight + 0.25, cellZOffset - cellSize/2 + 1.6);
+        EnvironmentMeshGroups.details.add(bedMesh);
+        RegisterBoundingBoxForCollisionWorld(bedMesh.position.x, bedMesh.position.y, bedMesh.position.z, 1.5, 0.5, 3.0);
+
+        const looseBrickGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.4, 0.2, 0.2);
+        const looseBrickMesh = new THREE.Mesh(looseBrickGeom, new THREE.MeshStandardMaterial({color: 0x1a1a1a}));
+        looseBrickMesh.position.set(cellXOffset, cellLevelHeight + 1.0, cellZOffset - cellSize/2 - cellWallThickness/2 + 0.1);
+        looseBrickMesh.userData = { type: 'loose_brick', interacted: false };
+        EnvironmentMeshGroups.details.add(looseBrickMesh);
+        InteractableObjectsArray.push(looseBrickMesh);
+
+        const ventGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.8, 0.8, 0.1);
+        const ventMesh = new THREE.Mesh(ventGeom, new THREE.MeshStandardMaterial({color: 0x111111}));
+        ventMesh.position.set(cellXOffset + cellSize/2 - 0.5, cellLevelHeight + cellHeight - 0.6, cellZOffset - cellSize/2 + 0.1);
+        ventMesh.userData = { type: 'vent_cover', interacted: false };
+        EnvironmentMeshGroups.details.add(ventMesh);
+        InteractableObjectsArray.push(ventMesh);
         
-        doorMesh.userData = { 
-            type: 'door', 
-            interact: function() {
-                if (GameState.hasKey) {
-                    GameState.doorUnlocked = true;
-                    updateHUD("DOOR UNLOCKED. ESCAPE.");
-                    triggerWinSequence();
-                } else {
-                    updateHUD("IT'S LOCKED. FEELS HEAVY.");
-                }
+        const spoonGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.05, 0.01, 0.2);
+        const spoonMesh = new THREE.Mesh(spoonGeom, new THREE.MeshStandardMaterial({color: 0x888888, metalness: 0.9}));
+        spoonMesh.position.set(cellXOffset - cellSize/2 + 0.8, cellLevelHeight + 0.52, cellZOffset - cellSize/2 + 2.8);
+        spoonMesh.userData = { type: 'spoon', pickedUp: false };
+        EnvironmentMeshGroups.details.add(spoonMesh);
+        InteractableObjectsArray.push(spoonMesh);
+    }
+}
+
+const InteractableObjectsArray = [];
+
+ConstructPrisonCellUnit(0, -17, 4.2, true); 
+ConstructPrisonCellUnit(-4.5, -17, 4.2, false); 
+ConstructPrisonCellUnit(4.5, -17, 4.2, false); 
+
+camera.position.set(0, 4.2 + PlayerPhysicalProperties.currentHeight, -17);
+
+const DetailedCoordinateDataPaddingArray = new Float32Array(30000);
+for(let dataIdx = 0; dataIdx < 30000; dataIdx+=3) {
+    DetailedCoordinateDataPaddingArray[dataIdx] = (Math.random() - 0.5) * 100;
+    DetailedCoordinateDataPaddingArray[dataIdx+1] = Math.random() * 20;
+    DetailedCoordinateDataPaddingArray[dataIdx+2] = (Math.random() - 0.5) * 100;
+}
+const EnvironmentalDustGeometry = new THREE.BufferGeometry();
+EnvironmentalDustGeometry.setAttribute('position', new THREE.BufferAttribute(DetailedCoordinateDataPaddingArray, 3));
+const EnvironmentalDustMaterial = new THREE.PointsMaterial({color: 0x444444, size: 0.05, transparent: true, opacity: 0.4});
+const EnvironmentalDustSystem = new THREE.Points(EnvironmentalDustGeometry, EnvironmentalDustMaterial);
+scene.add(EnvironmentalDustSystem);
+
+function AdvancedInteractionRaycastLogicSystem(objectData) {
+    if (objectData.type === 'spoon' && !objectData.pickedUp) {
+        objectData.pickedUp = true;
+        objectData.meshRef.visible = false;
+        ComplexInventoryDataSystem.addItem({ id: 'spoon', displayName: 'Rusted Spoon', condition: 100 });
+        DisplaySubtitleTemporaryMessage("Acquired: Rusted Spoon. Might be useful for digging.");
+        if (GameMasterState.phase === 1) {
+            UpdateHUDStateText("PHASE 1: PREPARATION - FIND ESCAPE ROUTE");
+        }
+    }
+    else if (objectData.type === 'loose_brick') {
+        if (ComplexInventoryDataSystem.hasItem('spoon') && !objectData.interacted) {
+            if (AIGuardPatrolSystem.currentLineOfSightHitPlayer) {
+                DisplaySubtitleTemporaryMessage("Can't do this while the guard is watching!");
+                return;
             }
-        };
-        interactables.push(doorMesh);
+            objectData.interacted = true;
+            objectData.meshRef.position.z += 0.2;
+            objectData.meshRef.rotation.y = Math.PI / 8;
+            DisplaySubtitleTemporaryMessage("Pried the brick loose. There's a hidden cavity.");
+            ComplexInventoryDataSystem.addItem({ id: 'lockpick', displayName: 'Makeshift Lockpick', condition: 50 });
+            UpdateHUDStateText("PHASE 2: DISTRACTION");
+            GameMasterState.phase = 2;
+        } else if (!objectData.interacted) {
+            DisplaySubtitleTemporaryMessage("A loose brick. I need something thin and sturdy to pry it.");
+        }
+    }
+    else if (objectData.type === 'vent_cover') {
+        if (GameMasterState.phase >= 3 && !objectData.interacted) {
+            objectData.interacted = true;
+            objectData.meshRef.rotation.x = Math.PI / 2;
+            GameMasterState.ventOpen = true;
+            UpdateHUDStateText("PHASE 4: NAVIGATION - ESCAPE THE MAZE");
+            GameMasterState.phase = 4;
+            DisplaySubtitleTemporaryMessage("Vent is open. Time to crawl.");
+        } else if (!objectData.interacted) {
+            DisplaySubtitleTemporaryMessage("Secured tightly. No way to open it from here right now.");
+        }
+    }
+}
 
-        // The Cot (Bed)
-        const bedGroup = new THREE.Group();
-        bedGroup.position.set(-roomSize/2 + 1, 0, -roomSize/2 + 2);
-        scene.add(bedGroup);
+function ExecutePrimaryInteractionRaycast() {
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+    const intersects = raycaster.intersectObjects(InteractableObjectsArray, false);
+    
+    if (intersects.length > 0 && intersects[0].distance < 2.5) {
+        const hitObj = intersects[0].object;
+        hitObj.userData.meshRef = hitObj;
+        AdvancedInteractionRaycastLogicSystem(hitObj.userData);
+    } else if (GameMasterState.phase === 2 && ComplexInventoryDataSystem.hasItem('spoon')) {
+        const wallIntersects = raycaster.intersectObjects(EnvironmentMeshGroups.walls.children, false);
+        if (wallIntersects.length > 0 && wallIntersects[0].distance < 2.0) {
+            GameMasterState.distractionActive = true;
+            GameMasterState.distractionLocation.copy(wallIntersects[0].point);
+            DisplaySubtitleTemporaryMessage("Banged on the wall. That should get his attention.");
+            GameMasterState.phase = 3;
+            UpdateHUDStateText("PHASE 3: THE ACT - UNLOCK AND VENT");
+        }
+    }
+}
 
-        const frameGeom = new THREE.BoxGeometry(1.5, 0.5, 3);
-        const frameMesh = new THREE.Mesh(frameGeom, rustMaterial);
-        frameMesh.position.y = 0.25;
-        frameMesh.castShadow = true;
-        frameMesh.receiveShadow = true;
-        bedGroup.add(frameMesh);
+let SubtitleTimeoutReference = null;
+function DisplaySubtitleTemporaryMessage(msg) {
+    const el = document.getElementById('subtitles');
+    el.innerText = msg;
+    el.style.opacity = 1.0;
+    if (SubtitleTimeoutReference) clearTimeout(SubtitleTimeoutReference);
+    SubtitleTimeoutReference = setTimeout(() => { el.style.opacity = 0.0; }, 4000);
+}
 
-        const mattressGeom = new THREE.BoxGeometry(1.4, 0.2, 2.9);
-        const mattressMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 1.0 });
-        const mattressMesh = new THREE.Mesh(mattressGeom, mattressMat);
-        mattressMesh.position.y = 0.6;
-        mattressMesh.castShadow = true;
-        mattressMesh.receiveShadow = true;
-        bedGroup.add(mattressMesh);
+function UpdateHUDStateText(phaseText) {
+    document.getElementById('hud').innerHTML = `STATE: ${GameMasterState.playerDetected ? '<span style="color:red">DETECTED</span>' : 'CONCEALED'}<br>${phaseText}`;
+}
 
-        // The Hidden Spoon (under bed)
-        const spoonGeom = new THREE.CylinderGeometry(0.02, 0.05, 0.3, 8);
-        const spoonMesh = new THREE.Mesh(spoonGeom, new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.2 }));
-        spoonMesh.rotation.x = Math.PI / 2;
-        spoonMesh.position.set(-roomSize/2 + 0.5, 0.05, -roomSize/2 + 1.5);
-        spoonMesh.castShadow = true;
-        scene.add(spoonMesh);
+const AIGuardSkeletonConfiguration = {
+    headRadius: 0.25,
+    torsoWidth: 0.6,
+    torsoHeight: 0.8,
+    torsoDepth: 0.3,
+    limbWidth: 0.15,
+    armLength: 0.7,
+    legLength: 0.8
+};
 
-        spoonMesh.userData = {
-            type: 'spoon',
-            interact: function() {
-                scene.remove(spoonMesh);
-                GameState.hasSpoon = true;
-                GameState.inventory.push("RUSTED SPOON");
-                updateHUD("FOUND: RUSTED SPOON");
+const GuardMaterialSet = new THREE.MeshStandardMaterial({color: 0x112244, roughness: 0.7});
+const GuardSkinMaterialSet = new THREE.MeshStandardMaterial({color: 0xffccaa, roughness: 0.5});
+
+const AIGuardMeshGroup = new THREE.Group();
+const GuardTorsoMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.torsoWidth, AIGuardSkeletonConfiguration.torsoHeight, AIGuardSkeletonConfiguration.torsoDepth), GuardMaterialSet);
+GuardTorsoMesh.position.y = AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight / 2;
+AIGuardMeshGroup.add(GuardTorsoMesh);
+
+const GuardHeadMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.headRadius*2, AIGuardSkeletonConfiguration.headRadius*2, AIGuardSkeletonConfiguration.headRadius*2), GuardSkinMaterialSet);
+GuardHeadMesh.position.y = AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight + AIGuardSkeletonConfiguration.headRadius;
+AIGuardMeshGroup.add(GuardHeadMesh);
+
+const GuardLeftArmMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.armLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
+GuardLeftArmMesh.position.set(-AIGuardSkeletonConfiguration.torsoWidth/2 - AIGuardSkeletonConfiguration.limbWidth/2, AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight - AIGuardSkeletonConfiguration.armLength/2, 0);
+AIGuardMeshGroup.add(GuardLeftArmMesh);
+
+const GuardRightArmMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.armLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
+GuardRightArmMesh.position.set(AIGuardSkeletonConfiguration.torsoWidth/2 + AIGuardSkeletonConfiguration.limbWidth/2, AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight - AIGuardSkeletonConfiguration.armLength/2, 0);
+AIGuardMeshGroup.add(GuardRightArmMesh);
+
+const GuardLeftLegMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.legLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
+GuardLeftLegMesh.position.set(-AIGuardSkeletonConfiguration.torsoWidth/4, AIGuardSkeletonConfiguration.legLength/2, 0);
+AIGuardMeshGroup.add(GuardLeftLegMesh);
+
+const GuardRightLegMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.legLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
+GuardRightLegMesh.position.set(AIGuardSkeletonConfiguration.torsoWidth/4, AIGuardSkeletonConfiguration.legLength/2, 0);
+AIGuardMeshGroup.add(GuardRightLegMesh);
+
+const GuardFlashlightSpot = new THREE.SpotLight(0xffffff, 2.0, 30, Math.PI/6, 0.5, 1);
+GuardFlashlightSpot.position.set(0, AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight - 0.2, 0);
+GuardFlashlightSpot.target.position.set(0, 0, 1);
+AIGuardMeshGroup.add(GuardFlashlightSpot);
+AIGuardMeshGroup.add(GuardFlashlightSpot.target);
+
+AIGuardMeshGroup.position.set(20, 4.2, -15);
+scene.add(AIGuardMeshGroup);
+
+const AIGuardPatrolSystem = {
+    waypoints: [
+        new THREE.Vector3(20, 4.2, -15),
+        new THREE.Vector3(0, 4.2, -15),
+        new THREE.Vector3(-20, 4.2, -15),
+        new THREE.Vector3(-20, 4.2, -5),
+        new THREE.Vector3(20, 4.2, -5)
+    ],
+    currentWaypointIndex: 0,
+    speed: 2.0,
+    state: 'PATROL',
+    animTimer: 0.0,
+    currentLineOfSightHitPlayer: false,
+    
+    update: function(deltaTime) {
+        this.animTimer += deltaTime * 5.0;
+        GuardLeftLegMesh.rotation.x = Math.sin(this.animTimer) * 0.5;
+        GuardRightLegMesh.rotation.x = -Math.sin(this.animTimer) * 0.5;
+        GuardLeftArmMesh.rotation.x = -Math.sin(this.animTimer) * 0.5;
+        GuardRightArmMesh.rotation.x = Math.sin(this.animTimer) * 0.5;
+
+        if (GameMasterState.distractionActive && this.state !== 'INVESTIGATING') {
+            this.state = 'INVESTIGATING';
+            GameMasterState.distractionActive = false;
+        }
+
+        let targetPos;
+        if (this.state === 'PATROL') {
+            targetPos = this.waypoints[this.currentWaypointIndex];
+            if (AIGuardMeshGroup.position.distanceTo(targetPos) < 0.5) {
+                this.currentWaypointIndex = (this.currentWaypointIndex + 1) % this.waypoints.length;
             }
-        };
-        interactables.push(spoonMesh);
-
-        // The Loose Brick
-        const brickGeom = new THREE.BoxGeometry(0.4, 0.2, 0.2);
-        const brickMesh = new THREE.Mesh(brickGeom, wallMaterial);
-        brickMesh.position.set(roomSize/2 - 0.1, 1.2, -1.5);
-        scene.add(brickMesh);
-
-        brickMesh.userData = {
-            type: 'brick',
-            interact: function() {
-                if (GameState.hasSpoon) {
-                    if (!GameState.brickRemoved) {
-                        brickMesh.position.z += 0.2;
-                        brickMesh.rotation.y = Math.PI / 8;
-                        brickMesh.position.y -= 0.8;
-                        GameState.brickRemoved = true;
-                        scene.add(keyMesh); // Reveal key
-                        updateHUD("PRYING THE BRICK LOOSE...");
-                    }
-                } else {
-                    updateHUD("A LOOSE BRICK. NEEDS SOMETHING TO PRY IT.");
-                }
+        } else if (this.state === 'INVESTIGATING') {
+            targetPos = GameMasterState.distractionLocation;
+            if (AIGuardMeshGroup.position.distanceTo(targetPos) < 2.0) {
+                this.state = 'PATROL'; 
             }
-        };
-        interactables.push(brickMesh);
+        }
 
-        // The Hidden Key (Behind brick)
-        const keyGeom = new THREE.TorusGeometry(0.05, 0.02, 8, 16);
-        const keyMesh = new THREE.Mesh(keyGeom, new THREE.MeshStandardMaterial({ color: 0xddaa00, metalness: 1.0, roughness: 0.3 }));
-        keyMesh.position.set(roomSize/2 - 0.15, 1.2, -1.5);
-        // Not added to scene until brick removed
+        if (targetPos) {
+            const dir = new THREE.Vector3().subVectors(targetPos, AIGuardMeshGroup.position).normalize();
+            AIGuardMeshGroup.position.add(dir.multiplyScalar(this.speed * deltaTime));
+            
+            const lookAtTarget = new THREE.Vector3().copy(AIGuardMeshGroup.position).add(dir);
+            AIGuardMeshGroup.lookAt(lookAtTarget);
+            GuardFlashlightSpot.target.position.copy(lookAtTarget);
+        }
+
+        this.checkLineOfSight();
+    },
+
+    checkLineOfSight: function() {
+        const dirToPlayer = new THREE.Vector3().subVectors(camera.position, AIGuardMeshGroup.position).normalize();
+        const distanceToPlayer = AIGuardMeshGroup.position.distanceTo(camera.position);
         
-        keyMesh.userData = {
-            type: 'key',
-            interact: function() {
-                scene.remove(keyMesh);
-                GameState.hasKey = true;
-                GameState.inventory.push("IRON KEY");
-                updateHUD("FOUND: IRON KEY");
+        const forwardVector = new THREE.Vector3(0, 0, 1);
+        forwardVector.applyQuaternion(AIGuardMeshGroup.quaternion);
+        
+        const angle = forwardVector.angleTo(dirToPlayer);
+        
+        if (angle < Math.PI / 4 && distanceToPlayer < 25) {
+            const raycaster = new THREE.Raycaster(AIGuardMeshGroup.position, dirToPlayer, 0, distanceToPlayer);
+            const intersects = raycaster.intersectObjects(EnvironmentMeshGroups.walls.children, true);
+            
+            if (intersects.length === 0) {
+                this.currentLineOfSightHitPlayer = true;
+                if (!GameMasterState.playerDetected) {
+                    GameMasterState.playerDetected = true;
+                    UpdateHUDStateText("DETECTED - GAME OVER");
+                    document.getElementById('fade-overlay').style.opacity = 1.0;
+                    setTimeout(() => location.reload(), 3000);
+                }
+            } else {
+                this.currentLineOfSightHitPlayer = false;
             }
-        };
-        interactables.push(keyMesh);
-
-        // Window and Bars
-        const windowGroup = new THREE.Group();
-        windowGroup.position.set(0, 2.5, -roomSize/2);
-        scene.add(windowGroup);
-
-        const windowHoleGeom = new THREE.BoxGeometry(1.5, 1, 0.2);
-        const windowHoleMesh = new THREE.Mesh(windowHoleGeom, new THREE.MeshBasicMaterial({ color: 0x000000 }));
-        windowGroup.add(windowHoleMesh);
-
-        for (let i = 0; i < 5; i++) {
-            const barGeom = new THREE.CylinderGeometry(0.02, 0.02, 1, 8);
-            const barMesh = new THREE.Mesh(barGeom, rustMaterial);
-            barMesh.position.set(-0.6 + i * 0.3, 0, 0);
-            barMesh.castShadow = true;
-            windowGroup.add(barMesh);
+        } else {
+            this.currentLineOfSightHitPlayer = false;
         }
+    }
+};
 
-        // ==========================================
-        // ENVIRONMENTAL CLUTTER (MASSIVE DATA ARRAYS)
-        // ==========================================
-        // Defining thousands of explicit vertices to represent floating dust motes
-        // Procedurally generating the array but storing it explicitly in memory
-        const dustParticleCount = 5000;
-        const dustPositions = new Float32Array(dustParticleCount * 3);
-        const dustOpacities = new Float32Array(dustParticleCount);
+const PostProcessingStackBuilder = {
+    composer: null,
+    init: function() {
+        const renderScene = new THREE.RenderPass(scene, camera);
+        this.composer = new THREE.EffectComposer(renderer);
+        this.composer.addPass(renderScene);
 
-        for(let i = 0; i < dustParticleCount; i++) {
-            dustPositions[i*3] = (Math.random() - 0.5) * roomSize;
-            dustPositions[i*3+1] = Math.random() * roomHeight;
-            dustPositions[i*3+2] = (Math.random() - 0.5) * roomSize;
-            dustOpacities[i] = Math.random();
-        }
+        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.2;
+        bloomPass.strength = 1.2;
+        bloomPass.radius = 0.5;
+        this.composer.addPass(bloomPass);
 
-        const dustGeometry = new THREE.BufferGeometry();
-        dustGeometry.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
-        dustGeometry.setAttribute('aOpacity', new THREE.BufferAttribute(dustOpacities, 1));
-
-        // Custom Shader for Dust
-        const dustVertexShader = `
-            attribute float aOpacity;
-            varying float vOpacity;
-            void main() {
-                vOpacity = aOpacity;
-                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-                gl_PointSize = (2.0 / -mvPosition.z);
-                gl_Position = projectionMatrix * mvPosition;
-            }
-        `;
-        const dustFragmentShader = `
-            varying float vOpacity;
-            void main() {
-                float dist = length(gl_PointCoord - vec2(0.5));
-                if (dist > 0.5) discard;
-                gl_FragColor = vec4(0.8, 0.8, 0.8, vOpacity * (0.5 - dist));
-            }
-        `;
-
-        const dustMaterial = new THREE.ShaderMaterial({
-            vertexShader: dustVertexShader,
-            fragmentShader: dustFragmentShader,
-            transparent: true,
-            depthWrite: false
-        });
-
-        const dustSystem = new THREE.Points(dustGeometry, dustMaterial);
-        scene.add(dustSystem);
-
-        // ==========================================
-        // LIGHTING & VOLUMETRIC EFFECTS
-        // ==========================================
-        const ambientLight = new THREE.AmbientLight(0x111115, 0.4);
-        scene.add(ambientLight);
-
-        const moonLight = new THREE.SpotLight(0x445588, 2.5);
-        moonLight.position.set(0, 3, -roomSize/2 - 2);
-        moonLight.target.position.set(0, 0, 0);
-        moonLight.castShadow = true;
-        moonLight.angle = Math.PI / 6;
-        moonLight.penumbra = 0.5;
-        moonLight.shadow.mapSize.width = 2048;
-        moonLight.shadow.mapSize.height = 2048;
-        scene.add(moonLight);
-        scene.add(moonLight.target);
-
-        // Fake Volumetric light ray
-        const rayGeometry = new THREE.ConeGeometry(2, 6, 32, 1, true);
-        const rayMaterial = new THREE.MeshBasicMaterial({
-            color: 0x445588,
-            transparent: true,
-            opacity: 0.05,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            side: THREE.DoubleSide
-        });
-        const lightRay = new THREE.Mesh(rayGeometry, rayMaterial);
-        lightRay.position.set(0, 1.5, -roomSize/2 + 2);
-        lightRay.rotation.x = -Math.PI / 4;
-        scene.add(lightRay);
-
-        // ==========================================
-        // CUSTOM POST-PROCESSING SHADERS (Cinematic)
-        // ==========================================
-        const composer = new THREE.EffectComposer(renderer);
-        const renderPass = new THREE.RenderPass(scene, camera);
-        composer.addPass(renderPass);
-
-        const CinematicShader = {
+        const FilmGrainShaderDefinition = {
             uniforms: {
                 "tDiffuse": { value: null },
                 "time": { value: 0.0 },
-                "pulseIntensity": { value: 0.0 }
+                "nIntensity": { value: 0.4 },
+                "sIntensity": { value: 0.9 },
+                "sCount": { value: 4096 }
             },
             vertexShader: `
                 varying vec2 vUv;
@@ -560,194 +710,144 @@
             fragmentShader: `
                 uniform sampler2D tDiffuse;
                 uniform float time;
-                uniform float pulseIntensity;
+                uniform float nIntensity;
                 varying vec2 vUv;
-
-                float random(vec2 st) {
-                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                float random(vec2 p) {
+                    vec2 K1 = vec2(23.14069263277926, 2.665144142690225);
+                    return fract(cos(dot(p,K1)) * 12345.6789);
                 }
-
                 void main() {
-                    vec2 uv = vUv;
-                    
-                    // Chromatic Aberration
-                    float offset = 0.002 + pulseIntensity * 0.005;
-                    vec4 cr = texture2D(tDiffuse, uv + vec2(offset, 0.0));
-                    vec4 cg = texture2D(tDiffuse, uv);
-                    vec4 cb = texture2D(tDiffuse, uv - vec2(offset, 0.0));
-                    vec4 color = vec4(cr.r, cg.g, cb.b, 1.0);
-
-                    // Film Grain
-                    float noise = (random(uv + time) - 0.5) * 0.15;
-                    color.rgb += noise;
-
-                    // Vignette & Heartbeat Pulse
-                    vec2 center = vec2(0.5, 0.5);
-                    float dist = distance(uv, center);
-                    float baseVignette = smoothstep(0.8, 0.2, dist);
-                    
-                    float pulse = sin(time * 5.0) * cos(time * 2.5);
-                    float dynamicVignette = smoothstep(0.8 - (pulse * 0.1 * pulseIntensity), 0.1, dist);
-                    
-                    color.rgb *= mix(baseVignette, dynamicVignette, pulseIntensity);
-                    
-                    // Darken overall output
-                    color.rgb *= 0.6;
-
-                    gl_FragColor = color;
+                    vec4 cTextureScreen = texture2D(tDiffuse, vUv);
+                    float dx = random(vUv + time);
+                    vec3 cResult = cTextureScreen.rgb + cTextureScreen.rgb * clamp(0.1 + dx, 0.0, 1.0) * nIntensity;
+                    // Vignette
+                    vec2 distVec = vUv - vec2(0.5);
+                    float dist = length(distVec);
+                    cResult *= smoothstep(0.8, 0.2, dist * 1.2);
+                    gl_FragColor = vec4(cResult, cTextureScreen.a);
                 }
             `
         };
+        this.filmPass = new THREE.ShaderPass(FilmGrainShaderDefinition);
+        this.filmPass.renderToScreen = true;
+        this.composer.addPass(this.filmPass);
+    },
+    render: function(delta) {
+        if (this.filmPass) this.filmPass.uniforms["time"].value += delta;
+        this.composer.render();
+    }
+};
+PostProcessingStackBuilder.init();
 
-        const cinematicPass = new THREE.ShaderPass(CinematicShader);
-        composer.addPass(cinematicPass);
-
-        // ==========================================
-        // RAYCASTING & INTERACTION LOGIC
-        // ==========================================
-        const raycaster = new THREE.Raycaster();
-        const centerVector = new THREE.Vector2(0, 0);
-        const promptEl = document.getElementById('interaction-prompt');
-        let currentIntersect = null;
-
-        function updateRaycaster() {
-            raycaster.setFromCamera(centerVector, camera);
-            const intersects = raycaster.intersectObjects(interactables, false);
-
-            if (intersects.length > 0 && intersects[0].distance < 2.5) {
-                currentIntersect = intersects[0].object;
-                promptEl.style.opacity = 1;
-                
-                // Increase pulse intensity if looking at a crucial clue
-                if (currentIntersect.userData.type === 'brick' || currentIntersect.userData.type === 'key') {
-                    CinematicShader.uniforms.pulseIntensity.value = THREE.MathUtils.lerp(CinematicShader.uniforms.pulseIntensity.value, 1.0, 0.1);
-                }
-            } else {
-                currentIntersect = null;
-                promptEl.style.opacity = 0;
-                CinematicShader.uniforms.pulseIntensity.value = THREE.MathUtils.lerp(CinematicShader.uniforms.pulseIntensity.value, 0.0, 0.05);
-            }
-        }
-
-        function interact() {
-            if (currentIntersect && currentIntersect.userData.interact) {
-                currentIntersect.userData.interact();
-            }
-        }
-
-        function updateHUD(message) {
-            const hud = document.getElementById('inventory-hud');
-            let invStr = GameState.inventory.length > 0 ? GameState.inventory.join(' | ') : 'EMPTY';
-            hud.innerHTML = `INVENTORY: ${invStr}<br><br><span style="color:#fff; font-size:14px;">> ${message}</span>`;
-            setTimeout(() => {
-                hud.innerHTML = `INVENTORY: ${invStr}`;
-            }, 4000);
-        }
-
-        function triggerWinSequence() {
-            GameState.escaped = true;
-            document.exitPointerLock();
+function AdvancedPhysicsCollisionResolutionSystem(proposedPos, boundingBoxes, radius) {
+    let finalPos = proposedPos.clone();
+    for (let i = 0; i < boundingBoxes.length; i++) {
+        const box = boundingBoxes[i];
+        
+        if (finalPos.x + radius > box.minX && finalPos.x - radius < box.maxX &&
+            finalPos.y + radius > box.minY && finalPos.y - radius < box.maxY &&
+            finalPos.z + radius > box.minZ && finalPos.z - radius < box.maxZ) {
             
-            // Animate door opening
-            const openInterval = setInterval(() => {
-                if (doorGroup.rotation.y < Math.PI / 2) {
-                    doorGroup.rotation.y += 0.02;
-                } else {
-                    clearInterval(openInterval);
-                }
-            }, 16);
-
-            // Fade to white
-            setTimeout(() => {
-                const fScreen = document.getElementById('freedom-screen');
-                fScreen.style.display = 'flex';
-                // Trigger reflow
-                void fScreen.offsetWidth;
-                fScreen.style.opacity = 1;
-            }, 1000);
+            const overlapX1 = (finalPos.x + radius) - box.minX;
+            const overlapX2 = box.maxX - (finalPos.x - radius);
+            const overlapY1 = (finalPos.y + radius) - box.minY;
+            const overlapY2 = box.maxY - (finalPos.y - radius);
+            const overlapZ1 = (finalPos.z + radius) - box.minZ;
+            const overlapZ2 = box.maxZ - (finalPos.z - radius);
+            
+            const minOverlap = Math.min(overlapX1, overlapX2, overlapY1, overlapY2, overlapZ1, overlapZ2);
+            
+            if (minOverlap === overlapY1) { finalPos.y -= overlapY1; PlayerPhysicalProperties.isGrounded = false; }
+            else if (minOverlap === overlapY2) { finalPos.y += overlapY2; PlayerPhysicalProperties.isGrounded = true; PlayerPhysicalProperties.velocity.y = 0; }
+            else if (minOverlap === overlapX1) finalPos.x -= overlapX1;
+            else if (minOverlap === overlapX2) finalPos.x += overlapX2;
+            else if (minOverlap === overlapZ1) finalPos.z -= overlapZ1;
+            else if (minOverlap === overlapZ2) finalPos.z += overlapZ2;
         }
+    }
+    return finalPos;
+}
 
-        // ==========================================
-        // MAIN GAME LOOP
-        // ==========================================
-        const clock = new THREE.Clock();
+const GlobalClockInstance = new THREE.Clock();
 
-        function animate() {
-            requestAnimationFrame(animate);
+function MainGameRenderLoop() {
+    requestAnimationFrame(MainGameRenderLoop);
+    const deltaTime = GlobalClockInstance.getDelta();
+    const elapsedTime = GlobalClockInstance.getElapsedTime();
 
-            const delta = clock.getDelta();
-            const time = clock.getElapsedTime();
+    CustomProceduralGrimeMaterialShader.uniforms.time.value = elapsedTime;
+    CustomRustySteelMaterialShader.uniforms.time.value = elapsedTime;
 
-            CinematicShader.uniforms.time.value = time;
+    if (ControllerPointerIsLocked && !GameMasterState.playerDetected) {
+        const targetHeight = PlayerMovementStateCrouch ? PlayerPhysicalProperties.heightCrouching : PlayerPhysicalProperties.heightStanding;
+        PlayerPhysicalProperties.currentHeight += (targetHeight - PlayerPhysicalProperties.currentHeight) * 10 * deltaTime;
+        const currentSpeed = PlayerMovementStateCrouch ? PlayerPhysicalProperties.crouchSpeed : PlayerPhysicalProperties.speed;
 
-            if (isLocked && !GameState.escaped) {
-                // Physics & Movement
-                PlayerPhysics.velocity.x -= PlayerPhysics.velocity.x * 10.0 * delta;
-                PlayerPhysics.velocity.z -= PlayerPhysics.velocity.z * 10.0 * delta;
+        PlayerPhysicalProperties.velocity.x -= PlayerPhysicalProperties.velocity.x * 10.0 * deltaTime;
+        PlayerPhysicalProperties.velocity.z -= PlayerPhysicalProperties.velocity.z * 10.0 * deltaTime;
+        PlayerPhysicalProperties.velocity.y -= 30.0 * deltaTime; 
 
-                PlayerPhysics.direction.z = Number(PlayerPhysics.moveForward) - Number(PlayerPhysics.moveBackward);
-                PlayerPhysics.direction.x = Number(PlayerPhysics.moveRight) - Number(PlayerPhysics.moveLeft);
-                PlayerPhysics.direction.normalize();
+        PlayerPhysicalProperties.direction.z = Number(PlayerMovementStateForward) - Number(PlayerMovementStateBackward);
+        PlayerPhysicalProperties.direction.x = Number(PlayerMovementStateRight) - Number(PlayerMovementStateLeft);
+        PlayerPhysicalProperties.direction.normalize();
 
-                if (PlayerPhysics.moveForward || PlayerPhysics.moveBackward) PlayerPhysics.velocity.z -= PlayerPhysics.direction.z * PlayerPhysics.speed * delta;
-                if (PlayerPhysics.moveLeft || PlayerPhysics.moveRight) PlayerPhysics.velocity.x -= PlayerPhysics.direction.x * PlayerPhysics.speed * delta;
+        if (PlayerMovementStateForward || PlayerMovementStateBackward) PlayerPhysicalProperties.velocity.z -= PlayerPhysicalProperties.direction.z * currentSpeed * deltaTime;
+        if (PlayerMovementStateLeft || PlayerMovementStateRight) PlayerPhysicalProperties.velocity.x -= PlayerPhysicalProperties.direction.x * currentSpeed * deltaTime;
 
-                // Apply velocity relative to camera orientation
-                const camRot = camera.rotation.y;
-                const moveX = PlayerPhysics.velocity.x * delta;
-                const moveZ = PlayerPhysics.velocity.z * delta;
+        const camRot = CameraEulerRotationSystem.y;
+        const moveX = PlayerPhysicalProperties.velocity.x * deltaTime;
+        const moveZ = PlayerPhysicalProperties.velocity.z * deltaTime;
+        const moveY = PlayerPhysicalProperties.velocity.y * deltaTime;
 
-                const actualMoveX = moveX * Math.cos(camRot) + moveZ * Math.sin(camRot);
-                const actualMoveZ = moveZ * Math.cos(camRot) - moveX * Math.sin(camRot);
+        const actualMoveX = moveX * Math.cos(camRot) + moveZ * Math.sin(camRot);
+        const actualMoveZ = moveZ * Math.cos(camRot) - moveX * Math.sin(camRot);
 
-                camera.position.x -= actualMoveX;
-                camera.position.z -= actualMoveZ;
+        let proposedPos = camera.position.clone();
+        proposedPos.x -= actualMoveX;
+        proposedPos.z -= actualMoveZ;
+        proposedPos.y += moveY;
 
-                // Simple collision constraints (keep inside room)
-                const bound = roomSize / 2 - 0.5;
-                if (camera.position.x > bound) camera.position.x = bound;
-                if (camera.position.x < -bound) camera.position.x = -bound;
-                if (camera.position.z > bound) camera.position.z = bound;
-                if (camera.position.z < -bound) camera.position.z = -bound;
-
-                // Head bobbing
-                if (PlayerPhysics.moveForward || PlayerPhysics.moveBackward || PlayerPhysics.moveLeft || PlayerPhysics.moveRight) {
-                    camera.position.y = PlayerPhysics.height + Math.sin(time * 10) * 0.05;
-                } else {
-                    camera.position.y = PlayerPhysics.height;
-                }
-
-                updateRaycaster();
+        proposedPos.y -= PlayerPhysicalProperties.currentHeight;
+        proposedPos = AdvancedPhysicsCollisionResolutionSystem(proposedPos, PhysicalCollisionWorldBoundingBoxes, PlayerPhysicalProperties.radius);
+        proposedPos.y += PlayerPhysicalProperties.currentHeight;
+        
+        camera.position.copy(proposedPos);
+        
+        if (PlayerMovementStateForward || PlayerMovementStateBackward || PlayerMovementStateLeft || PlayerMovementStateRight) {
+            if (PlayerPhysicalProperties.isGrounded) {
+                camera.position.y += Math.sin(elapsedTime * (PlayerMovementStateCrouch ? 8 : 12)) * (PlayerMovementStateCrouch ? 0.02 : 0.05);
             }
-
-            // Animate dust
-            const positions = dustSystem.geometry.attributes.position.array;
-            for(let i = 0; i < dustParticleCount; i++) {
-                positions[i*3+1] -= delta * 0.1; // Fall slowly
-                positions[i*3] += Math.sin(time + i) * 0.001; // Drift X
-                positions[i*3+2] += Math.cos(time + i) * 0.001; // Drift Z
-                
-                // Reset if hits floor
-                if(positions[i*3+1] < 0) {
-                    positions[i*3+1] = roomHeight;
-                }
-            }
-            dustSystem.geometry.attributes.position.needsUpdate = true;
-
-            composer.render();
         }
+    }
 
-        // Handle window resize
-        window.addEventListener('resize', onWindowResize, false);
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            composer.setSize(window.innerWidth, window.innerHeight);
-        }
+    AIGuardPatrolSystem.update(deltaTime);
+    
+    // Flickering light logic
+    if (Math.random() > 0.95) {
+        MainCourtyardSpotlight.intensity = 1.0 + Math.random() * 2.0;
+    } else {
+        MainCourtyardSpotlight.intensity = 2.0;
+    }
 
-        // Start
-        animate();
-    </script>
+    const positions = EnvironmentalDustSystem.geometry.attributes.position.array;
+    for (let i = 0; i < 30000; i += 3) {
+        positions[i+1] -= deltaTime * 2.0;
+        if (positions[i+1] < 0) positions[i+1] = 20;
+    }
+    EnvironmentalDustSystem.geometry.attributes.position.needsUpdate = true;
+
+    PostProcessingStackBuilder.render(deltaTime);
+}
+
+window.addEventListener('resize', onWindowResize, false);
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    PostProcessingStackBuilder.composer.setSize(window.innerWidth, window.innerHeight);
+}
+
+MainGameRenderLoop();
+</script>
 </body>
 </html>
