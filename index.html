@@ -1349,7 +1349,7 @@ function executeComplexGuardAILogic(deltaTimeValue) {
         }
         
         if (booleanHasClearLineOfSight === true && PLAYER_STATE_CROUCHING === false) {
-            GUARD_SUSPICION_METER += deltaTimeValue * 45.0;
+            GUARD_SUSPICION_METER += deltaTimeValue * 100.0;
         }
         
         if (GUARD_SUSPICION_METER > 100.0) {
