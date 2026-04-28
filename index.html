@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Block D - The Final Escape</title>
+<title>Escape</title>
 <style>
 /* ==========================================================================
    MASSIVE CSS DEFINITION: EXPLICIT PROPERTIES TO MAXIMIZE DETAIL
@@ -1303,7 +1303,7 @@ function executeComplexGuardAILogic(deltaTimeValue) {
         if (absoluteDistanceToPlayer < 22.0) {
             let mathematicalAngleToPlayer = Math.atan2(distanceXCalculation, distanceZCalculation);
             let mathematicalGuardAngle = guardEntityGroup.rotation.y;
-            if (Math.abs(mathematicalAngleToPlayer - mathematicalGuardAngle) < 0.95) {
+            if (Math.abs(mathematicalAngleToPlayer - mathematicalGuardAngle) < 3.14) {
                 GUARD_ACTIVE_STATE_STRING = "ACTIVE_SEARCH_PROTOCOL";
                 GUARD_SUSPICION_METER += 15.0;
             }
