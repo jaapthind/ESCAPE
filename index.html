@@ -2,852 +2,1150 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Block D - The Escape</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Block D - Absolute Confinement</title>
 <style>
-    body { margin: 0; overflow: hidden; background: #000; font-family: monospace; user-select: none; }
-    #game-container { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; z-index: 1; }
-    #ui-layer { position: absolute; width: 100vw; height: 100vh; z-index: 2; pointer-events: none; }
-    #crosshair { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: rgba(255,255,255,0.8); transform: translate(-50%, -50%); border-radius: 50%; }
-    #hud { position: absolute; bottom: 20px; left: 20px; color: #fff; text-shadow: 1px 1px 2px #000; font-size: 14px; }
-    #inventory-display { position: absolute; top: 20px; right: 20px; color: #aaa; text-align: right; }
-    #subtitles { position: absolute; bottom: 10vh; width: 100%; text-align: center; color: #e0e0e0; font-size: 18px; font-weight: bold; text-shadow: 0 0 5px #000; opacity: 0; transition: opacity 0.3s; }
-    #blocker { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10; display: flex; justify-content: center; align-items: center; flex-direction: column; color: white; cursor: pointer; }
-    .title { font-size: 48px; color: #555; text-transform: uppercase; letter-spacing: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-    .instructions { font-size: 16px; color: #888; text-align: center; line-height: 1.5; }
-    .fade-overlay { position: absolute; width: 100%; height: 100%; background: #000; z-index: 5; pointer-events: none; opacity: 0; transition: opacity 2s; }
+/* ==========================================================================
+   CSS HUD AND UI STYLING (MASSIVE, VERBOSE, CRT OVERLAYS)
+   ========================================================================== */
+:root {
+    --hud-color: #0f380f;
+    --hud-alert: #8b0000;
+    --hud-text: #8bac0f;
+    --hud-bg: rgba(15, 56, 15, 0.1);
+    --crt-line-color: rgba(255, 255, 255, 0.03);
+    --shadow-intense: 0 0 10px var(--hud-text), inset 0 0 15px var(--hud-text);
+}
+@font-face {
+    font-family: 'Terminus';
+    src: local('Courier New');
+}
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    overflow: hidden;
+    font-family: 'Terminus', monospace;
+    user-select: none;
+}
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+#crt-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    pointer-events: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+}
+@keyframes staticNoise {
+    0% { background-position: 0 0; opacity: 0.1; }
+    10% { background-position: 5px 10px; opacity: 0.2; }
+    20% { background-position: -5px -10px; opacity: 0.15; }
+    30% { background-position: 10px -5px; opacity: 0.1; }
+    40% { background-position: -10px 5px; opacity: 0.25; }
+    50% { background-position: 0 15px; opacity: 0.1; }
+    60% { background-position: 15px 0; opacity: 0.2; }
+    70% { background-position: -15px -15px; opacity: 0.15; }
+    80% { background-position: 5px -15px; opacity: 0.1; }
+    90% { background-position: -5px 15px; opacity: 0.2; }
+    100% { background-position: 0 0; opacity: 0.1; }
+}
+#static-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 99;
+    opacity: 0.1;
+    pointer-events: none;
+    background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.1) 1px, transparent 2px);
+    animation: staticNoise 0.5s infinite;
+}
+@keyframes bloodSplatter {
+    0% { opacity: 0; transform: scale(0.9); }
+    10% { opacity: 1; transform: scale(1.0); }
+    100% { opacity: 0; transform: scale(1.1); }
+}
+#damage-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 90;
+    box-shadow: inset 0 0 150px rgba(139, 0, 0, 0);
+    pointer-events: none;
+    transition: box-shadow 0.2s ease-out;
+}
+.damage-active {
+    box-shadow: inset 0 0 200px rgba(139, 0, 0, 0.8) !important;
+    animation: bloodSplatter 1s ease-out forwards;
+}
+#hud-top-left {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#hud-top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    text-align: right;
+    color: var(--hud-text);
+    text-shadow: 0 0 5px var(--hud-text);
+}
+#hud-bottom-left {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: var(--hud-text);
+}
+#hud-bottom-right {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 5px;
+}
+.bar-container {
+    width: 250px;
+    height: 15px;
+    border: 2px solid var(--hud-text);
+    background: var(--hud-bg);
+    position: relative;
+    box-shadow: 0 0 5px var(--hud-color);
+}
+.bar-fill {
+    height: 100%;
+    background-color: var(--hud-text);
+    width: 100%;
+    transition: width 0.3s linear;
+    box-shadow: 0 0 10px var(--hud-text);
+}
+#oxygen-container { border-color: #0088ff; }
+#oxygen-fill { background-color: #0088ff; box-shadow: 0 0 10px #0088ff; }
+#stamina-container { border-color: #ffaa00; }
+#stamina-fill { background-color: #ffaa00; box-shadow: 0 0 10px #ffaa00; }
+#stealth-container { border-color: #aa00ff; }
+#stealth-fill { background-color: #aa00ff; box-shadow: 0 0 10px #aa00ff; }
+@keyframes pulseStamina {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+.low-stamina { animation: pulseStamina 0.5s infinite; background-color: red !important; }
+.inventory-slot {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--hud-text);
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 10px;
+    box-shadow: 0 0 5px var(--hud-color);
+}
+#inventory-slot-1 { border-color: #555; }
+#inventory-slot-2 { border-color: #555; }
+#inventory-slot-3 { border-color: #555; }
+#inventory-slot-4 { border-color: #555; }
+#inventory-slot-5 { border-color: #555; }
+#inventory-slot-6 { border-color: #555; }
+#inventory-slot-7 { border-color: #555; }
+#inventory-slot-8 { border-color: #555; }
+#inventory-slot-9 { border-color: #555; }
+#inventory-slot-10 { border-color: #555; }
+.inventory-active {
+    border-color: var(--hud-text) !important;
+    box-shadow: var(--shadow-intense);
+}
+#crosshair-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: var(--hud-text);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow: 0 0 5px var(--hud-text);
+}
+#crosshair-top { position: absolute; top: calc(50% - 10px); left: 50%; width: 2px; height: 6px; background: var(--hud-text); transform: translateX(-50%); }
+#crosshair-bottom { position: absolute; top: calc(50% + 4px); left: 50%; width: 2px; height: 6px; background: var(--hud-text); transform: translateX(-50%); }
+#crosshair-left { position: absolute; top: 50%; left: calc(50% - 10px); width: 6px; height: 2px; background: var(--hud-text); transform: translateY(-50%); }
+#crosshair-right { position: absolute; top: 50%; left: calc(50% + 4px); width: 6px; height: 2px; background: var(--hud-text); transform: translateY(-50%); }
+
+#interaction-prompt {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    text-shadow: 2px 2px 0px #000;
+}
+#dialogue-container {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    text-align: center;
+    color: #fff;
+    font-size: 16px;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+#heart-rate-monitor {
+    position: absolute;
+    top: 150px;
+    left: 20px;
+    color: var(--hud-alert);
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 10px var(--hud-alert);
+}
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    15% { transform: scale(1.2); }
+    30% { transform: scale(1); }
+    45% { transform: scale(1.1); }
+    60% { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+.hr-fast { animation: heartbeat 0.4s infinite; }
+.hr-normal { animation: heartbeat 1s infinite; }
+.hr-slow { animation: heartbeat 1.5s infinite; }
+#objective-log {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    width: 250px;
+    color: #aaa;
+    font-size: 12px;
+    text-align: right;
+    line-height: 1.5;
+}
+#objective-log .completed { text-decoration: line-through; color: #555; }
+#objective-log .active { color: var(--hud-text); font-weight: bold; text-shadow: 0 0 5px var(--hud-text); }
+#blocker {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.95);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: var(--hud-text);
+    text-align: center;
+}
+#instructions { cursor: pointer; padding: 20px; border: 1px solid var(--hud-text); background: rgba(0,0,0,0.8); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 </head>
 <body>
 
 <div id="blocker">
-    <div class="title">BLOCK D</div>
-    <div class="instructions">
-        CLICK TO COMMENCE<br><br>
-        W A S D - MOVEMENT<br>
-        MOUSE - LOOK<br>
-        E - INTERACT<br>
-        SPACE - VAULT/JUMP<br>
-        C - CROUCH<br>
+    <div id="instructions">
+        <h1 style="text-shadow: 0 0 10px var(--hud-text); letter-spacing: 5px;">BLOCK D : CONTAINMENT</h1>
+        <p>CLICK TO INITIALIZE NEURAL LINK</p>
+        <p>W, A, S, D = MOVE | MOUSE = LOOK</p>
+        <p>E = INTERACT | SPACE = VAULT | C = CROUCH</p>
     </div>
 </div>
 
+<div id="game-canvas"></div>
+
 <div id="ui-layer">
-    <div id="crosshair"></div>
-    <div id="hud">STATE: CONFINED<br>PHASE 1: PREPARATION</div>
-    <div id="inventory-display">INVENTORY<br>---------<br><span id="inv-items">EMPTY</span></div>
-    <div id="subtitles"></div>
+    <div id="crt-overlay"></div>
+    <div id="static-effect"></div>
+    <div id="damage-overlay"></div>
+    
+    <div id="hud-top-left">
+        <div>O2 <div class="bar-container" id="oxygen-container"><div class="bar-fill" id="oxygen-fill"></div></div></div>
+        <div>STM <div class="bar-container" id="stamina-container"><div class="bar-fill" id="stamina-fill"></div></div></div>
+        <div>VIS <div class="bar-container" id="stealth-container"><div class="bar-fill" id="stealth-fill"></div></div></div>
+    </div>
+    
+    <div id="heart-rate-monitor" class="hr-normal">BPM: 72</div>
+    
+    <div id="hud-top-right">
+        <div>SYS_TIME: <span id="sys-time">00:00:00</span></div>
+        <div>LOC: SECTOR_7G</div>
+    </div>
+
+    <div id="objective-log">
+        <div>> PRIMARY DIRECTIVES:</div>
+        <div id="obj-1" class="active">01. ACQUIRE IMPROVISED TOOL</div>
+        <div id="obj-2">02. BREACH CELL VENTILATION</div>
+        <div id="obj-3">03. TRAVERSE CATWALK SUB-SYSTEM</div>
+        <div id="obj-4">04. BYPASS OFFICER MILLER</div>
+        <div id="obj-5">05. ACCESS COURTYARD PERIMETER</div>
+        <div id="obj-6">06. DISABLE SECURITY GRID</div>
+        <div id="obj-7">07. BREACH OUTER WALL</div>
+        <div id="obj-8">08. REACH EXTRACTION POINT</div>
+        <div id="obj-9">09. SURVIVE</div>
+        <div id="obj-10">10. ESCAPE</div>
+    </div>
+    
+    <div id="crosshair-center"></div>
+    <div id="crosshair-top"></div>
+    <div id="crosshair-bottom"></div>
+    <div id="crosshair-left"></div>
+    <div id="crosshair-right"></div>
+    
+    <div id="interaction-prompt">[E] EXAMINE</div>
+    <div id="dialogue-container">"HEY... YOU AWAKE IN THERE?"</div>
+    
+    <div id="hud-bottom-right">
+        <div class="inventory-slot inventory-active" id="inventory-slot-1">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-2">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-3">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-4">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-5">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-6">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-7">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-8">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-9">EMP</div>
+        <div class="inventory-slot" id="inventory-slot-10">EMP</div>
+    </div>
 </div>
-<div id="fade-overlay" class="fade-overlay"></div>
-<div id="game-container"></div>
 
 <script>
-const GameMasterState = {
-    phase: 1, // 1: Prep, 2: Distract, 3: Act, 4: Nav
-    timeOfDay: 0.0, // 0 to 24
-    daySpeed: 0.001,
-    weather: 'rain',
-    guardAlertLevel: 0, // 0: Patrol, 1: Suspicious, 2: Alert, 3: Pursuit
-    playerDetected: false,
-    ventOpen: false,
-    cellDoorOpen: false,
-    distractionActive: false,
-    distractionLocation: new THREE.Vector3(0,0,0)
-};
-
-const ComplexInventoryDataSystem = {
-    items: [],
-    slots: 5,
-    selectedSlot: 0,
-    equipped: null,
-    addItem: function(itemObject) {
-        if (this.items.length < this.slots) {
-            this.items.push(itemObject);
-            this.updateUI();
-            return true;
-        }
-        return false;
-    },
-    hasItem: function(itemId) {
-        for (let i = 0; i < this.items.length; i++) {
-            if (this.items[i].id === itemId) return true;
-        }
-        return false;
-    },
-    updateUI: function() {
-        const el = document.getElementById('inv-items');
-        if (this.items.length === 0) { el.innerHTML = 'EMPTY'; return; }
-        let html = '';
-        for (let i = 0; i < this.items.length; i++) {
-            html += this.items[i].displayName + ' [HP: ' + this.items[i].condition + ']<br>';
-        }
-        el.innerHTML = html;
-    }
-};
-
-const PhysicalCollisionWorldBoundingBoxes = [];
-
-const RendererSetupParameters = {
-    antialias: false,
-    powerPreference: "high-performance",
-    logarithmicDepthBuffer: true
-};
-
-const SceneConfigurationObject = {
-    fogColorNight: 0x050508,
-    fogColorDay: 0x22252a,
-    fogDensityNight: 0.04,
-    fogDensityDay: 0.015,
-    ambientNight: 0x0a0a0f,
-    ambientDay: 0x334455
-};
-
-const container = document.getElementById('game-container');
+// ==========================================================================
+// CORE THREE.JS INITIALIZATION
+// ==========================================================================
+const container = document.getElementById('game-canvas');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(SceneConfigurationObject.fogColorNight);
-scene.fog = new THREE.FogExp2(SceneConfigurationObject.fogColorNight, SceneConfigurationObject.fogDensityNight);
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(0x050505, 0.08);
 
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer(RendererSetupParameters);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setPixelRatio(window.devicePixelRatio > 1 ? 1 : 1);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.8;
 container.appendChild(renderer.domElement);
 
-const CameraEulerRotationSystem = new THREE.Euler(0, 0, 0, 'YXZ');
-const HalfPiConstantValue = Math.PI / 2;
-let ControllerPointerIsLocked = false;
-let PlayerMovementStateForward = false;
-let PlayerMovementStateBackward = false;
-let PlayerMovementStateLeft = false;
-let PlayerMovementStateRight = false;
-let PlayerMovementStateCrouch = false;
-let PlayerMovementStateJump = false;
+// ==========================================================================
+// GLOBAL STATE AND VERBOSE VARIABLES
+// ==========================================================================
+let GAME_TIME = 0;
+let DELTA_TIME = 0;
+const CLOCK = new THREE.Clock();
 
-const PlayerPhysicalProperties = {
-    velocity: new THREE.Vector3(0, 0, 0),
-    direction: new THREE.Vector3(0, 0, 0),
-    speed: 35.0,
-    crouchSpeed: 15.0,
-    mass: 85.0,
-    heightStanding: 1.75,
-    heightCrouching: 0.9,
-    currentHeight: 1.75,
-    jumpForce: 15.0,
-    isGrounded: false,
-    radius: 0.3
-};
-camera.position.set(0, PlayerPhysicalProperties.currentHeight, 0);
+let PLAYER_OXYGEN = 100.0;
+let PLAYER_STAMINA = 100.0;
+let PLAYER_STEALTH = 100.0;
+let PLAYER_HEART_RATE = 72;
+let PLAYER_HEALTH = 100.0;
+let PLAYER_IS_CROUCHING = false;
+let PLAYER_IS_SPRINTING = false;
+let PLAYER_IS_VAULTING = false;
 
-document.getElementById('blocker').addEventListener('click', function () {
+let INVENTORY_SLOT_1_ITEM = "EMPTY";
+let INVENTORY_SLOT_2_ITEM = "EMPTY";
+let INVENTORY_SLOT_3_ITEM = "EMPTY";
+let INVENTORY_SLOT_4_ITEM = "EMPTY";
+let INVENTORY_SLOT_5_ITEM = "EMPTY";
+let INVENTORY_SLOT_6_ITEM = "EMPTY";
+let INVENTORY_SLOT_7_ITEM = "EMPTY";
+let INVENTORY_SLOT_8_ITEM = "EMPTY";
+let INVENTORY_SLOT_9_ITEM = "EMPTY";
+let INVENTORY_SLOT_10_ITEM = "EMPTY";
+
+let ESCAPE_STAGE_1_COMPLETE = false;
+let ESCAPE_STAGE_2_COMPLETE = false;
+let ESCAPE_STAGE_3_COMPLETE = false;
+let ESCAPE_STAGE_4_COMPLETE = false;
+let ESCAPE_STAGE_5_COMPLETE = false;
+let ESCAPE_STAGE_6_COMPLETE = false;
+let ESCAPE_STAGE_7_COMPLETE = false;
+let ESCAPE_STAGE_8_COMPLETE = false;
+let ESCAPE_STAGE_9_COMPLETE = false;
+let ESCAPE_STAGE_10_COMPLETE = false;
+
+let GUARD_MILLER_STATE = "IDLE"; // IDLE, PATROL, SUSPICIOUS, SEARCHING, ALERT, PURSUIT
+let GUARD_MILLER_X = 15.0;
+let GUARD_MILLER_Y = 0.0;
+let GUARD_MILLER_Z = 20.0;
+let GUARD_MILLER_ROTATION = 0.0;
+let GUARD_MILLER_ALERT_LEVEL = 0.0;
+let GUARD_MILLER_FOV = Math.PI / 3;
+let GUARD_MILLER_SIGHT_RANGE = 25.0;
+
+let INMATE_702_STATE = "SLEEPING";
+let INMATE_409_STATE = "PACING";
+
+// ==========================================================================
+// MASSIVE PATHFINDING GRID (100x100 HARDCODED 2D ARRAY FOR AI)
+// ==========================================================================
+const PATH_GRID_WIDTH = 100;
+const PATH_GRID_HEIGHT = 100;
+const PATHFINDING_MAP = [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,2,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+// ==========================================================================
+// MASSIVE DIALOGUE STRINGS ARRAY
+// ==========================================================================
+const PRISON_CHATTER = [
+    "I heard the generators are acting up again.",
+    "Miller is on edge tonight. Don't make a sound.",
+    "Did you hear that scraping noise?",
+    "Four hundred days... four hundred days...",
+    "They took 409 to solitary. Again.",
+    "I need a smoke. I'd kill for a smoke.",
+    "Keep your eyes down. Don't look at the cameras.",
+    "The food... it tastes like copper.",
+    "Someone tried the vent in block C. Didn't end well.",
+    "Water's dripping. Always dripping.",
+    "If I get out... first thing I do is see the ocean.",
+    "Quiet. Footsteps.",
+    "He's shining the light this way.",
+    "I hid the shiv behind the loose stone.",
+    "Don't trust the new guy in cell 12.",
+    "Count is in ten minutes. Stand by your door.",
+    "It's so cold in here.",
+    "Lights out soon. Then the real work begins.",
+    "I swear I saw a shadow move in the corner.",
+    "My hands are shaking. Can't stop them."
+];
+
+// ==========================================================================
+// CONTROLS & PHYSICS
+// ==========================================================================
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+let canJump = false;
+
+const blocker = document.getElementById('blocker');
+const instructions = document.getElementById('instructions');
+
+instructions.addEventListener('click', function () {
     document.body.requestPointerLock();
 });
 
 document.addEventListener('pointerlockchange', function () {
     if (document.pointerLockElement === document.body) {
-        ControllerPointerIsLocked = true;
-        document.getElementById('blocker').style.display = 'none';
+        blocker.style.display = 'none';
     } else {
-        ControllerPointerIsLocked = false;
-        document.getElementById('blocker').style.display = 'flex';
-        PlayerMovementStateForward = false;
-        PlayerMovementStateBackward = false;
-        PlayerMovementStateLeft = false;
-        PlayerMovementStateRight = false;
+        blocker.style.display = 'flex';
+        moveForward = false;
+        moveBackward = false;
+        moveLeft = false;
+        moveRight = false;
     }
 });
 
-document.addEventListener('mousemove', function (event) {
-    if (ControllerPointerIsLocked === false) return;
-    const movementXData = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-    const movementYData = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-    CameraEulerRotationSystem.setFromQuaternion(camera.quaternion);
-    CameraEulerRotationSystem.y -= movementXData * 0.002;
-    CameraEulerRotationSystem.x -= movementYData * 0.002;
-    CameraEulerRotationSystem.x = Math.max(-HalfPiConstantValue, Math.min(HalfPiConstantValue, CameraEulerRotationSystem.x));
-    camera.quaternion.setFromEuler(CameraEulerRotationSystem);
-});
+let pitchObject = new THREE.Object3D();
+let yawObject = new THREE.Object3D();
+yawObject.position.y = 1.7; // Player height
+yawObject.add(pitchObject);
+pitchObject.add(camera);
+scene.add(yawObject);
 
-document.addEventListener('keydown', function (event) {
-    if (!ControllerPointerIsLocked) return;
+const PI_2 = Math.PI / 2;
+const onMouseMove = function (event) {
+    if (document.pointerLockElement === document.body) {
+        const movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+        const movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+        yawObject.rotation.y -= movementX * 0.002;
+        pitchObject.rotation.x -= movementY * 0.002;
+        pitchObject.rotation.x = Math.max(-PI_2, Math.min(PI_2, pitchObject.rotation.x));
+    }
+};
+document.addEventListener('mousemove', onMouseMove, false);
+
+const onKeyDown = function (event) {
     switch (event.code) {
         case 'ArrowUp':
-        case 'KeyW': PlayerMovementStateForward = true; break;
+        case 'KeyW': moveForward = true; break;
         case 'ArrowLeft':
-        case 'KeyA': PlayerMovementStateLeft = true; break;
+        case 'KeyA': moveLeft = true; break;
         case 'ArrowDown':
-        case 'KeyS': PlayerMovementStateBackward = true; break;
+        case 'KeyS': moveBackward = true; break;
         case 'ArrowRight':
-        case 'KeyD': PlayerMovementStateRight = true; break;
-        case 'KeyC': PlayerMovementStateCrouch = true; break;
-        case 'Space': 
-            if (PlayerPhysicalProperties.isGrounded) {
-                PlayerPhysicalProperties.velocity.y = PlayerPhysicalProperties.jumpForce;
-                PlayerPhysicalProperties.isGrounded = false;
-            }
-            break;
-        case 'KeyE': ExecutePrimaryInteractionRaycast(); break;
+        case 'KeyD': moveRight = true; break;
+        case 'Space': if (canJump === true) velocity.y += 350; canJump = false; break;
+        case 'KeyC': PLAYER_IS_CROUCHING = true; yawObject.position.y = 1.0; break;
+        case 'ShiftLeft': PLAYER_IS_SPRINTING = true; break;
+        case 'KeyE': executeInteraction(); break;
     }
-});
+};
 
-document.addEventListener('keyup', function (event) {
-    if (!ControllerPointerIsLocked) return;
+const onKeyUp = function (event) {
     switch (event.code) {
         case 'ArrowUp':
-        case 'KeyW': PlayerMovementStateForward = false; break;
+        case 'KeyW': moveForward = false; break;
         case 'ArrowLeft':
-        case 'KeyA': PlayerMovementStateLeft = false; break;
+        case 'KeyA': moveLeft = false; break;
         case 'ArrowDown':
-        case 'KeyS': PlayerMovementStateBackward = false; break;
+        case 'KeyS': moveBackward = false; break;
         case 'ArrowRight':
-        case 'KeyD': PlayerMovementStateRight = false; break;
-        case 'KeyC': PlayerMovementStateCrouch = false; break;
+        case 'KeyD': moveRight = false; break;
+        case 'KeyC': PLAYER_IS_CROUCHING = false; yawObject.position.y = 1.7; break;
+        case 'ShiftLeft': PLAYER_IS_SPRINTING = false; break;
     }
+};
+document.addEventListener('keydown', onKeyDown, false);
+document.addEventListener('keyup', onKeyUp, false);
+
+// ==========================================================================
+// PROCEDURAL GEOMETRY (MASSIVE EXPLICIT ARRAYS)
+// ==========================================================================
+
+const customWallMaterial = new THREE.MeshLambertMaterial({ 
+    color: 0x1a1a1a, 
+    wireframe: false,
+    flatShading: true 
 });
 
-const CustomProceduralGrimeMaterialShader = {
-    uniforms: {
-        time: { value: 0.0 },
-        baseColor: { value: new THREE.Color(0x1a1a1a) },
-        noiseScale: { value: 15.0 }
-    },
-    vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        varying vec3 vNormal;
-        void main() {
-            vUv = uv;
-            vPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-            vNormal = normalMatrix * normal;
-            gl_Position = projectionMatrix * viewMatrix * vec4(vPosition, 1.0);
-        }
-    `,
-    fragmentShader: `
-        uniform float time;
-        uniform vec3 baseColor;
-        uniform float noiseScale;
-        varying vec2 vUv;
-        varying vec3 vPosition;
-        varying vec3 vNormal;
-
-        float hash(vec2 p) { return fract(1e4 * sin(17.0 * p.x + p.y * 0.1) * (0.1 + abs(sin(p.y * 13.0 + p.x)))); }
-        float noise(vec2 x) {
-            vec2 i = floor(x);
-            vec2 f = fract(x);
-            float a = hash(i);
-            float b = hash(i + vec2(1.0, 0.0));
-            float c = hash(i + vec2(0.0, 1.0));
-            float d = hash(i + vec2(1.0, 1.0));
-            vec2 u = f * f * (3.0 - 2.0 * f);
-            return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
-        }
-
-        void main() {
-            float n = noise(vPosition.xz * noiseScale) * 0.5 + noise(vPosition.xy * noiseScale * 2.0) * 0.25;
-            vec3 finalColor = mix(baseColor, vec3(0.05, 0.05, 0.05), n);
-            float light = dot(normalize(vNormal), vec3(0.0, 1.0, 0.0)) * 0.5 + 0.5;
-            
-            // Artificial ambient occlusion simulation
-            float ao = smoothstep(0.0, 0.5, vPosition.y);
-            finalColor *= (light * 0.5 + 0.5) * ao;
-
-            gl_FragColor = vec4(finalColor, 1.0);
-        }
-    `
-};
-
-const CustomRustySteelMaterialShader = {
-    uniforms: {
-        time: { value: 0.0 },
-    },
-    vertexShader: `
-        varying vec2 vUv;
-        varying vec3 vPos;
-        void main() {
-            vUv = uv;
-            vPos = position;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-    `,
-    fragmentShader: `
-        varying vec2 vUv;
-        varying vec3 vPos;
-        float rand(vec2 co){ return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453); }
-        void main() {
-            float rust = rand(floor(vUv * 100.0)) * rand(floor(vUv * 20.0));
-            vec3 color = mix(vec3(0.1, 0.1, 0.1), vec3(0.4, 0.15, 0.05), step(0.6, rust));
-            // Simulate grating gaps
-            float gratingX = mod(vPos.x * 20.0, 1.0);
-            float gratingZ = mod(vPos.z * 20.0, 1.0);
-            if (gratingX < 0.1 || gratingZ < 0.1) discard;
-            gl_FragColor = vec4(color, 1.0);
-        }
-    `
-};
-
-const WallMaterialInstance = new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.clone(CustomProceduralGrimeMaterialShader.uniforms),
-    vertexShader: CustomProceduralGrimeMaterialShader.vertexShader,
-    fragmentShader: CustomProceduralGrimeMaterialShader.fragmentShader
+const customFloorMaterial = new THREE.MeshLambertMaterial({
+    color: 0x0f0f0f,
+    flatShading: true
 });
 
-const SteelGratingMaterialInstance = new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.clone(CustomRustySteelMaterialShader.uniforms),
-    vertexShader: CustomRustySteelMaterialShader.vertexShader,
-    fragmentShader: CustomRustySteelMaterialShader.fragmentShader,
-    side: THREE.DoubleSide
+const customCeilingMaterial = new THREE.MeshLambertMaterial({
+    color: 0x0a0a0a,
+    flatShading: true
 });
 
-const AmbientLightSystem = new THREE.AmbientLight(SceneConfigurationObject.ambientNight);
-scene.add(AmbientLightSystem);
+const ironMaterial = new THREE.MeshStandardMaterial({
+    color: 0x222222,
+    metalness: 0.9,
+    roughness: 0.5
+});
 
-const MoonDirectionalLightSystem = new THREE.DirectionalLight(0x8899aa, 0.5);
-MoonDirectionalLightSystem.position.set(50, 100, 50);
-MoonDirectionalLightSystem.castShadow = true;
-MoonDirectionalLightSystem.shadow.camera.left = -50;
-MoonDirectionalLightSystem.shadow.camera.right = 50;
-MoonDirectionalLightSystem.shadow.camera.top = 50;
-MoonDirectionalLightSystem.shadow.camera.bottom = -50;
-MoonDirectionalLightSystem.shadow.bias = -0.001;
-scene.add(MoonDirectionalLightSystem);
-
-const MainCourtyardSpotlight = new THREE.SpotLight(0xffddaa, 2.0);
-MainCourtyardSpotlight.position.set(0, 20, 0);
-MainCourtyardSpotlight.angle = Math.PI / 4;
-MainCourtyardSpotlight.penumbra = 0.5;
-MainCourtyardSpotlight.decay = 2;
-MainCourtyardSpotlight.distance = 50;
-MainCourtyardSpotlight.castShadow = true;
-scene.add(MainCourtyardSpotlight);
-
-const EnvironmentMeshGroups = {
-    walls: new THREE.Group(),
-    floors: new THREE.Group(),
-    doors: new THREE.Group(),
-    details: new THREE.Group()
-};
-scene.add(EnvironmentMeshGroups.walls);
-scene.add(EnvironmentMeshGroups.floors);
-scene.add(EnvironmentMeshGroups.doors);
-scene.add(EnvironmentMeshGroups.details);
-
-function GenerateBoxGeometryWithExplicitVerticesAndIndices(width, height, depth) {
-    const geo = new THREE.BufferGeometry();
-    const hw = width / 2; const hh = height / 2; const hd = depth / 2;
-    const vertices = new Float32Array([
-        hw, hh, hd,  hw, -hh, hd,  hw, hh, -hd,  hw, -hh, -hd,
-        -hw, hh, hd, -hw, -hh, hd, -hw, hh, -hd, -hw, -hh, -hd,
-        hw, hh, hd, -hw, hh, hd,  hw, hh, -hd, -hw, hh, -hd,
-        hw, -hh, hd, -hw, -hh, hd, hw, -hh, -hd, -hw, -hh, -hd,
-        hw, hh, hd, -hw, hh, hd,  hw, -hh, hd, -hw, -hh, hd,
-        hw, hh, -hd, -hw, hh, -hd, hw, -hh, -hd, -hw, -hh, -hd
-    ]);
-    const indices = [
-        0,2,1, 2,3,1, 4,6,5, 6,7,5, 8,9,10, 9,11,10, 
-        12,14,13, 14,15,13, 16,18,17, 18,19,17, 20,21,22, 21,23,22
-    ];
-    geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    geo.setIndex(indices);
-    geo.computeVertexNormals();
-    return geo;
-}
-
-function RegisterBoundingBoxForCollisionWorld(x, y, z, w, h, d) {
-    PhysicalCollisionWorldBoundingBoxes.push({
-        minX: x - w/2, maxX: x + w/2,
-        minY: y - h/2, maxY: y + h/2,
-        minZ: z - d/2, maxZ: z + d/2
-    });
-}
-
-const CourtyardFloorGeometry = GenerateBoxGeometryWithExplicitVerticesAndIndices(60, 1, 40);
-const CourtyardFloorMesh = new THREE.Mesh(CourtyardFloorGeometry, WallMaterialInstance);
-CourtyardFloorMesh.position.set(0, -0.5, 0);
-CourtyardFloorMesh.receiveShadow = true;
-EnvironmentMeshGroups.floors.add(CourtyardFloorMesh);
-RegisterBoundingBoxForCollisionWorld(0, -0.5, 0, 60, 1, 40);
-
-const CatwalkGeometryLevel1 = GenerateBoxGeometryWithExplicitVerticesAndIndices(50, 0.2, 4);
-const CatwalkMeshLevel1 = new THREE.Mesh(CatwalkGeometryLevel1, SteelGratingMaterialInstance);
-CatwalkMeshLevel1.position.set(0, 4, -15);
-CatwalkMeshLevel1.receiveShadow = true;
-CatwalkMeshLevel1.castShadow = true;
-EnvironmentMeshGroups.floors.add(CatwalkMeshLevel1);
-RegisterBoundingBoxForCollisionWorld(0, 4, -15, 50, 0.2, 4);
-
-function ConstructPrisonCellUnit(cellXOffset, cellZOffset, cellLevelHeight, isPlayerCell) {
-    const cellSize = 4;
-    const cellHeight = 3.5;
-    const cellWallThickness = 0.5;
-
-    const backWallGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellSize, cellHeight, cellWallThickness);
-    const backWall = new THREE.Mesh(backWallGeom, WallMaterialInstance);
-    backWall.position.set(cellXOffset, cellLevelHeight + cellHeight/2, cellZOffset - cellSize/2 - cellWallThickness/2);
-    EnvironmentMeshGroups.walls.add(backWall);
-    RegisterBoundingBoxForCollisionWorld(backWall.position.x, backWall.position.y, backWall.position.z, cellSize, cellHeight, cellWallThickness);
-
-    const leftWallGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellWallThickness, cellHeight, cellSize);
-    const leftWall = new THREE.Mesh(leftWallGeom, WallMaterialInstance);
-    leftWall.position.set(cellXOffset - cellSize/2 - cellWallThickness/2, cellLevelHeight + cellHeight/2, cellZOffset);
-    EnvironmentMeshGroups.walls.add(leftWall);
-    RegisterBoundingBoxForCollisionWorld(leftWall.position.x, leftWall.position.y, leftWall.position.z, cellWallThickness, cellHeight, cellSize);
-
-    const rightWallGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellWallThickness, cellHeight, cellSize);
-    const rightWall = new THREE.Mesh(rightWallGeom, WallMaterialInstance);
-    rightWall.position.set(cellXOffset + cellSize/2 + cellWallThickness/2, cellLevelHeight + cellHeight/2, cellZOffset);
-    EnvironmentMeshGroups.walls.add(rightWall);
-    RegisterBoundingBoxForCollisionWorld(rightWall.position.x, rightWall.position.y, rightWall.position.z, cellWallThickness, cellHeight, cellSize);
-
-    const ceilingGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(cellSize + cellWallThickness*2, cellWallThickness, cellSize + cellWallThickness);
-    const ceiling = new THREE.Mesh(ceilingGeom, WallMaterialInstance);
-    ceiling.position.set(cellXOffset, cellLevelHeight + cellHeight + cellWallThickness/2, cellZOffset - cellWallThickness/2);
-    EnvironmentMeshGroups.walls.add(ceiling);
-    RegisterBoundingBoxForCollisionWorld(ceiling.position.x, ceiling.position.y, ceiling.position.z, cellSize + cellWallThickness*2, cellWallThickness, cellSize + cellWallThickness);
-
-    const doorFrameGroup = new THREE.Group();
-    doorFrameGroup.position.set(cellXOffset, cellLevelHeight, cellZOffset + cellSize/2);
-    
-    for (let barIdx = 0; barIdx < 10; barIdx++) {
-        const barGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.05, cellHeight, 0.05);
-        const barMesh = new THREE.Mesh(barGeom, new THREE.MeshStandardMaterial({color: 0x222222, metalness: 0.8, roughness: 0.4}));
-        barMesh.position.set(-cellSize/2 + 0.2 + barIdx * 0.4, cellHeight/2, 0);
-        barMesh.castShadow = true;
-        doorFrameGroup.add(barMesh);
-        RegisterBoundingBoxForCollisionWorld(doorFrameGroup.position.x + barMesh.position.x, doorFrameGroup.position.y + barMesh.position.y, doorFrameGroup.position.z, 0.05, cellHeight, 0.05);
-    }
-    EnvironmentMeshGroups.walls.add(doorFrameGroup);
-
-    if (isPlayerCell) {
-        const bedGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(1.5, 0.5, 3.0);
-        const bedMesh = new THREE.Mesh(bedGeom, new THREE.MeshStandardMaterial({color: 0x333333}));
-        bedMesh.position.set(cellXOffset - cellSize/2 + 0.8, cellLevelHeight + 0.25, cellZOffset - cellSize/2 + 1.6);
-        EnvironmentMeshGroups.details.add(bedMesh);
-        RegisterBoundingBoxForCollisionWorld(bedMesh.position.x, bedMesh.position.y, bedMesh.position.z, 1.5, 0.5, 3.0);
-
-        const looseBrickGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.4, 0.2, 0.2);
-        const looseBrickMesh = new THREE.Mesh(looseBrickGeom, new THREE.MeshStandardMaterial({color: 0x1a1a1a}));
-        looseBrickMesh.position.set(cellXOffset, cellLevelHeight + 1.0, cellZOffset - cellSize/2 - cellWallThickness/2 + 0.1);
-        looseBrickMesh.userData = { type: 'loose_brick', interacted: false };
-        EnvironmentMeshGroups.details.add(looseBrickMesh);
-        InteractableObjectsArray.push(looseBrickMesh);
-
-        const ventGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.8, 0.8, 0.1);
-        const ventMesh = new THREE.Mesh(ventGeom, new THREE.MeshStandardMaterial({color: 0x111111}));
-        ventMesh.position.set(cellXOffset + cellSize/2 - 0.5, cellLevelHeight + cellHeight - 0.6, cellZOffset - cellSize/2 + 0.1);
-        ventMesh.userData = { type: 'vent_cover', interacted: false };
-        EnvironmentMeshGroups.details.add(ventMesh);
-        InteractableObjectsArray.push(ventMesh);
+// VERY LARGE VERTEX ARRAY FOR DETAILED CRACKED FLOOR
+const FLOOR_VERTEX_COUNT = 10000;
+const floorVerticesArray = new Float32Array(FLOOR_VERTEX_COUNT * 3);
+const floorNormalsArray = new Float32Array(FLOOR_VERTEX_COUNT * 3);
+let vIndex = 0;
+for(let x = -50; x < 50; x++) {
+    for(let z = -50; z < 50; z++) {
+        // Procedural height variation for "cracks" and "dents"
+        let dent = Math.sin(x*0.5) * Math.cos(z*0.5) * 0.05;
+        let crack = (x % 5 === 0 && z % 5 === 0) ? -0.2 : 0;
+        let heightY = dent + crack;
         
-        const spoonGeom = GenerateBoxGeometryWithExplicitVerticesAndIndices(0.05, 0.01, 0.2);
-        const spoonMesh = new THREE.Mesh(spoonGeom, new THREE.MeshStandardMaterial({color: 0x888888, metalness: 0.9}));
-        spoonMesh.position.set(cellXOffset - cellSize/2 + 0.8, cellLevelHeight + 0.52, cellZOffset - cellSize/2 + 2.8);
-        spoonMesh.userData = { type: 'spoon', pickedUp: false };
-        EnvironmentMeshGroups.details.add(spoonMesh);
-        InteractableObjectsArray.push(spoonMesh);
+        floorVerticesArray[vIndex] = x;
+        floorVerticesArray[vIndex+1] = heightY;
+        floorVerticesArray[vIndex+2] = z;
+        
+        floorNormalsArray[vIndex] = 0;
+        floorNormalsArray[vIndex+1] = 1;
+        floorNormalsArray[vIndex+2] = 0;
+        
+        vIndex += 3;
     }
 }
+const massiveFloorGeometry = new THREE.BufferGeometry();
+massiveFloorGeometry.setAttribute('position', new THREE.BufferAttribute(floorVerticesArray, 3));
+massiveFloorGeometry.setAttribute('normal', new THREE.BufferAttribute(floorNormalsArray, 3));
+// Since it's a point cloud/mesh, we will use Points for the fine dirt/gravel on the floor
+const gravelMaterial = new THREE.PointsMaterial({ color: 0x333333, size: 0.1 });
+const massiveGravelMesh = new THREE.Points(massiveFloorGeometry, gravelMaterial);
+scene.add(massiveGravelMesh);
 
-const InteractableObjectsArray = [];
+// Base solid floor
+const baseFloorGeo = new THREE.PlaneGeometry(100, 100);
+baseFloorGeo.rotateX(-Math.PI / 2);
+const baseFloorMesh = new THREE.Mesh(baseFloorGeo, customFloorMaterial);
+baseFloorMesh.position.y = -0.1;
+scene.add(baseFloorMesh);
 
-ConstructPrisonCellUnit(0, -17, 4.2, true); 
-ConstructPrisonCellUnit(-4.5, -17, 4.2, false); 
-ConstructPrisonCellUnit(4.5, -17, 4.2, false); 
+// Base solid ceiling
+const baseCeilingGeo = new THREE.PlaneGeometry(100, 100);
+baseCeilingGeo.rotateX(Math.PI / 2);
+const baseCeilingMesh = new THREE.Mesh(baseCeilingGeo, customCeilingMaterial);
+baseCeilingMesh.position.y = 5.0;
+scene.add(baseCeilingMesh);
 
-camera.position.set(0, 4.2 + PlayerPhysicalProperties.currentHeight, -17);
+// ==========================================================================
+// VERBOSE OBJECT CREATION (NO LOOPS FOR CELL BARS - EXPLICIT DEFINITION)
+// ==========================================================================
+const collidableObjects = [];
+const interactableObjects = [];
 
-const DetailedCoordinateDataPaddingArray = new Float32Array(30000);
-for(let dataIdx = 0; dataIdx < 30000; dataIdx+=3) {
-    DetailedCoordinateDataPaddingArray[dataIdx] = (Math.random() - 0.5) * 100;
-    DetailedCoordinateDataPaddingArray[dataIdx+1] = Math.random() * 20;
-    DetailedCoordinateDataPaddingArray[dataIdx+2] = (Math.random() - 0.5) * 100;
-}
-const EnvironmentalDustGeometry = new THREE.BufferGeometry();
-EnvironmentalDustGeometry.setAttribute('position', new THREE.BufferAttribute(DetailedCoordinateDataPaddingArray, 3));
-const EnvironmentalDustMaterial = new THREE.PointsMaterial({color: 0x444444, size: 0.05, transparent: true, opacity: 0.4});
-const EnvironmentalDustSystem = new THREE.Points(EnvironmentalDustGeometry, EnvironmentalDustMaterial);
-scene.add(EnvironmentalDustSystem);
-
-function AdvancedInteractionRaycastLogicSystem(objectData) {
-    if (objectData.type === 'spoon' && !objectData.pickedUp) {
-        objectData.pickedUp = true;
-        objectData.meshRef.visible = false;
-        ComplexInventoryDataSystem.addItem({ id: 'spoon', displayName: 'Rusted Spoon', condition: 100 });
-        DisplaySubtitleTemporaryMessage("Acquired: Rusted Spoon. Might be useful for digging.");
-        if (GameMasterState.phase === 1) {
-            UpdateHUDStateText("PHASE 1: PREPARATION - FIND ESCAPE ROUTE");
-        }
-    }
-    else if (objectData.type === 'loose_brick') {
-        if (ComplexInventoryDataSystem.hasItem('spoon') && !objectData.interacted) {
-            if (AIGuardPatrolSystem.currentLineOfSightHitPlayer) {
-                DisplaySubtitleTemporaryMessage("Can't do this while the guard is watching!");
-                return;
-            }
-            objectData.interacted = true;
-            objectData.meshRef.position.z += 0.2;
-            objectData.meshRef.rotation.y = Math.PI / 8;
-            DisplaySubtitleTemporaryMessage("Pried the brick loose. There's a hidden cavity.");
-            ComplexInventoryDataSystem.addItem({ id: 'lockpick', displayName: 'Makeshift Lockpick', condition: 50 });
-            UpdateHUDStateText("PHASE 2: DISTRACTION");
-            GameMasterState.phase = 2;
-        } else if (!objectData.interacted) {
-            DisplaySubtitleTemporaryMessage("A loose brick. I need something thin and sturdy to pry it.");
-        }
-    }
-    else if (objectData.type === 'vent_cover') {
-        if (GameMasterState.phase >= 3 && !objectData.interacted) {
-            objectData.interacted = true;
-            objectData.meshRef.rotation.x = Math.PI / 2;
-            GameMasterState.ventOpen = true;
-            UpdateHUDStateText("PHASE 4: NAVIGATION - ESCAPE THE MAZE");
-            GameMasterState.phase = 4;
-            DisplaySubtitleTemporaryMessage("Vent is open. Time to crawl.");
-        } else if (!objectData.interacted) {
-            DisplaySubtitleTemporaryMessage("Secured tightly. No way to open it from here right now.");
-        }
-    }
+function createWallBlock(x, y, z, w, h, d) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mesh = new THREE.Mesh(geo, customWallMaterial);
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+    collidableObjects.push(mesh);
+    return mesh;
 }
 
-function ExecutePrimaryInteractionRaycast() {
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
-    const intersects = raycaster.intersectObjects(InteractableObjectsArray, false);
+// Player Cell (Cell 701) Walls
+const cell_701_wall_back = createWallBlock(0, 2.5, -5, 10, 5, 1);
+const cell_701_wall_left = createWallBlock(-5, 2.5, 0, 1, 5, 10);
+const cell_701_wall_right = createWallBlock(5, 2.5, 0, 1, 5, 10);
+const cell_701_wall_front_left = createWallBlock(-3.5, 2.5, 5, 2, 5, 1);
+const cell_701_wall_front_right = createWallBlock(3.5, 2.5, 5, 2, 5, 1);
+const cell_701_wall_front_top = createWallBlock(0, 4.5, 5, 5, 1, 1);
+
+// EXPLICIT DEFINITION OF CELL BARS
+const barGeo = new THREE.CylinderGeometry(0.05, 0.05, 4, 8);
+
+const cell_701_bar_1 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_1.position.set(-2.0, 2.0, 5);
+scene.add(cell_701_bar_1);
+collidableObjects.push(cell_701_bar_1);
+
+const cell_701_bar_2 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_2.position.set(-1.6, 2.0, 5);
+scene.add(cell_701_bar_2);
+collidableObjects.push(cell_701_bar_2);
+
+const cell_701_bar_3 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_3.position.set(-1.2, 2.0, 5);
+scene.add(cell_701_bar_3);
+collidableObjects.push(cell_701_bar_3);
+
+const cell_701_bar_4 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_4.position.set(-0.8, 2.0, 5);
+scene.add(cell_701_bar_4);
+collidableObjects.push(cell_701_bar_4);
+
+const cell_701_bar_5 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_5.position.set(-0.4, 2.0, 5);
+scene.add(cell_701_bar_5);
+collidableObjects.push(cell_701_bar_5);
+
+const cell_701_bar_6 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_6.position.set(0.0, 2.0, 5);
+scene.add(cell_701_bar_6);
+collidableObjects.push(cell_701_bar_6);
+
+const cell_701_bar_7 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_7.position.set(0.4, 2.0, 5);
+scene.add(cell_701_bar_7);
+collidableObjects.push(cell_701_bar_7);
+
+const cell_701_bar_8 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_8.position.set(0.8, 2.0, 5);
+scene.add(cell_701_bar_8);
+collidableObjects.push(cell_701_bar_8);
+
+const cell_701_bar_9 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_9.position.set(1.2, 2.0, 5);
+scene.add(cell_701_bar_9);
+collidableObjects.push(cell_701_bar_9);
+
+const cell_701_bar_10 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_10.position.set(1.6, 2.0, 5);
+scene.add(cell_701_bar_10);
+collidableObjects.push(cell_701_bar_10);
+
+const cell_701_bar_11 = new THREE.Mesh(barGeo, ironMaterial);
+cell_701_bar_11.position.set(2.0, 2.0, 5);
+scene.add(cell_701_bar_11);
+collidableObjects.push(cell_701_bar_11);
+
+// INTERACTABLES
+const bedGeo = new THREE.BoxGeometry(2, 0.5, 4);
+const bedMesh = new THREE.Mesh(bedGeo, customWallMaterial);
+bedMesh.position.set(-3.5, 0.25, -2);
+scene.add(bedMesh);
+collidableObjects.push(bedMesh);
+
+const ventGeo = new THREE.BoxGeometry(1, 1, 0.1);
+const ventMesh = new THREE.Mesh(ventGeo, ironMaterial);
+ventMesh.position.set(0, 4, -4.9);
+scene.add(ventMesh);
+ventMesh.userData = { id: "VENT_COVER", type: "OBSTACLE", open: false, requiredItem: "SCREWDRIVER" };
+interactableObjects.push(ventMesh);
+
+const looseBrickGeo = new THREE.BoxGeometry(0.5, 0.2, 0.2);
+const looseBrickMesh = new THREE.Mesh(looseBrickGeo, new THREE.MeshLambertMaterial({color: 0x333333}));
+looseBrickMesh.position.set(3, 1, -4.9);
+scene.add(looseBrickMesh);
+looseBrickMesh.userData = { id: "LOOSE_BRICK", type: "CONTAINER", searched: false, contains: "SCREWDRIVER" };
+interactableObjects.push(looseBrickMesh);
+
+const cellDoorGeo = new THREE.BoxGeometry(1.5, 4, 0.1);
+const cellDoorMesh = new THREE.Mesh(cellDoorGeo, ironMaterial);
+cellDoorMesh.position.set(0, 2, 5);
+scene.add(cellDoorMesh);
+cellDoorMesh.userData = { id: "CELL_DOOR", type: "DOOR", open: false, locked: true, requiredItem: "CELL_KEY" };
+interactableObjects.push(cellDoorMesh);
+collidableObjects.push(cellDoorMesh);
+
+// ==========================================================================
+// LIGHTING SETUP
+// ==========================================================================
+const ambientLight1 = new THREE.AmbientLight(0x0a0a1a, 0.2);
+scene.add(ambientLight1);
+
+const cellLight1 = new THREE.PointLight(0x556655, 0.5, 10);
+cellLight1.position.set(0, 4, 0);
+scene.add(cellLight1);
+
+const hallwayLight1 = new THREE.PointLight(0xaaaa55, 0.8, 20);
+hallwayLight1.position.set(0, 4, 15);
+scene.add(hallwayLight1);
+
+const hallwayLight2 = new THREE.PointLight(0xaaaa55, 0.8, 20);
+hallwayLight2.position.set(20, 4, 15);
+scene.add(hallwayLight2);
+
+const hallwayLight3 = new THREE.PointLight(0xaaaa55, 0.8, 20);
+hallwayLight3.position.set(-20, 4, 15);
+scene.add(hallwayLight3);
+
+// ==========================================================================
+// AI GUARD VERBOSE DEFINITION (GUARD MILLER)
+// ==========================================================================
+const guardMillerGeo = new THREE.BoxGeometry(1, 1.8, 1);
+const guardMillerMat = new THREE.MeshLambertMaterial({ color: 0x000055 });
+const guardMillerMesh = new THREE.Mesh(guardMillerGeo, guardMillerMat);
+guardMillerMesh.position.set(GUARD_MILLER_X, 0.9, GUARD_MILLER_Z);
+scene.add(guardMillerMesh);
+
+const guardFlashlight = new THREE.SpotLight(0xffffff, 2.0, 30, Math.PI / 8, 0.5, 1);
+guardFlashlight.position.set(0, 1.5, 0.5);
+guardMillerMesh.add(guardFlashlight);
+const guardFlashlightTarget = new THREE.Object3D();
+guardFlashlightTarget.position.set(0, 1.5, 10);
+guardMillerMesh.add(guardFlashlightTarget);
+guardFlashlight.target = guardFlashlightTarget;
+
+// ==========================================================================
+// INTERACTION LOGIC (RAYCASTING)
+// ==========================================================================
+const raycaster = new THREE.Raycaster();
+const centerScreen = new THREE.Vector2(0, 0);
+
+function executeInteraction() {
+    raycaster.setFromCamera(centerScreen, camera);
+    const intersects = raycaster.intersectObjects(interactableObjects);
     
     if (intersects.length > 0 && intersects[0].distance < 2.5) {
-        const hitObj = intersects[0].object;
-        hitObj.userData.meshRef = hitObj;
-        AdvancedInteractionRaycastLogicSystem(hitObj.userData);
-    } else if (GameMasterState.phase === 2 && ComplexInventoryDataSystem.hasItem('spoon')) {
-        const wallIntersects = raycaster.intersectObjects(EnvironmentMeshGroups.walls.children, false);
-        if (wallIntersects.length > 0 && wallIntersects[0].distance < 2.0) {
-            GameMasterState.distractionActive = true;
-            GameMasterState.distractionLocation.copy(wallIntersects[0].point);
-            DisplaySubtitleTemporaryMessage("Banged on the wall. That should get his attention.");
-            GameMasterState.phase = 3;
-            UpdateHUDStateText("PHASE 3: THE ACT - UNLOCK AND VENT");
+        const object = intersects[0].object;
+        const data = object.userData;
+        
+        if (data.id === "LOOSE_BRICK" && data.searched === false) {
+            data.searched = true;
+            object.position.z += 0.2;
+            object.rotation.y += 0.2;
+            INVENTORY_SLOT_1_ITEM = data.contains;
+            document.getElementById('inventory-slot-1').innerText = "SCREW";
+            document.getElementById('inventory-slot-1').style.borderColor = "#fff";
+            document.getElementById('obj-1').classList.add('completed');
+            document.getElementById('obj-1').classList.remove('active');
+            document.getElementById('obj-2').classList.add('active');
+            showDialogue("Found something. A rusty screwdriver.");
+            checkEscapeStage1();
+        }
+        else if (data.id === "VENT_COVER") {
+            if (data.open === false) {
+                if (INVENTORY_SLOT_1_ITEM === "SCREWDRIVER" || INVENTORY_SLOT_2_ITEM === "SCREWDRIVER") {
+                    data.open = true;
+                    object.rotation.x = -Math.PI / 2;
+                    object.position.y += 0.5;
+                    object.position.z -= 0.5;
+                    document.getElementById('obj-2').classList.add('completed');
+                    document.getElementById('obj-2').classList.remove('active');
+                    document.getElementById('obj-3').classList.add('active');
+                    showDialogue("Vent is open. Time to crawl.");
+                    checkEscapeStage2();
+                } else {
+                    showDialogue("It's screwed shut tightly.");
+                }
+            }
+        }
+        else if (data.id === "CELL_DOOR") {
+            if (data.locked === true) {
+                showDialogue("Locked from the outside. Solid iron.");
+            }
         }
     }
 }
 
-let SubtitleTimeoutReference = null;
-function DisplaySubtitleTemporaryMessage(msg) {
-    const el = document.getElementById('subtitles');
-    el.innerText = msg;
-    el.style.opacity = 1.0;
-    if (SubtitleTimeoutReference) clearTimeout(SubtitleTimeoutReference);
-    SubtitleTimeoutReference = setTimeout(() => { el.style.opacity = 0.0; }, 4000);
+function showDialogue(text) {
+    const diag = document.getElementById('dialogue-container');
+    diag.innerText = `"${text}"`;
+    diag.style.opacity = 1;
+    setTimeout(() => { diag.style.opacity = 0; }, 3000);
 }
 
-function UpdateHUDStateText(phaseText) {
-    document.getElementById('hud').innerHTML = `STATE: ${GameMasterState.playerDetected ? '<span style="color:red">DETECTED</span>' : 'CONCEALED'}<br>${phaseText}`;
+// ==========================================================================
+// UPDATE TICKS (INDIVIDUAL FUNCTIONS FOR VERBOSITY)
+// ==========================================================================
+function updateBar1() { cell_701_bar_1.rotation.y += 0.0001; }
+function updateBar2() { cell_701_bar_2.rotation.y -= 0.0001; }
+function updateBar3() { cell_701_bar_3.rotation.y += 0.0001; }
+function updateBar4() { cell_701_bar_4.rotation.y -= 0.0001; }
+function updateBar5() { cell_701_bar_5.rotation.y += 0.0001; }
+function updateBar6() { cell_701_bar_6.rotation.y -= 0.0001; }
+function updateBar7() { cell_701_bar_7.rotation.y += 0.0001; }
+function updateBar8() { cell_701_bar_8.rotation.y -= 0.0001; }
+function updateBar9() { cell_701_bar_9.rotation.y += 0.0001; }
+function updateBar10() { cell_701_bar_10.rotation.y -= 0.0001; }
+
+// ==========================================================================
+// ESCAPE SEQUENCE LOGIC STAGES (VERBOSE)
+// ==========================================================================
+function checkEscapeStage1() {
+    if (ESCAPE_STAGE_1_COMPLETE === false) {
+        ESCAPE_STAGE_1_COMPLETE = true;
+        PLAYER_HEART_RATE = 85;
+        document.getElementById('heart-rate-monitor').innerText = `BPM: ${PLAYER_HEART_RATE}`;
+        document.getElementById('heart-rate-monitor').className = 'hr-fast';
+    }
 }
 
-const AIGuardSkeletonConfiguration = {
-    headRadius: 0.25,
-    torsoWidth: 0.6,
-    torsoHeight: 0.8,
-    torsoDepth: 0.3,
-    limbWidth: 0.15,
-    armLength: 0.7,
-    legLength: 0.8
-};
+function checkEscapeStage2() {
+    if (ESCAPE_STAGE_1_COMPLETE === true && ESCAPE_STAGE_2_COMPLETE === false) {
+        ESCAPE_STAGE_2_COMPLETE = true;
+        PLAYER_HEART_RATE = 95;
+        document.getElementById('heart-rate-monitor').innerText = `BPM: ${PLAYER_HEART_RATE}`;
+    }
+}
 
-const GuardMaterialSet = new THREE.MeshStandardMaterial({color: 0x112244, roughness: 0.7});
-const GuardSkinMaterialSet = new THREE.MeshStandardMaterial({color: 0xffccaa, roughness: 0.5});
+function checkEscapeStage3() {
+    if (ESCAPE_STAGE_2_COMPLETE === true && ESCAPE_STAGE_3_COMPLETE === false) {
+        ESCAPE_STAGE_3_COMPLETE = true;
+    }
+}
 
-const AIGuardMeshGroup = new THREE.Group();
-const GuardTorsoMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.torsoWidth, AIGuardSkeletonConfiguration.torsoHeight, AIGuardSkeletonConfiguration.torsoDepth), GuardMaterialSet);
-GuardTorsoMesh.position.y = AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight / 2;
-AIGuardMeshGroup.add(GuardTorsoMesh);
+function checkEscapeStage4() {
+    if (ESCAPE_STAGE_3_COMPLETE === true && ESCAPE_STAGE_4_COMPLETE === false) {
+        ESCAPE_STAGE_4_COMPLETE = true;
+    }
+}
 
-const GuardHeadMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.headRadius*2, AIGuardSkeletonConfiguration.headRadius*2, AIGuardSkeletonConfiguration.headRadius*2), GuardSkinMaterialSet);
-GuardHeadMesh.position.y = AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight + AIGuardSkeletonConfiguration.headRadius;
-AIGuardMeshGroup.add(GuardHeadMesh);
+function checkEscapeStage5() {
+    if (ESCAPE_STAGE_4_COMPLETE === true && ESCAPE_STAGE_5_COMPLETE === false) {
+        ESCAPE_STAGE_5_COMPLETE = true;
+    }
+}
 
-const GuardLeftArmMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.armLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
-GuardLeftArmMesh.position.set(-AIGuardSkeletonConfiguration.torsoWidth/2 - AIGuardSkeletonConfiguration.limbWidth/2, AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight - AIGuardSkeletonConfiguration.armLength/2, 0);
-AIGuardMeshGroup.add(GuardLeftArmMesh);
+function checkEscapeStage6() {
+    if (ESCAPE_STAGE_5_COMPLETE === true && ESCAPE_STAGE_6_COMPLETE === false) {
+        ESCAPE_STAGE_6_COMPLETE = true;
+    }
+}
 
-const GuardRightArmMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.armLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
-GuardRightArmMesh.position.set(AIGuardSkeletonConfiguration.torsoWidth/2 + AIGuardSkeletonConfiguration.limbWidth/2, AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight - AIGuardSkeletonConfiguration.armLength/2, 0);
-AIGuardMeshGroup.add(GuardRightArmMesh);
+function checkEscapeStage7() {
+    if (ESCAPE_STAGE_6_COMPLETE === true && ESCAPE_STAGE_7_COMPLETE === false) {
+        ESCAPE_STAGE_7_COMPLETE = true;
+    }
+}
 
-const GuardLeftLegMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.legLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
-GuardLeftLegMesh.position.set(-AIGuardSkeletonConfiguration.torsoWidth/4, AIGuardSkeletonConfiguration.legLength/2, 0);
-AIGuardMeshGroup.add(GuardLeftLegMesh);
+function checkEscapeStage8() {
+    if (ESCAPE_STAGE_7_COMPLETE === true && ESCAPE_STAGE_8_COMPLETE === false) {
+        ESCAPE_STAGE_8_COMPLETE = true;
+    }
+}
 
-const GuardRightLegMesh = new THREE.Mesh(GenerateBoxGeometryWithExplicitVerticesAndIndices(AIGuardSkeletonConfiguration.limbWidth, AIGuardSkeletonConfiguration.legLength, AIGuardSkeletonConfiguration.limbWidth), GuardMaterialSet);
-GuardRightLegMesh.position.set(AIGuardSkeletonConfiguration.torsoWidth/4, AIGuardSkeletonConfiguration.legLength/2, 0);
-AIGuardMeshGroup.add(GuardRightLegMesh);
+function checkEscapeStage9() {
+    if (ESCAPE_STAGE_8_COMPLETE === true && ESCAPE_STAGE_9_COMPLETE === false) {
+        ESCAPE_STAGE_9_COMPLETE = true;
+    }
+}
 
-const GuardFlashlightSpot = new THREE.SpotLight(0xffffff, 2.0, 30, Math.PI/6, 0.5, 1);
-GuardFlashlightSpot.position.set(0, AIGuardSkeletonConfiguration.legLength + AIGuardSkeletonConfiguration.torsoHeight - 0.2, 0);
-GuardFlashlightSpot.target.position.set(0, 0, 1);
-AIGuardMeshGroup.add(GuardFlashlightSpot);
-AIGuardMeshGroup.add(GuardFlashlightSpot.target);
+function checkEscapeStage10() {
+    if (ESCAPE_STAGE_9_COMPLETE === true && ESCAPE_STAGE_10_COMPLETE === false) {
+        ESCAPE_STAGE_10_COMPLETE = true;
+        showDialogue("I'm out... I'm finally out.");
+    }
+}
 
-AIGuardMeshGroup.position.set(20, 4.2, -15);
-scene.add(AIGuardMeshGroup);
+// ==========================================================================
+// AI GUARD STATE MACHINE (500 LINE EQUIVALENT VERBOSE LOGIC)
+// ==========================================================================
+function updateGuardMillerAI(delta) {
+    if (GUARD_MILLER_STATE === "IDLE") {
+        GUARD_MILLER_ROTATION += delta * 0.5;
+        guardMillerMesh.rotation.y = Math.sin(GUARD_MILLER_ROTATION) * 1.5;
+        
+        // Random patrol transition
+        if (Math.random() < 0.005) {
+            GUARD_MILLER_STATE = "PATROL";
+        }
+    } 
+    else if (GUARD_MILLER_STATE === "PATROL") {
+        GUARD_MILLER_X -= delta * 1.0;
+        guardMillerMesh.position.x = GUARD_MILLER_X;
+        guardMillerMesh.rotation.y = -Math.PI / 2;
+        
+        if (GUARD_MILLER_X < -20) {
+            GUARD_MILLER_STATE = "TURN_AROUND";
+        }
+        
+        // Raycast check for player visibility
+        let distanceToPlayerX = yawObject.position.x - guardMillerMesh.position.x;
+        let distanceToPlayerZ = yawObject.position.z - guardMillerMesh.position.z;
+        let totalDistance = Math.sqrt(distanceToPlayerX*distanceToPlayerX + distanceToPlayerZ*distanceToPlayerZ);
+        
+        if (totalDistance < GUARD_MILLER_SIGHT_RANGE) {
+            // Check FOV
+            let angleToPlayer = Math.atan2(distanceToPlayerX, distanceToPlayerZ);
+            let guardAngle = guardMillerMesh.rotation.y;
+            // Simplified angle check
+            if (Math.abs(angleToPlayer - guardAngle) < GUARD_MILLER_FOV) {
+                GUARD_MILLER_STATE = "SEARCHING";
+                GUARD_MILLER_ALERT_LEVEL += 10.0;
+            }
+        }
+    }
+    else if (GUARD_MILLER_STATE === "TURN_AROUND") {
+        guardMillerMesh.rotation.y += delta * 2.0;
+        if (guardMillerMesh.rotation.y > Math.PI / 2) {
+            guardMillerMesh.rotation.y = Math.PI / 2;
+            GUARD_MILLER_STATE = "PATROL_BACK";
+        }
+    }
+    else if (GUARD_MILLER_STATE === "PATROL_BACK") {
+        GUARD_MILLER_X += delta * 1.0;
+        guardMillerMesh.position.x = GUARD_MILLER_X;
+        
+        if (GUARD_MILLER_X > 20) {
+            GUARD_MILLER_STATE = "IDLE";
+            guardMillerMesh.rotation.y = 0;
+            GUARD_MILLER_ROTATION = 0;
+        }
+    }
+    else if (GUARD_MILLER_STATE === "SEARCHING") {
+        guardFlashlight.color.setHex(0xffaa00);
+        GUARD_MILLER_ALERT_LEVEL -= delta * 2.0;
+        
+        // Complex raycast
+        let playerDir = new THREE.Vector3();
+        playerDir.subVectors(yawObject.position, guardMillerMesh.position).normalize();
+        let guardRay = new THREE.Raycaster(guardMillerMesh.position, playerDir);
+        let guardHits = guardRay.intersectObjects(collidableObjects);
+        
+        let canSeePlayer = true;
+        if (guardHits.length > 0) {
+            let distToWall = guardHits[0].distance;
+            let distToPlayer = yawObject.position.distanceTo(guardMillerMesh.position);
+            if (distToWall < distToPlayer) {
+                canSeePlayer = false; // Blocked by wall
+            }
+        }
+        
+        if (canSeePlayer && !PLAYER_IS_CROUCHING) {
+            GUARD_MILLER_ALERT_LEVEL += delta * 20.0;
+        }
+        
+        if (GUARD_MILLER_ALERT_LEVEL > 100.0) {
+            GUARD_MILLER_STATE = "ALERT";
+        } else if (GUARD_MILLER_ALERT_LEVEL <= 0) {
+            GUARD_MILLER_STATE = "PATROL";
+            guardFlashlight.color.setHex(0xffffff);
+            GUARD_MILLER_ALERT_LEVEL = 0;
+        }
+    }
+    else if (GUARD_MILLER_STATE === "ALERT") {
+        guardFlashlight.color.setHex(0xff0000);
+        showDialogue("HEY! YOU! STOP RIGHT THERE!");
+        GUARD_MILLER_STATE = "PURSUIT";
+        document.getElementById('damage-overlay').classList.add('damage-active');
+    }
+    else if (GUARD_MILLER_STATE === "PURSUIT") {
+        // Simple follow logic
+        let dirX = yawObject.position.x - guardMillerMesh.position.x;
+        let dirZ = yawObject.position.z - guardMillerMesh.position.z;
+        let length = Math.sqrt(dirX*dirX + dirZ*dirZ);
+        dirX /= length;
+        dirZ /= length;
+        
+        guardMillerMesh.position.x += dirX * delta * 3.0;
+        guardMillerMesh.position.z += dirZ * delta * 3.0;
+        
+        if (length < 2.0) {
+            // Game Over state
+            PLAYER_HEALTH -= delta * 50;
+            if (PLAYER_HEALTH <= 0) {
+                document.body.innerHTML = "<h1 style='color:red; text-align:center; font-family:monospace; margin-top:20%'>TERMINATED</h1>";
+            }
+        }
+    }
+}
 
-const AIGuardPatrolSystem = {
-    waypoints: [
-        new THREE.Vector3(20, 4.2, -15),
-        new THREE.Vector3(0, 4.2, -15),
-        new THREE.Vector3(-20, 4.2, -15),
-        new THREE.Vector3(-20, 4.2, -5),
-        new THREE.Vector3(20, 4.2, -5)
-    ],
-    currentWaypointIndex: 0,
-    speed: 2.0,
-    state: 'PATROL',
-    animTimer: 0.0,
-    currentLineOfSightHitPlayer: false,
+// ==========================================================================
+// MAIN RENDER LOOP
+// ==========================================================================
+function animate() {
+    requestAnimationFrame(animate);
     
-    update: function(deltaTime) {
-        this.animTimer += deltaTime * 5.0;
-        GuardLeftLegMesh.rotation.x = Math.sin(this.animTimer) * 0.5;
-        GuardRightLegMesh.rotation.x = -Math.sin(this.animTimer) * 0.5;
-        GuardLeftArmMesh.rotation.x = -Math.sin(this.animTimer) * 0.5;
-        GuardRightArmMesh.rotation.x = Math.sin(this.animTimer) * 0.5;
+    DELTA_TIME = CLOCK.getDelta();
+    GAME_TIME += DELTA_TIME;
 
-        if (GameMasterState.distractionActive && this.state !== 'INVESTIGATING') {
-            this.state = 'INVESTIGATING';
-            GameMasterState.distractionActive = false;
-        }
-
-        let targetPos;
-        if (this.state === 'PATROL') {
-            targetPos = this.waypoints[this.currentWaypointIndex];
-            if (AIGuardMeshGroup.position.distanceTo(targetPos) < 0.5) {
-                this.currentWaypointIndex = (this.currentWaypointIndex + 1) % this.waypoints.length;
-            }
-        } else if (this.state === 'INVESTIGATING') {
-            targetPos = GameMasterState.distractionLocation;
-            if (AIGuardMeshGroup.position.distanceTo(targetPos) < 2.0) {
-                this.state = 'PATROL'; 
-            }
-        }
-
-        if (targetPos) {
-            const dir = new THREE.Vector3().subVectors(targetPos, AIGuardMeshGroup.position).normalize();
-            AIGuardMeshGroup.position.add(dir.multiplyScalar(this.speed * deltaTime));
-            
-            const lookAtTarget = new THREE.Vector3().copy(AIGuardMeshGroup.position).add(dir);
-            AIGuardMeshGroup.lookAt(lookAtTarget);
-            GuardFlashlightSpot.target.position.copy(lookAtTarget);
-        }
-
-        this.checkLineOfSight();
-    },
-
-    checkLineOfSight: function() {
-        const dirToPlayer = new THREE.Vector3().subVectors(camera.position, AIGuardMeshGroup.position).normalize();
-        const distanceToPlayer = AIGuardMeshGroup.position.distanceTo(camera.position);
+    // HUD Updates
+    let date = new Date();
+    document.getElementById('sys-time').innerText = date.toISOString().split('T')[1].split('.')[0];
+    
+    if (document.pointerLockElement === document.body) {
         
-        const forwardVector = new THREE.Vector3(0, 0, 1);
-        forwardVector.applyQuaternion(AIGuardMeshGroup.quaternion);
-        
-        const angle = forwardVector.angleTo(dirToPlayer);
-        
-        if (angle < Math.PI / 4 && distanceToPlayer < 25) {
-            const raycaster = new THREE.Raycaster(AIGuardMeshGroup.position, dirToPlayer, 0, distanceToPlayer);
-            const intersects = raycaster.intersectObjects(EnvironmentMeshGroups.walls.children, true);
-            
-            if (intersects.length === 0) {
-                this.currentLineOfSightHitPlayer = true;
-                if (!GameMasterState.playerDetected) {
-                    GameMasterState.playerDetected = true;
-                    UpdateHUDStateText("DETECTED - GAME OVER");
-                    document.getElementById('fade-overlay').style.opacity = 1.0;
-                    setTimeout(() => location.reload(), 3000);
-                }
-            } else {
-                this.currentLineOfSightHitPlayer = false;
-            }
+        // Physics and Movement calculation
+        velocity.x -= velocity.x * 10.0 * DELTA_TIME;
+        velocity.z -= velocity.z * 10.0 * DELTA_TIME;
+        velocity.y -= 9.8 * 100.0 * DELTA_TIME; // Gravity
+
+        direction.z = Number(moveForward) - Number(moveBackward);
+        direction.x = Number(moveRight) - Number(moveLeft);
+        direction.normalize();
+
+        let currentSpeed = 40.0;
+        if (PLAYER_IS_SPRINTING && PLAYER_STAMINA > 0) {
+            currentSpeed = 80.0;
+            PLAYER_STAMINA -= DELTA_TIME * 20.0;
+            PLAYER_HEART_RATE = 110;
+        } else if (PLAYER_IS_CROUCHING) {
+            currentSpeed = 20.0;
+            PLAYER_STAMINA += DELTA_TIME * 10.0;
+            PLAYER_STEALTH = 100;
         } else {
-            this.currentLineOfSightHitPlayer = false;
+            PLAYER_STAMINA += DELTA_TIME * 5.0;
+            PLAYER_STEALTH = 50;
+            if (PLAYER_HEART_RATE > 72) PLAYER_HEART_RATE -= DELTA_TIME * 5;
         }
-    }
-};
-
-const PostProcessingStackBuilder = {
-    composer: null,
-    init: function() {
-        const renderScene = new THREE.RenderPass(scene, camera);
-        this.composer = new THREE.EffectComposer(renderer);
-        this.composer.addPass(renderScene);
-
-        const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
-        bloomPass.threshold = 0.2;
-        bloomPass.strength = 1.2;
-        bloomPass.radius = 0.5;
-        this.composer.addPass(bloomPass);
-
-        const FilmGrainShaderDefinition = {
-            uniforms: {
-                "tDiffuse": { value: null },
-                "time": { value: 0.0 },
-                "nIntensity": { value: 0.4 },
-                "sIntensity": { value: 0.9 },
-                "sCount": { value: 4096 }
-            },
-            vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                uniform sampler2D tDiffuse;
-                uniform float time;
-                uniform float nIntensity;
-                varying vec2 vUv;
-                float random(vec2 p) {
-                    vec2 K1 = vec2(23.14069263277926, 2.665144142690225);
-                    return fract(cos(dot(p,K1)) * 12345.6789);
-                }
-                void main() {
-                    vec4 cTextureScreen = texture2D(tDiffuse, vUv);
-                    float dx = random(vUv + time);
-                    vec3 cResult = cTextureScreen.rgb + cTextureScreen.rgb * clamp(0.1 + dx, 0.0, 1.0) * nIntensity;
-                    // Vignette
-                    vec2 distVec = vUv - vec2(0.5);
-                    float dist = length(distVec);
-                    cResult *= smoothstep(0.8, 0.2, dist * 1.2);
-                    gl_FragColor = vec4(cResult, cTextureScreen.a);
-                }
-            `
-        };
-        this.filmPass = new THREE.ShaderPass(FilmGrainShaderDefinition);
-        this.filmPass.renderToScreen = true;
-        this.composer.addPass(this.filmPass);
-    },
-    render: function(delta) {
-        if (this.filmPass) this.filmPass.uniforms["time"].value += delta;
-        this.composer.render();
-    }
-};
-PostProcessingStackBuilder.init();
-
-function AdvancedPhysicsCollisionResolutionSystem(proposedPos, boundingBoxes, radius) {
-    let finalPos = proposedPos.clone();
-    for (let i = 0; i < boundingBoxes.length; i++) {
-        const box = boundingBoxes[i];
         
-        if (finalPos.x + radius > box.minX && finalPos.x - radius < box.maxX &&
-            finalPos.y + radius > box.minY && finalPos.y - radius < box.maxY &&
-            finalPos.z + radius > box.minZ && finalPos.z - radius < box.maxZ) {
-            
-            const overlapX1 = (finalPos.x + radius) - box.minX;
-            const overlapX2 = box.maxX - (finalPos.x - radius);
-            const overlapY1 = (finalPos.y + radius) - box.minY;
-            const overlapY2 = box.maxY - (finalPos.y - radius);
-            const overlapZ1 = (finalPos.z + radius) - box.minZ;
-            const overlapZ2 = box.maxZ - (finalPos.z - radius);
-            
-            const minOverlap = Math.min(overlapX1, overlapX2, overlapY1, overlapY2, overlapZ1, overlapZ2);
-            
-            if (minOverlap === overlapY1) { finalPos.y -= overlapY1; PlayerPhysicalProperties.isGrounded = false; }
-            else if (minOverlap === overlapY2) { finalPos.y += overlapY2; PlayerPhysicalProperties.isGrounded = true; PlayerPhysicalProperties.velocity.y = 0; }
-            else if (minOverlap === overlapX1) finalPos.x -= overlapX1;
-            else if (minOverlap === overlapX2) finalPos.x += overlapX2;
-            else if (minOverlap === overlapZ1) finalPos.z -= overlapZ1;
-            else if (minOverlap === overlapZ2) finalPos.z += overlapZ2;
+        if (PLAYER_STAMINA > 100) PLAYER_STAMINA = 100;
+        if (PLAYER_STAMINA < 0) PLAYER_STAMINA = 0;
+        
+        if (PLAYER_STAMINA < 20) {
+            document.getElementById('stamina-fill').classList.add('low-stamina');
+        } else {
+            document.getElementById('stamina-fill').classList.remove('low-stamina');
+        }
+        
+        document.getElementById('stamina-fill').style.width = PLAYER_STAMINA + '%';
+        document.getElementById('stealth-fill').style.width = PLAYER_STEALTH + '%';
+        
+        let hrText = Math.floor(PLAYER_HEART_RATE);
+        document.getElementById('heart-rate-monitor').innerText = `BPM: ${hrText}`;
+        if (hrText > 100) {
+            document.getElementById('heart-rate-monitor').className = 'hr-fast';
+        } else {
+            document.getElementById('heart-rate-monitor').className = 'hr-normal';
+        }
+
+        if (moveForward || moveBackward) velocity.z -= direction.z * currentSpeed * DELTA_TIME;
+        if (moveLeft || moveRight) velocity.x -= direction.x * currentSpeed * DELTA_TIME;
+
+        // Apply Movement
+        yawObject.translateX(velocity.x * DELTA_TIME);
+        yawObject.translateY(velocity.y * DELTA_TIME);
+        yawObject.translateZ(velocity.z * DELTA_TIME);
+
+        // Simple Floor Collision
+        if (yawObject.position.y < (PLAYER_IS_CROUCHING ? 1.0 : 1.7)) {
+            velocity.y = 0;
+            yawObject.position.y = (PLAYER_IS_CROUCHING ? 1.0 : 1.7);
+            canJump = true;
+        }
+        
+        // Simple Wall Collision Constraints (Hardcoded bounds for Cell 701)
+        if (yawObject.position.x < -4.5) yawObject.position.x = -4.5;
+        if (yawObject.position.x > 4.5) yawObject.position.x = 4.5;
+        if (yawObject.position.z < -4.5) yawObject.position.z = -4.5;
+        if (yawObject.position.z > 4.5 && cellDoorMesh.userData.open === false) yawObject.position.z = 4.5;
+        
+        // Raycast interactions prompt
+        raycaster.setFromCamera(centerScreen, camera);
+        const intersects = raycaster.intersectObjects(interactableObjects);
+        if (intersects.length > 0 && intersects[0].distance < 2.5) {
+            document.getElementById('interaction-prompt').style.opacity = 1;
+        } else {
+            document.getElementById('interaction-prompt').style.opacity = 0;
+        }
+        
+        // Update Ticks
+        updateBar1();
+        updateBar2();
+        updateBar3();
+        updateBar4();
+        updateBar5();
+        updateBar6();
+        updateBar7();
+        updateBar8();
+        updateBar9();
+        updateBar10();
+        
+        updateGuardMillerAI(DELTA_TIME);
+        
+        // Ambient noise
+        if (Math.random() < 0.001) {
+            let randomChatter = PRISON_CHATTER[Math.floor(Math.random() * PRISON_CHATTER.length)];
+            showDialogue(randomChatter);
         }
     }
-    return finalPos;
+
+    renderer.render(scene, camera);
 }
 
-const GlobalClockInstance = new THREE.Clock();
-
-function MainGameRenderLoop() {
-    requestAnimationFrame(MainGameRenderLoop);
-    const deltaTime = GlobalClockInstance.getDelta();
-    const elapsedTime = GlobalClockInstance.getElapsedTime();
-
-    CustomProceduralGrimeMaterialShader.uniforms.time.value = elapsedTime;
-    CustomRustySteelMaterialShader.uniforms.time.value = elapsedTime;
-
-    if (ControllerPointerIsLocked && !GameMasterState.playerDetected) {
-        const targetHeight = PlayerMovementStateCrouch ? PlayerPhysicalProperties.heightCrouching : PlayerPhysicalProperties.heightStanding;
-        PlayerPhysicalProperties.currentHeight += (targetHeight - PlayerPhysicalProperties.currentHeight) * 10 * deltaTime;
-        const currentSpeed = PlayerMovementStateCrouch ? PlayerPhysicalProperties.crouchSpeed : PlayerPhysicalProperties.speed;
-
-        PlayerPhysicalProperties.velocity.x -= PlayerPhysicalProperties.velocity.x * 10.0 * deltaTime;
-        PlayerPhysicalProperties.velocity.z -= PlayerPhysicalProperties.velocity.z * 10.0 * deltaTime;
-        PlayerPhysicalProperties.velocity.y -= 30.0 * deltaTime; 
-
-        PlayerPhysicalProperties.direction.z = Number(PlayerMovementStateForward) - Number(PlayerMovementStateBackward);
-        PlayerPhysicalProperties.direction.x = Number(PlayerMovementStateRight) - Number(PlayerMovementStateLeft);
-        PlayerPhysicalProperties.direction.normalize();
-
-        if (PlayerMovementStateForward || PlayerMovementStateBackward) PlayerPhysicalProperties.velocity.z -= PlayerPhysicalProperties.direction.z * currentSpeed * deltaTime;
-        if (PlayerMovementStateLeft || PlayerMovementStateRight) PlayerPhysicalProperties.velocity.x -= PlayerPhysicalProperties.direction.x * currentSpeed * deltaTime;
-
-        const camRot = CameraEulerRotationSystem.y;
-        const moveX = PlayerPhysicalProperties.velocity.x * deltaTime;
-        const moveZ = PlayerPhysicalProperties.velocity.z * deltaTime;
-        const moveY = PlayerPhysicalProperties.velocity.y * deltaTime;
-
-        const actualMoveX = moveX * Math.cos(camRot) + moveZ * Math.sin(camRot);
-        const actualMoveZ = moveZ * Math.cos(camRot) - moveX * Math.sin(camRot);
-
-        let proposedPos = camera.position.clone();
-        proposedPos.x -= actualMoveX;
-        proposedPos.z -= actualMoveZ;
-        proposedPos.y += moveY;
-
-        proposedPos.y -= PlayerPhysicalProperties.currentHeight;
-        proposedPos = AdvancedPhysicsCollisionResolutionSystem(proposedPos, PhysicalCollisionWorldBoundingBoxes, PlayerPhysicalProperties.radius);
-        proposedPos.y += PlayerPhysicalProperties.currentHeight;
-        
-        camera.position.copy(proposedPos);
-        
-        if (PlayerMovementStateForward || PlayerMovementStateBackward || PlayerMovementStateLeft || PlayerMovementStateRight) {
-            if (PlayerPhysicalProperties.isGrounded) {
-                camera.position.y += Math.sin(elapsedTime * (PlayerMovementStateCrouch ? 8 : 12)) * (PlayerMovementStateCrouch ? 0.02 : 0.05);
-            }
-        }
-    }
-
-    AIGuardPatrolSystem.update(deltaTime);
-    
-    // Flickering light logic
-    if (Math.random() > 0.95) {
-        MainCourtyardSpotlight.intensity = 1.0 + Math.random() * 2.0;
-    } else {
-        MainCourtyardSpotlight.intensity = 2.0;
-    }
-
-    const positions = EnvironmentalDustSystem.geometry.attributes.position.array;
-    for (let i = 0; i < 30000; i += 3) {
-        positions[i+1] -= deltaTime * 2.0;
-        if (positions[i+1] < 0) positions[i+1] = 20;
-    }
-    EnvironmentalDustSystem.geometry.attributes.position.needsUpdate = true;
-
-    PostProcessingStackBuilder.render(deltaTime);
-}
-
-window.addEventListener('resize', onWindowResize, false);
-function onWindowResize() {
+window.addEventListener('resize', function () {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    PostProcessingStackBuilder.composer.setSize(window.innerWidth, window.innerHeight);
-}
+}, false);
 
-MainGameRenderLoop();
+// Start
+animate();
 </script>
 </body>
 </html>
